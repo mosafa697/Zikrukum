@@ -10,6 +10,7 @@ import { setPhases } from '../store/slices/phasesSlice';
 import { setPhasesLengthCount, setIndexCount } from '../store/slices/indexCountSlice';
 import { RootState } from '../store';
 import { PhraseCard } from '../components/PhraseCard';
+import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 
 export function CategoryScreen() {
   const dispatch = useDispatch();
@@ -19,6 +20,8 @@ export function CategoryScreen() {
   const categoryData = azkar.find((item) => item.id.toString() === categoryId);
   const currentPhrase = useSelector((state: RootState) => state.phases.value[state.indexCount.value]);
   const phrases = useSelector((state: RootState) => state.phases.value);
+  const themeName = useSelector((state: RootState) => state.theme.value);
+  const theme = getAzkarTheme(themeName);
 
   useEffect(() => {
     if (categoryData?.phrases) {
@@ -30,26 +33,26 @@ export function CategoryScreen() {
 
   if (!categoryData) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>الفئة غير موجودة</Text>
+      <View style={[styles.container, { backgroundColor: theme.bgColor }]}> 
+        <Text style={[styles.title, { color: theme.textColor }]}>الفئة غير موجودة</Text>
       </View>
     );
   }
 
   if (!currentPhrase) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>جارٍ تحميل الذكر...</Text>
+      <View style={[styles.container, { backgroundColor: theme.bgColor }]}> 
+        <Text style={[styles.title, { color: theme.textColor }]}>جارٍ تحميل الذكر...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}> 
+    <View style={[styles.container, { backgroundColor: theme.bgColor }]}> 
       <PhraseCard phrase={currentPhrase} categoryName={categoryData.title} />
-      <View style={styles.footerActions}> 
-        <Text style={styles.footerText}>العدد المتبقي: {currentPhrase.count}</Text>
-        <Text style={styles.footerText}>الذكريات: {phrases.length}</Text>
+      <View style={[styles.footerActions, { backgroundColor: theme.bgColor }]}> 
+        <Text style={[styles.footerText, { color: theme.secondaryTextColor }]}>العدد المتبقي: {currentPhrase.count}</Text>
+        <Text style={[styles.footerText, { color: theme.secondaryTextColor }]}>الذكريات: {phrases.length}</Text>
       </View>
     </View>
   );
@@ -57,7 +60,7 @@ export function CategoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 8 },
-  title: { fontSize: 20, textAlign: 'center', marginTop: 24 },
+  title: { fontSize: 20, textAlign: 'center', marginTop: 24, fontFamily: AZKAR_PRIMARY_FONT },
   footerActions: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
-  footerText: { fontSize: 12, color: '#64748b' },
+  footerText: { fontSize: 12, fontFamily: AZKAR_PRIMARY_FONT },
 });

@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { AzkarThemeName } from '../../theme/azkarTheme';
 
 export type ThemeState = {
-  value: string;
-  list: string[];
+  value: AzkarThemeName;
+  list: AzkarThemeName[];
 };
 
 const initialState: ThemeState = {
@@ -14,7 +15,7 @@ const themeSlice = createSlice({
   name: 'theme',
   initialState,
   reducers: {
-    setTheme: (state, action: PayloadAction<string>) => {
+    setTheme: (state, action: PayloadAction<AzkarThemeName>) => {
       state.value = action.payload;
     },
   },
