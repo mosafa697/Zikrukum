@@ -1,4 +1,4 @@
-# RN Zekrecom
+# Zikrukum
 
 This folder contains the initial React Native migration of the Azkar app using Expo.
 

@@ -1,54 +1,92 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import Clipboard from '@react-native-clipboard/clipboard';
-import { config } from '../config/config';
-import { decrementIndex, incrementIndex, setIsLastPhrase } from '../store/slices/indexCountSlice';
-import { incrementTotalCount } from '../store/slices/totalCountSlice';
+import { useNavigation } from '@react-navigation/native';
+import * as Clipboard from 'expo-clipboard';
+import { Ionicons } from '@expo/vector-icons';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
+import { decrementIndex, incrementIndex } from '../store/slices/indexCountSlice';
+import { decrementFontScale, incrementFontScale } from '../store/slices/fontScaleSlice';
 import { RootState } from '../store';
 import type { AzkarPhrase } from '../mappers/azkarMapper';
+import { config } from '../config/config';
+import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 
-export function PhraseCard({ phrase, categoryName }: { phrase: AzkarPhrase; categoryName: string }) {
+const SWIPE_THRESHOLD = 50;
+const SWIPE_ANIMATION_DURATION = 200;
+
+type PhraseCardProps = {
+  phrase: AzkarPhrase;
+  counter: number;
+  onPhraseClick: () => void;
+  isAnimating: boolean;
+  onBack: () => void;
+  categoryName: string;
+};
+
+export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack, categoryName }: PhraseCardProps) {
   const dispatch = useDispatch();
-  const [counter, setCounter] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [longPressTriggered, setLongPressTriggered] = useState(false);
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   const indexCount = useSelector((state: RootState) => state.indexCount.value);
   const phasesLength = useSelector((state: RootState) => state.indexCount.phasesLength);
   const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
   const showSubText = useSelector((state: RootState) => state.subText.value);
   const fontScale = useSelector((state: RootState) => state.fontScale.value);
-  const theme = useSelector((state: RootState) => state.theme.value);
+  const themeName = useSelector((state: RootState) => state.theme.value);
+  const colors = getAzkarTheme(themeName);
 
-  useEffect(() => {
-    dispatch(setIsLastPhrase(indexCount === phasesLength));
-  }, [dispatch, indexCount, phasesLength]);
+  const [longPressTriggered, setLongPressTriggered] = useState(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const progressPercentage = phasesLength > 0 ? (indexCount / phasesLength) * 100 : 0;
   const remainingCount = Math.max(phrase.count - counter, 0);
+  const canGoBack = indexCount > 0;
+  const canGoForward = !isLastPhrase;
 
-  const themeColors = getAzkarTheme(theme);
+  const translateX = useRef(new Animated.Value(0)).current;
 
-  const handleCounterPress = () => {
-    if (counter >= phrase.count) return;
-    setIsAnimating(true);
-    const nextCounter = counter + 1;
-    setCounter(nextCounter);
-    dispatch(incrementTotalCount());
-    if (nextCounter >= phrase.count) {
-      setTimeout(() => dispatch(incrementIndex()), 300);
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationX: translateX } }],
+    { useNativeDriver: true }
+  );
+
+  // Swipe right = next phrase, swipe left = previous phrase (mirrors web react-swipeable behavior)
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.oldState !== State.ACTIVE) return;
+    const dx = event.nativeEvent.translationX;
+    if (Math.abs(dx) > SWIPE_THRESHOLD) {
+      if (dx < 0 && !canGoBack) {
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+        return;
+      }
+      if (dx > 0 && !canGoForward) {
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+        return;
+      }
+      Animated.timing(translateX, {
+        toValue: dx > 0 ? 500 : -500,
+        duration: SWIPE_ANIMATION_DURATION,
+        useNativeDriver: true,
+      }).start(() => {
+        translateX.setValue(0);
+        dispatch(dx > 0 ? incrementIndex() : decrementIndex());
+      });
+    } else {
+      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
     }
-    setTimeout(() => setIsAnimating(false), 300);
   };
 
+  // Mirrors ZekrCounter's useTimeGuardedCallback guard
+  const guardedCounterPress = useTimeGuardedCallback(onPhraseClick, config.interaction.counterGuardMs);
+
   const startLongPress = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-    }
     longPressTimerRef.current = setTimeout(() => {
       setLongPressTriggered(true);
-      Clipboard.setString(phrase.text);
+      Clipboard.setStringAsync(phrase.text);
     }, config.interaction.longPressMs);
   };
 
@@ -64,85 +102,164 @@ export function PhraseCard({ phrase, categoryName }: { phrase: AzkarPhrase; cate
       setLongPressTriggered(false);
       return;
     }
-    handleCounterPress();
+    guardedCounterPress();
   };
-
-  const goBack = () => {
-    dispatch(decrementIndex());
-  };
-
-  const progressPercentage = phasesLength > 0 ? (indexCount / phasesLength) * 100 : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgColor }]}> 
-      <View style={[styles.card, { backgroundColor: themeColors.cardBgColor, borderColor: themeColors.buttonBorderColor }]}> 
-        <View style={styles.header}> 
-          <Text style={[styles.category, { color: themeColors.secondaryTextColor }]}>{categoryName}</Text>
-          <View style={styles.progressWrap}> 
-            <View style={[styles.progressBar, { backgroundColor: themeColors.sliderBg }]}> 
-              <View style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: themeColors.sliderBgActive }]} /> 
+    <View style={[styles.outerContainer, { backgroundColor: colors.bgColor }]}>
+      <View style={[styles.card, { backgroundColor: colors.cardBgColor }]}>
+
+        {/* Header: font controls | category + progress | settings + home */}
+        <View style={styles.header}>
+          <View style={styles.headerSide}>
+            <Pressable
+              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              onPress={() => dispatch(decrementFontScale())}
+              accessibilityLabel="تصغير الخط"
+            >
+              <Ionicons name="remove" size={20} color={colors.textColor} />
+            </Pressable>
+            <Pressable
+              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              onPress={() => dispatch(incrementFontScale())}
+              accessibilityLabel="تكبير الخط"
+            >
+              <Ionicons name="add" size={20} color={colors.textColor} />
+            </Pressable>
+          </View>
+
+          <View style={styles.headerCenter}>
+            <Text style={[styles.categoryPill, { color: colors.textColor, borderColor: colors.buttonBorderColor }]} numberOfLines={1}>
+              {categoryName}
+            </Text>
+            <View style={[styles.progressTrack, { backgroundColor: colors.sliderBg }]}>
+              <View style={[styles.progressFill, { width: `${progressPercentage}%` as any, backgroundColor: colors.sliderBgActive }]} />
             </View>
+          </View>
+
+          <View style={[styles.headerSide, styles.headerRight]}>
+            <Pressable
+              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              onPress={() => navigation.navigate('Settings')}
+              accessibilityLabel="الإعدادات"
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.textColor} />
+            </Pressable>
+            <Pressable
+              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              onPress={onBack}
+              accessibilityLabel="الرئيسية"
+            >
+              <Ionicons name="home-outline" size={20} color={colors.textColor} />
+            </Pressable>
           </View>
         </View>
 
-        <Pressable
-          onPress={handleContentPress}
-          onLongPress={startLongPress}
-          onPressOut={cancelLongPress}
-          style={styles.phraseArea}
+        {/* Phrase content area — swipe left = previous, swipe right = next */}
+        <PanGestureHandler
+          onGestureEvent={onGestureEvent}
+          onHandlerStateChange={onHandlerStateChange}
+          activeOffsetX={[-5, 5]}
+          failOffsetY={[-20, 20]}
         >
-          <Text style={[styles.phraseText, { color: themeColors.textColor, fontSize: fontScale * 16 }]}>{phrase.text}</Text>
-          {showSubText && phrase.subtext ? <Text style={[styles.subtext, { color: themeColors.secondaryTextColor }]}>{phrase.subtext}</Text> : null}
-        </Pressable>
+          <Animated.View style={[styles.phraseArea, { transform: [{ translateX }] }]}>
+            <Pressable
+              onPress={handleContentPress}
+              onLongPress={startLongPress}
+              onPressOut={cancelLongPress}
+              style={styles.phraseAreaInner}
+            >
+              <Text
+                style={[
+                  styles.phraseText,
+                  { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+                ]}
+              >
+                {phrase.text}
+              </Text>
+              {showSubText && phrase.subtext ? (
+                <>
+                  <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+                  <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.8) * 16 }]}>
+                    {phrase.subtext}
+                  </Text>
+                </>
+              ) : null}
+            </Pressable>
+          </Animated.View>
+        </PanGestureHandler>
 
-        <View style={styles.footer}> 
+        {/* Footer: previous | counter | next */}
+        <View style={styles.footer}>
           <Pressable
-            onPress={goBack}
-            disabled={indexCount === 0}
-            style={[styles.navButton, { backgroundColor: themeColors.buttonBgColor, borderColor: themeColors.buttonBorderColor }]}
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoBack && styles.invisible]}
+            onPress={() => dispatch(decrementIndex())}
+            disabled={!canGoBack}
+            accessibilityLabel="الذكر السابق"
           >
-            <Text style={[styles.navText, { color: indexCount === 0 ? themeColors.secondaryTextColor : themeColors.textColor }]}>السابق</Text>
+            <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
           </Pressable>
 
           <Pressable
-            onPress={handleCounterPress}
-            style={[
-              styles.counterButton,
-              { backgroundColor: themeColors.buttonBgColor, borderColor: themeColors.buttonBorderColor },
-              isAnimating && styles.counterButtonActive,
-            ]}
+            style={[styles.counterBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, isAnimating && styles.counterBtnActive]}
+            onPress={guardedCounterPress}
+            accessibilityLabel={`العدد المتبقي ${remainingCount}`}
           >
-            <Text style={[styles.counterText, { color: themeColors.iconColor }]}>{remainingCount}</Text>
+            <Text style={[styles.counterText, { color: colors.iconColor }]}>{remainingCount}</Text>
           </Pressable>
 
           <Pressable
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoForward && styles.invisible]}
             onPress={() => dispatch(incrementIndex())}
-            disabled={isLastPhrase}
-            style={[styles.navButton, { backgroundColor: themeColors.buttonBgColor, borderColor: themeColors.buttonBorderColor }]}
+            disabled={!canGoForward}
+            accessibilityLabel="الذكر التالي"
           >
-            <Text style={[styles.navText, { color: isLastPhrase ? themeColors.secondaryTextColor : themeColors.textColor }]}>التالي</Text>
+            <Ionicons name="chevron-back" size={22} color={colors.textColor} />
           </Pressable>
         </View>
+
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, justifyContent: 'center' },
-  card: { flex: 1, borderRadius: 20, borderWidth: 1, padding: 16, justifyContent: 'space-between' },
-  header: { marginBottom: 12 },
-  category: { fontSize: 13, textAlign: 'center', marginBottom: 8, fontFamily: AZKAR_PRIMARY_FONT },
-  progressWrap: { marginTop: 6 },
-  progressBar: { height: 8, borderRadius: 999, overflow: 'hidden' },
+  outerContainer: { flex: 1, padding: 16 },
+  card: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  headerSide: { flexDirection: 'row', gap: 8 },
+  headerRight: { justifyContent: 'flex-end' },
+  headerCenter: { flex: 1, alignItems: 'center', marginHorizontal: 8, gap: 4 },
+  categoryPill: {
+    fontSize: 11,
+    fontWeight: '600',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
+  },
+  progressTrack: { height: 8, borderRadius: 999, overflow: 'hidden', width: '100%' },
   progressFill: { height: '100%', borderRadius: 999 },
-  phraseArea: { flex: 1, justifyContent: 'center', paddingVertical: 12 },
-  phraseText: { textAlign: 'center', lineHeight: 32, writingDirection: 'rtl', fontFamily: AZKAR_PRIMARY_FONT, fontWeight: '700' },
-  subtext: { textAlign: 'center', marginTop: 12, lineHeight: 22, fontFamily: AZKAR_PRIMARY_FONT },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  navButton: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
-  navText: { fontFamily: AZKAR_PRIMARY_FONT },
-  counterButton: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999, borderWidth: 1 },
-  counterButtonActive: { transform: [{ scale: 0.97 }] },
-  counterText: { fontSize: 28, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
+  iconBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  phraseArea: { flex: 1, overflow: 'hidden' },
+  phraseAreaInner: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
+  phraseText: { textAlign: 'center', writingDirection: 'rtl', fontFamily: AZKAR_PRIMARY_FONT, fontWeight: '700' },
+  divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
+  subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  invisible: { opacity: 0 },
+  counterBtn: { width: 88, height: 88, borderRadius: 999, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  counterBtnActive: { transform: [{ scale: 0.94 }] },
+  counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
 });

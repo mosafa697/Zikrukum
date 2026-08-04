@@ -1,8 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { RootState } from '../store';
 import { incrementTotalCount } from '../store/slices/totalCountSlice';
+import { config } from '../config/config';
+import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 
 export function FreeTasbihScreen() {
@@ -12,42 +15,63 @@ export function FreeTasbihScreen() {
   const theme = getAzkarTheme(themeName);
   const [count, setCount] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleTap = () => {
-    setIsAnimating(true);
-    const nextCount = count + 1;
-    setCount(nextCount);
+  const tap = useCallback(() => {
+    setCount((c) => c + 1);
     dispatch(incrementTotalCount());
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setIsAnimating(false), 120);
-  };
+    setIsAnimating(true);
+    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    animTimerRef.current = setTimeout(() => setIsAnimating(false), config.interaction.freeTasbihAnimationMs);
+  }, [dispatch]);
+
+  const handleTap = useTimeGuardedCallback(tap, config.interaction.freeTasbihTapGuardMs);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bgColor }]}> 
-      <Text style={[styles.title, { color: theme.textColor }]}>تسابيح حرة</Text>
-      <Text style={[styles.value, { color: theme.iconColor }]}>{count}</Text>
-      <Pressable
-        onPress={handleTap}
-        style={[
-          styles.button,
-          { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
-          isAnimating && styles.buttonActive,
-        ]}
-      >
-        <Text style={[styles.buttonText, { color: theme.textColor }]}>اضغط</Text>
-      </Pressable>
-      <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>العداد الإجمالي: {totalCount}</Text>
+    <View style={[styles.container, { backgroundColor: theme.bgColor }]}>
+      <View style={[styles.card, { backgroundColor: theme.cardBgColor }]}>
+
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => setCount(0)}
+            style={[styles.iconBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
+            accessibilityLabel="إعادة تعيين"
+          >
+            <Ionicons name="trash-outline" size={20} color={theme.textColor} />
+          </Pressable>
+        </View>
+
+        <Text style={[styles.value, { color: theme.iconColor }]}>{count}</Text>
+
+        <Pressable
+          onPress={handleTap}
+          style={[
+            styles.tapBtn,
+            { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+            isAnimating && styles.tapBtnActive,
+          ]}
+          accessibilityLabel="سبّح"
+        >
+          <Text style={[styles.tapBtnText, { color: theme.textColor }]}>سبّح</Text>
+        </Pressable>
+
+        <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>
+          {'العداد الإجمالي: '}{totalCount.toLocaleString()}
+        </Text>
+
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 16, fontFamily: AZKAR_PRIMARY_FONT },
-  value: { fontSize: 64, fontWeight: '800', marginBottom: 20, fontFamily: AZKAR_PRIMARY_FONT },
-  button: { paddingHorizontal: 40, paddingVertical: 16, borderRadius: 16, borderWidth: 1 },
-  buttonActive: { transform: [{ scale: 0.97 }] },
-  buttonText: { fontSize: 22, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT },
-  meta: { marginTop: 16, fontFamily: AZKAR_PRIMARY_FONT },
+  container: { flex: 1, padding: 16 },
+  card: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  header: { position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'flex-end' },
+  iconBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  value: { fontSize: 72, fontWeight: '800', marginBottom: 32, fontFamily: AZKAR_PRIMARY_FONT },
+  tapBtn: { paddingHorizontal: 48, paddingVertical: 18, borderRadius: 20, borderWidth: 1 },
+  tapBtnActive: { transform: [{ scale: 0.96 }] },
+  tapBtnText: { fontSize: 22, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT },
+  meta: { marginTop: 24, fontSize: 14, fontFamily: AZKAR_PRIMARY_FONT },
 });

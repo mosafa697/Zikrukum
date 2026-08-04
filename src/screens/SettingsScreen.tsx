@@ -1,88 +1,198 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { RootState } from '../store';
 import { setTheme } from '../store/slices/themeSlice';
 import { toggleAppearance } from '../store/slices/subTextSlice';
 import { incrementFontScale, decrementFontScale } from '../store/slices/fontScaleSlice';
 import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
-import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
+
+// Border color shown around the selected theme circle
+const THEME_SELECTED_BORDER: Record<AzkarThemeName, string> = {
+  light: '#2563eb',
+  solarized: '#00753a',
+  dark: '#ffffff',
+};
 
 export function SettingsScreen() {
   const dispatch = useDispatch();
-  const theme = useSelector((state: RootState) => state.theme.value);
+  const theme = useSelector((state: RootState) => state.theme.value) as AzkarThemeName;
   const showSubText = useSelector((state: RootState) => state.subText.value);
   const fontScale = useSelector((state: RootState) => state.fontScale.value);
   const shuffle = useSelector((state: RootState) => state.phases.shuffle);
   const totalCount = useSelector((state: RootState) => state.totalCount.value);
   const colors = getAzkarTheme(theme);
 
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactMsg, setContactMsg] = useState('');
+
+  const handleSendContact = () => {
+    if (!contactName.trim() || !contactMsg.trim()) {
+      Alert.alert('تنبيه', 'يرجى تعبئة الاسم والرسالة');
+      return;
+    }
+    const subject = encodeURIComponent(`Zikrukum - ${contactName.trim()}`);
+    const body = encodeURIComponent(contactMsg.trim());
+    Linking.openURL(`mailto:?subject=${subject}&body=${body}`);
+  };
+
+  const handleResetTotalCount = () => {
+    Alert.alert(
+      'إعادة تعيين',
+      'هل أنت متأكد من إعادة تعيين عداد الأذكار؟',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        { text: 'تأكيد', style: 'destructive', onPress: () => dispatch(resetTotalCount()) },
+      ]
+    );
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgColor }]}> 
-      <Text style={[styles.title, { color: colors.textColor }]}>الإعدادات</Text>
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}> 
-        <Text style={[styles.label, { color: colors.textColor }]}>المظهر</Text>
-        <View style={styles.row}> 
-          {['light', 'solarized', 'dark'].map((option) => (
-            <Pressable
-              key={option}
-              onPress={() => dispatch(setTheme(option as 'light' | 'solarized' | 'dark'))}
-              style={[
-                styles.option,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-                theme === option && { backgroundColor: colors.sliderBgActive, borderColor: colors.sliderBgActive },
-              ]}
-            >
-              <Text style={[styles.optionText, { color: theme === option ? colors.iconColorActive : colors.textColor }]}>{option}</Text>
-            </Pressable>
-          ))}
+    <ScrollView style={[styles.container, { backgroundColor: colors.bgColor }]} contentContainerStyle={styles.scrollContent}>
+
+      {/* Theme picker */}
+      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+        <Text style={[styles.label, { color: colors.textColor }]}>سمة النظام</Text>
+        <View style={styles.row}>
+          {(['light', 'solarized', 'dark'] as AzkarThemeName[]).map((name) => {
+            const t = AZKAR_THEME_MAP[name];
+            const selected = theme === name;
+            return (
+              <Pressable
+                key={name}
+                onPress={() => dispatch(setTheme(name))}
+                style={[
+                  styles.themeCircle,
+                  { backgroundColor: t.bgColor, borderColor: selected ? THEME_SELECTED_BORDER[name] : 'transparent' },
+                ]}
+              >
+                <View style={[styles.themeDot, { backgroundColor: t.sliderBgActive }]} />
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}> 
-        <Text style={[styles.label, { color: colors.textColor }]}>الخط</Text>
-        <View style={styles.row}> 
-          <Pressable onPress={() => dispatch(decrementFontScale())} style={[styles.option, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}><Text style={[styles.optionText, { color: colors.textColor }]}>أصغر</Text></Pressable>
+      {/* Font scale */}
+      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+        <Text style={[styles.label, { color: colors.textColor }]}>حجم الخط</Text>
+        <View style={styles.row}>
+          <Pressable
+            onPress={() => dispatch(decrementFontScale())}
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+          >
+            <Ionicons name="remove" size={20} color={colors.textColor} />
+          </Pressable>
           <Text style={[styles.valueText, { color: colors.textColor }]}>{fontScale.toFixed(1)}</Text>
-          <Pressable onPress={() => dispatch(incrementFontScale())} style={[styles.option, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}><Text style={[styles.optionText, { color: colors.textColor }]}>أكبر</Text></Pressable>
+          <Pressable
+            onPress={() => dispatch(incrementFontScale())}
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+          >
+            <Ionicons name="add" size={20} color={colors.textColor} />
+          </Pressable>
         </View>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}> 
-        <Text style={[styles.label, { color: colors.textColor }]}>الإعدادات الأخرى</Text>
-        <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}> 
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>إظهار النص الفرعي</Text>
-          <Text style={[styles.valueText, { color: colors.secondaryTextColor }]}>{showSubText ? 'مفعّل' : 'معطّل'}</Text>
-        </Pressable>
-        <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}> 
+      {/* Toggles */}
+      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+        <Text style={[styles.label, { color: colors.textColor }]}>الإعدادات</Text>
+        <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
           <Text style={[styles.toggleText, { color: colors.textColor }]}>ترتيب عشوائي</Text>
-          <Text style={[styles.valueText, { color: colors.secondaryTextColor }]}>{shuffle ? 'مفعّل' : 'معطّل'}</Text>
+          <View style={[styles.toggleBtn, { backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor, borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor }]}>
+            <Ionicons name={shuffle ? 'shuffle' : 'list-outline'} size={18} color={shuffle ? colors.iconColorActive : colors.textColor} />
+          </View>
+        </Pressable>
+        <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
+          <Text style={[styles.toggleText, { color: colors.textColor }]}>إظهار فضل الذكر</Text>
+          <View style={[styles.toggleBtn, { backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor, borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor }]}>
+            <Ionicons name={showSubText ? 'eye-outline' : 'eye-off-outline'} size={18} color={showSubText ? colors.iconColorActive : colors.textColor} />
+          </View>
         </Pressable>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}> 
-        <Text style={[styles.label, { color: colors.textColor }]}>العداد الإجمالي</Text>
-        <Text style={[styles.valueText, { color: colors.textColor }]}>{totalCount}</Text>
-        <Pressable onPress={() => dispatch(resetTotalCount())} style={[styles.resetButton, { backgroundColor: colors.sliderBgActive }]}> 
-          <Text style={[styles.resetButtonText, { color: colors.iconColorActive }]}>إعادة تعيين</Text>
-        </Pressable>
+      {/* Total count */}
+      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+        <Text style={[styles.label, { color: colors.textColor }]}>إجمالي الأذكار</Text>
+        <View style={styles.row}>
+          <Pressable
+            onPress={handleResetTotalCount}
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+          >
+            <Ionicons name="trash-outline" size={20} color={colors.textColor} />
+          </Pressable>
+          <Text style={[styles.countValue, { color: colors.iconColor, backgroundColor: colors.secondaryBgColor }]}>
+            {totalCount.toLocaleString()}
+          </Text>
+        </View>
       </View>
-    </View>
+
+
+      {/* Contact */}
+      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+        <Pressable onPress={() => setContactOpen((v) => !v)} style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}>
+          <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>
+            {contactOpen ? 'إغلاق' : 'تواصل معي للشكاوى والمقترحات'}
+          </Text>
+        </Pressable>
+        {contactOpen && (
+          <View style={styles.contactForm}>
+            <TextInput
+              value={contactName}
+              onChangeText={setContactName}
+              placeholder="الاسم"
+              placeholderTextColor={colors.iconColor}
+              style={[styles.input, { color: colors.textColor, borderColor: colors.buttonBorderColor, backgroundColor: colors.bgColor }]}
+            />
+            <TextInput
+              value={contactMsg}
+              onChangeText={setContactMsg}
+              placeholder="الرسالة"
+              placeholderTextColor={colors.iconColor}
+              multiline
+              numberOfLines={4}
+              style={[styles.input, styles.inputMultiline, { color: colors.textColor, borderColor: colors.buttonBorderColor, backgroundColor: colors.bgColor }]}
+            />
+            <Pressable
+              onPress={() => Linking.openURL('https://github.com/mosafa697/azkar')}
+              style={styles.githubRow}
+            >
+              <Ionicons name="logo-github" size={16} color={colors.iconColor} />
+              <Text style={[styles.githubText, { color: colors.iconColor }]}>المساهمة في المشروع على GitHub</Text>
+            </Pressable>
+            <Pressable onPress={handleSendContact} style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}>
+              <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>إرسال</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 16, textAlign: 'right', fontFamily: AZKAR_PRIMARY_FONT },
-  card: { borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1 },
-  label: { fontSize: 16, fontWeight: '700', marginBottom: 10, fontFamily: AZKAR_PRIMARY_FONT },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  option: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
-  optionText: { fontWeight: '600', fontFamily: AZKAR_PRIMARY_FONT },
+  container: { flex: 1 },
+  scrollContent: { padding: 16, gap: 12, paddingBottom: 32 },
+  card: { borderRadius: 16, padding: 16, borderWidth: 1 },
+  label: { fontSize: 15, fontWeight: '700', marginBottom: 12, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  themeCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  themeDot: { width: 16, height: 16, borderRadius: 8 },
+  iconBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  valueText: { fontSize: 16, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, flex: 1, textAlign: 'center' },
   toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
   toggleText: { fontSize: 15, fontFamily: AZKAR_PRIMARY_FONT },
-  valueText: { fontSize: 15, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT },
-  resetButton: { marginTop: 10, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
-  resetButtonText: { fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT },
+  toggleBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  countValue: { fontSize: 16, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, overflow: 'hidden' },
+  contactBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
+  contactBtnText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
+  contactForm: { marginTop: 12, gap: 10 },
+  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
+  inputMultiline: { minHeight: 90, textAlignVertical: 'top' },
+  githubRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  githubText: { fontSize: 13, fontFamily: AZKAR_PRIMARY_FONT, textDecorationLine: 'underline' },
 });
