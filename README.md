@@ -1,18 +1,49 @@
 # Zikrukum
 
-This folder contains the initial React Native migration of the Azkar app using Expo.
+React Native migration of the Azkar app using Expo.
 
-## Current status
+## Prerequisites
 
-- Expo project scaffold created
-- Navigation shell added
-- Basic categories, category, settings, and free tasbih screens created
-- Redux store scaffold added
+- [Node.js](https://nodejs.org/) (LTS)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/): `npm install -g expo-cli`
+- Android Studio (for Android emulator) or Xcode (for iOS simulator)
+- For physical device: [Expo Go](https://expo.dev/client) app
 
-## Next steps
+## Setup
 
-1. Port the azkar dataset and mapper logic
-2. Build the reading flow and counter behavior
-3. Add persistence with AsyncStorage
-4. Add theme, font scale, shuffle, and subtext behavior
-5. Prepare Android build assets and release configuration
+```bash
+npm install
+```
+
+## Running
+
+| Command | Description |
+|---|---|
+| `npm start` | Start Metro bundler (scan QR with Expo Go) |
+| `npm run android` | Run on Android emulator or connected device |
+| `npm run ios` | Run on iOS simulator (macOS only) |
+| `npm run web` | Run in browser |
+
+## Building for release
+
+### Android APK / AAB (via EAS Build)
+
+```bash
+npm install -g eas-cli
+eas login
+eas build --platform android
+```
+
+Or for a local build (requires Android Studio):
+
+```bash
+npx expo run:android --variant release
+```
+
+The signed AAB will be under `android/app/build/outputs/bundle/release/`.
+
+### iOS (macOS only)
+
+```bash
+eas build --platform ios
+```

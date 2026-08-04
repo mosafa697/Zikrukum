@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
@@ -109,8 +109,33 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
     <View style={[styles.outerContainer, { backgroundColor: colors.bgColor }]}>
       <View style={[styles.card, { backgroundColor: colors.cardBgColor }]}>
 
-        {/* Header: font controls | category + progress | settings + home */}
         <View style={styles.header}>
+          <View style={[styles.headerSide, styles.headerRight]}>
+            <Pressable
+              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              onPress={onBack}
+              accessibilityLabel="الرئيسية"
+            >
+              <Ionicons name="home-outline" size={20} color={colors.textColor} />
+            </Pressable>
+            <Pressable
+              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              onPress={() => navigation.navigate('Settings')}
+              accessibilityLabel="الإعدادات"
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.textColor} />
+            </Pressable>
+          </View>
+
+          <View style={styles.headerCenter}>
+            <View style={[styles.progressTrack, { backgroundColor: colors.sliderBg }]}>
+              <View style={[styles.progressFill, { width: `${progressPercentage}%` as any, backgroundColor: colors.sliderBgActive }]} />
+              <Text style={[styles.categoryLabel, { color: colors.textColor }]}>
+                {categoryName}
+              </Text>
+            </View>
+          </View>
+
           <View style={styles.headerSide}>
             <Pressable
               style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
@@ -125,32 +150,6 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
               accessibilityLabel="تكبير الخط"
             >
               <Ionicons name="add" size={20} color={colors.textColor} />
-            </Pressable>
-          </View>
-
-          <View style={styles.headerCenter}>
-            <Text style={[styles.categoryPill, { color: colors.textColor, borderColor: colors.buttonBorderColor }]} numberOfLines={1}>
-              {categoryName}
-            </Text>
-            <View style={[styles.progressTrack, { backgroundColor: colors.sliderBg }]}>
-              <View style={[styles.progressFill, { width: `${progressPercentage}%` as any, backgroundColor: colors.sliderBgActive }]} />
-            </View>
-          </View>
-
-          <View style={[styles.headerSide, styles.headerRight]}>
-            <Pressable
-              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
-              onPress={() => navigation.navigate('Settings')}
-              accessibilityLabel="الإعدادات"
-            >
-              <Ionicons name="settings-outline" size={20} color={colors.textColor} />
-            </Pressable>
-            <Pressable
-              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
-              onPress={onBack}
-              accessibilityLabel="الرئيسية"
-            >
-              <Ionicons name="home-outline" size={20} color={colors.textColor} />
             </Pressable>
           </View>
         </View>
@@ -169,22 +168,27 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
               onPressOut={cancelLongPress}
               style={styles.phraseAreaInner}
             >
-              <Text
-                style={[
-                  styles.phraseText,
-                  { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
-                ]}
+              <ScrollView
+                contentContainerStyle={styles.phraseScrollContent}
+                showsVerticalScrollIndicator={false}
               >
-                {phrase.text}
-              </Text>
-              {showSubText && phrase.subtext ? (
-                <>
-                  <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                  <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.8) * 16 }]}>
-                    {phrase.subtext}
-                  </Text>
-                </>
-              ) : null}
+                <Text
+                  style={[
+                    styles.phraseText,
+                    { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+                  ]}
+                >
+                  {phrase.text}
+                </Text>
+                {showSubText && phrase.subtext ? (
+                  <>
+                    <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+                    <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                      {phrase.subtext}
+                    </Text>
+                  </>
+                ) : null}
+              </ScrollView>
             </Pressable>
           </Animated.View>
         </PanGestureHandler>
@@ -192,12 +196,12 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
         {/* Footer: previous | counter | next */}
         <View style={styles.footer}>
           <Pressable
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoBack && styles.invisible]}
-            onPress={() => dispatch(decrementIndex())}
-            disabled={!canGoBack}
-            accessibilityLabel="الذكر السابق"
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoForward && styles.invisible]}
+            onPress={() => dispatch(incrementIndex())}
+            disabled={!canGoForward}
+            accessibilityLabel="الذكر التالي"
           >
-            <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
+            <Ionicons name="chevron-back" size={22} color={colors.textColor} />
           </Pressable>
 
           <Pressable
@@ -209,12 +213,12 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
           </Pressable>
 
           <Pressable
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoForward && styles.invisible]}
-            onPress={() => dispatch(incrementIndex())}
-            disabled={!canGoForward}
-            accessibilityLabel="الذكر التالي"
+            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoBack && styles.invisible]}
+            onPress={() => dispatch(decrementIndex())}
+            disabled={!canGoBack}
+            accessibilityLabel="الذكر السابق"
           >
-            <Ionicons name="chevron-back" size={22} color={colors.textColor} />
+            <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
           </Pressable>
         </View>
 
@@ -239,21 +243,24 @@ const styles = StyleSheet.create({
   headerSide: { flexDirection: 'row', gap: 8 },
   headerRight: { justifyContent: 'flex-end' },
   headerCenter: { flex: 1, alignItems: 'center', marginHorizontal: 8, gap: 4 },
-  categoryPill: {
+  progressTrack: { borderRadius: 999, overflow: 'hidden', width: '100%', justifyContent: 'center', alignItems: 'center' },
+  progressFill: { position: 'absolute', right: 0, top: 0, bottom: 0, borderRadius: 999 },
+  categoryLabel: {
     fontSize: 11,
     fontWeight: '600',
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
     fontFamily: AZKAR_PRIMARY_FONT,
     textAlign: 'center',
+    writingDirection: 'rtl',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    textShadowColor: 'rgba(255,255,255,0.6)',
+    textShadowRadius: 3,
+    textShadowOffset: { width: 0, height: 0 },
   },
-  progressTrack: { height: 8, borderRadius: 999, overflow: 'hidden', width: '100%' },
-  progressFill: { height: '100%', borderRadius: 999 },
-  iconBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 37, height: 37, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   phraseArea: { flex: 1, overflow: 'hidden' },
-  phraseAreaInner: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
+  phraseAreaInner: { flex: 1 },
+  phraseScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
   phraseText: { textAlign: 'center', writingDirection: 'rtl', fontFamily: AZKAR_PRIMARY_FONT, fontWeight: '700' },
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
   subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },

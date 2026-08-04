@@ -1,9 +1,9 @@
 export const config = {
   font: {
-    minScale: 1.4,
-    maxScale: 4.0,
-    defaultScale: 2.8,
-    scaleIncrement: 0.2,
+    minScale: 0.6,
+    maxScale: 2.0,
+    defaultScale: 1.2,
+    scaleIncrement: 0.1,
   },
   interaction: {
     counterGuardMs: 250,

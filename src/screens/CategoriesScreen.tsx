@@ -28,12 +28,12 @@ export function CategoriesScreen() {
           <Text style={[styles.quoteText, { color: theme.textColor }]}>
             {'قال الله تعالى: '}
             <Text style={styles.bold}>{'الَّذِينَ آمَنُواْ وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'}</Text>
-            {' (الرعد:28).'}
+            <Text style={{ fontSize: 13 }}>{' (الرعد:28).'}</Text>
           </Text>
           <Text style={[styles.quoteText, { color: theme.textColor }]}>
             {'وقال رسول الله ﷺ: '}
-            <Text style={styles.bold}>{'يقولُ اللَّهـ تعالى: أنا عِنْدَ ظَنِّ عَبْدِي بي، وأنا معهُ إذا ذَكَرَنِي'}</Text>
-            {'. صحيح البخاري 7405.'}
+            <Text style={styles.bold}>{'يقولُ اللَّه تعالى: أنا عِنْدَ ظَنِّ عَبْدِي بي، وأنا معهُ إذا ذَكَرَنِي'}</Text>
+            <Text style={{ fontSize: 13 }}>{'. صحيح البخاري 7405.'}</Text>
           </Text>
 
           {/* Search */}
