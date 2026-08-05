@@ -19,6 +19,7 @@ import { RootState } from '../store';
 import { PhraseCard } from '../components/PhraseCard';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/storage';
+import { t } from '../i18n';
 
 export function CategoryScreen() {
   const dispatch = useDispatch();
@@ -126,7 +127,7 @@ export function CategoryScreen() {
   if (!categoryData || !currentPhrase) {
     return (
       <View style={[styles.container, { backgroundColor: theme.bgColor }]}>
-        <Text style={[styles.loadingText, { color: theme.textColor }]}>جارٍ تحميل الذكر...</Text>
+        <Text style={[styles.loadingText, { color: theme.textColor }]}>{t('loadingDhikr')}</Text>
       </View>
     );
   }

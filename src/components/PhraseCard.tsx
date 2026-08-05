@@ -14,6 +14,7 @@ import type { AzkarPhrase } from '../mappers/azkarMapper';
 import { config } from '../config/config';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { t } from '../i18n';
 
 const SWIPE_THRESHOLD = 50;
 const SWIPE_ANIMATION_DURATION = 200;
@@ -114,14 +115,14 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
             <Pressable
               style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
               onPress={onBack}
-              accessibilityLabel="الرئيسية"
+              accessibilityLabel={t('home')}
             >
               <Ionicons name="home-outline" size={20} color={colors.textColor} />
             </Pressable>
             <Pressable
               style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
               onPress={() => navigation.navigate('Settings')}
-              accessibilityLabel="الإعدادات"
+              accessibilityLabel={t('settings')}
             >
               <Ionicons name="settings-outline" size={20} color={colors.textColor} />
             </Pressable>
@@ -140,14 +141,14 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
             <Pressable
               style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
               onPress={() => dispatch(decrementFontScale())}
-              accessibilityLabel="تصغير الخط"
+              accessibilityLabel={t('decreaseFontSize')}
             >
               <Ionicons name="remove" size={20} color={colors.textColor} />
             </Pressable>
             <Pressable
               style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
               onPress={() => dispatch(incrementFontScale())}
-              accessibilityLabel="تكبير الخط"
+              accessibilityLabel={t('increaseFontSize')}
             >
               <Ionicons name="add" size={20} color={colors.textColor} />
             </Pressable>
@@ -199,7 +200,7 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
             style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoForward && styles.invisible]}
             onPress={() => dispatch(incrementIndex())}
             disabled={!canGoForward}
-            accessibilityLabel="الذكر التالي"
+            accessibilityLabel={t('nextDhikr')}
           >
             <Ionicons name="chevron-back" size={22} color={colors.textColor} />
           </Pressable>
@@ -207,7 +208,7 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
           <Pressable
             style={[styles.counterBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, isAnimating && styles.counterBtnActive]}
             onPress={guardedCounterPress}
-            accessibilityLabel={`العدد المتبقي ${remainingCount}`}
+            accessibilityLabel={`${t('remainingCount')}${remainingCount}`}
           >
             <Text style={[styles.counterText, { color: colors.iconColor }]}>{remainingCount}</Text>
           </Pressable>
@@ -216,7 +217,7 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
             style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoBack && styles.invisible]}
             onPress={() => dispatch(decrementIndex())}
             disabled={!canGoBack}
-            accessibilityLabel="الذكر السابق"
+            accessibilityLabel={t('previousDhikr')}
           >
             <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
           </Pressable>

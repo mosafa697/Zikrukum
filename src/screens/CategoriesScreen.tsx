@@ -7,6 +7,7 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 import { azkar } from '../mappers/azkarMapper';
 import { RootState } from '../store';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { t } from '../i18n';
 
 export function CategoriesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -26,19 +27,19 @@ export function CategoriesScreen() {
 
           {/* Quran verse + Hadith */}
           <Text style={[styles.quoteText, { color: theme.textColor }]}>
-            {'قال الله تعالى: '}
-            <Text style={styles.bold}>{'الَّذِينَ آمَنُواْ وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'}</Text>
-            <Text style={{ fontSize: 13 }}>{' (الرعد:28).'}</Text>
+            {t('quranIntro')}
+            <Text style={styles.bold}>{t('quranVerse')}</Text>
+            <Text style={{ fontSize: 13 }}>{t('quranRef')}</Text>
           </Text>
           <Text style={[styles.quoteText, { color: theme.textColor }]}>
-            {'وقال رسول الله ﷺ: '}
-            <Text style={styles.bold}>{'يقولُ اللَّه تعالى: أنا عِنْدَ ظَنِّ عَبْدِي بي، وأنا معهُ إذا ذَكَرَنِي'}</Text>
-            <Text style={{ fontSize: 13 }}>{'. صحيح البخاري 7405.'}</Text>
+            {t('hadithIntro')}
+            <Text style={styles.bold}>{t('hadithText')}</Text>
+            <Text style={{ fontSize: 13 }}>{t('hadithRef')}</Text>
           </Text>
 
           {/* Search */}
           <TextInput
-            placeholder="ابحث عن فئة..."
+            placeholder={t('searchPlaceholder')}
             placeholderTextColor={theme.secondaryTextColor}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -53,7 +54,7 @@ export function CategoriesScreen() {
             style={[styles.categoryBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
             onPress={() => navigation.navigate('FreeTasbih')}
           >
-            <Text style={[styles.categoryText, { color: theme.textColor }]}>مسبحة حرة</Text>
+            <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
           </Pressable>
 
           {filteredAzkar.map((category) => (

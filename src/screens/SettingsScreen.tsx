@@ -9,6 +9,7 @@ import { incrementFontScale, decrementFontScale } from '../store/slices/fontScal
 import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
+import { t } from '../i18n';
 
 // Border color shown around the selected theme circle
 const THEME_SELECTED_BORDER: Record<AzkarThemeName, string> = {
@@ -32,7 +33,7 @@ export function SettingsScreen() {
 
   const handleSendContact = () => {
     if (!contactName.trim() || !contactMsg.trim()) {
-      Alert.alert('تنبيه', 'يرجى تعبئة الاسم والرسالة');
+      Alert.alert(t('alert'), t('fillNameAndMessage'));
       return;
     }
     const subject = encodeURIComponent(`Zikrukum - ${contactName.trim()}`);
@@ -42,11 +43,11 @@ export function SettingsScreen() {
 
   const handleResetTotalCount = () => {
     Alert.alert(
-      'إعادة تعيين',
-      'هل أنت متأكد من إعادة تعيين عداد الأذكار؟',
+      t('reset'),
+      t('resetConfirm'),
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'تأكيد', style: 'destructive', onPress: () => dispatch(resetTotalCount()) },
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('confirm'), style: 'destructive', onPress: () => dispatch(resetTotalCount()) },
       ]
     );
   };
@@ -56,7 +57,7 @@ export function SettingsScreen() {
 
       {/* Theme picker */}
       <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
-        <Text style={[styles.label, { color: colors.textColor }]}>سمة النظام</Text>
+        <Text style={[styles.label, { color: colors.textColor }]}>{t('systemTheme')}</Text>
         <View style={styles.row}>
           {(['light', 'solarized', 'dark'] as AzkarThemeName[]).map((name) => {
             const t = AZKAR_THEME_MAP[name];
@@ -79,7 +80,7 @@ export function SettingsScreen() {
 
       {/* Font scale */}
       <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
-        <Text style={[styles.label, { color: colors.textColor }]}>حجم الخط</Text>
+        <Text style={[styles.label, { color: colors.textColor }]}>{t('fontSize')}</Text>
         <View style={styles.row}>
           <Pressable
             onPress={() => dispatch(decrementFontScale())}
@@ -99,15 +100,15 @@ export function SettingsScreen() {
 
       {/* Toggles */}
       <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
-        <Text style={[styles.label, { color: colors.textColor }]}>الإعدادات</Text>
+        <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
         <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>ترتيب عشوائي</Text>
+          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
           <View style={[styles.toggleBtn, { backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor, borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor }]}>
             <Ionicons name={shuffle ? 'shuffle' : 'list-outline'} size={18} color={shuffle ? colors.iconColorActive : colors.textColor} />
           </View>
         </Pressable>
         <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>إظهار فضل الذكر</Text>
+          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
           <View style={[styles.toggleBtn, { backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor, borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor }]}>
             <Ionicons name={showSubText ? 'eye-outline' : 'eye-off-outline'} size={18} color={showSubText ? colors.iconColorActive : colors.textColor} />
           </View>
@@ -116,7 +117,7 @@ export function SettingsScreen() {
 
       {/* Total count */}
       <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
-        <Text style={[styles.label, { color: colors.textColor }]}>إجمالي الأذكار</Text>
+        <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
         <View style={styles.row}>
           <Pressable
             onPress={handleResetTotalCount}
@@ -135,7 +136,7 @@ export function SettingsScreen() {
       <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
         <Pressable onPress={() => setContactOpen((v) => !v)} style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}>
           <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>
-            {contactOpen ? 'إغلاق' : 'تواصل معي للشكاوى والمقترحات'}
+            {contactOpen ? t('close') : t('contactMe')}
           </Text>
         </Pressable>
         {contactOpen && (
@@ -143,14 +144,14 @@ export function SettingsScreen() {
             <TextInput
               value={contactName}
               onChangeText={setContactName}
-              placeholder="الاسم"
+              placeholder={t('namePlaceholder')}
               placeholderTextColor={colors.iconColor}
               style={[styles.input, { color: colors.textColor, borderColor: colors.buttonBorderColor, backgroundColor: colors.bgColor }]}
             />
             <TextInput
               value={contactMsg}
               onChangeText={setContactMsg}
-              placeholder="الرسالة"
+              placeholder={t('messagePlaceholder')}
               placeholderTextColor={colors.iconColor}
               multiline
               numberOfLines={4}
@@ -161,10 +162,10 @@ export function SettingsScreen() {
               style={styles.githubRow}
             >
               <Ionicons name="logo-github" size={16} color={colors.iconColor} />
-              <Text style={[styles.githubText, { color: colors.iconColor }]}>المساهمة في المشروع على GitHub</Text>
+              <Text style={[styles.githubText, { color: colors.iconColor }]}>{t('contributeGithub')}</Text>
             </Pressable>
             <Pressable onPress={handleSendContact} style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}>
-              <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>إرسال</Text>
+              <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>{t('send')}</Text>
             </Pressable>
           </View>
         )}

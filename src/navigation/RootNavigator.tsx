@@ -8,6 +8,7 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { FreeTasbihScreen } from '../screens/FreeTasbihScreen';
 import { RootState } from '../store';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { t } from '../i18n';
 
 export type RootStackParamList = {
   Categories: undefined;
@@ -33,10 +34,10 @@ export function RootNavigator() {
           contentStyle: { backgroundColor: theme.bgColor },
         }}
       >
-        <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: 'الأذكار' }} />
-        <Stack.Screen name="Category" component={CategoryScreen} options={{ title: 'تفاصيل الذكر' }} />
-        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'الإعدادات' }} />
-        <Stack.Screen name="FreeTasbih" component={FreeTasbihScreen} options={{ title: 'مسبحة حرة' }} />
+        <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: t('adhkar') }} />
+        <Stack.Screen name="Category" component={CategoryScreen} options={{ title: t('dhikrDetails') }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t('settings') }} />
+        <Stack.Screen name="FreeTasbih" component={FreeTasbihScreen} options={{ title: t('freeTasbih') }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

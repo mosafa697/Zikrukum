@@ -7,6 +7,7 @@ import { incrementTotalCount } from '../store/slices/totalCountSlice';
 import { config } from '../config/config';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { t } from '../i18n';
 
 export function FreeTasbihScreen() {
   const dispatch = useDispatch();
@@ -35,7 +36,7 @@ export function FreeTasbihScreen() {
           <Pressable
             onPress={() => setCount(0)}
             style={[styles.iconBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
-            accessibilityLabel="إعادة تعيين"
+            accessibilityLabel={t('reset')}
           >
             <Ionicons name="trash-outline" size={20} color={theme.textColor} />
           </Pressable>
@@ -50,13 +51,13 @@ export function FreeTasbihScreen() {
             { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
             isAnimating && styles.tapBtnActive,
           ]}
-          accessibilityLabel="سبّح"
+          accessibilityLabel={t('tasbih')}
         >
-          <Text style={[styles.tapBtnText, { color: theme.textColor }]}>سبّح</Text>
+          <Text style={[styles.tapBtnText, { color: theme.textColor }]}>{t('tasbih')}</Text>
         </Pressable>
 
         <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>
-          {'العداد الإجمالي: '}{totalCount.toLocaleString()}
+          {t('totalCounter')}{totalCount.toLocaleString()}
         </Text>
 
       </View>
