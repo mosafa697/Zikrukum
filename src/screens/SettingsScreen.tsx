@@ -42,21 +42,20 @@ export function SettingsScreen() {
   };
 
   const handleResetTotalCount = () => {
-    Alert.alert(
-      t('reset'),
-      t('resetConfirm'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        { text: t('confirm'), style: 'destructive', onPress: () => dispatch(resetTotalCount()) },
-      ]
-    );
+    Alert.alert(t('reset'), t('resetConfirm'), [
+      { text: t('cancel'), style: 'cancel' },
+      { text: t('confirm'), style: 'destructive', onPress: () => dispatch(resetTotalCount()) },
+    ]);
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgColor }]} contentContainerStyle={styles.scrollContent}>
-
-      {/* Theme picker */}
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgColor }]}
+      contentContainerStyle={styles.scrollContent}
+    >
+      <View
+        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
+      >
         <Text style={[styles.label, { color: colors.textColor }]}>{t('systemTheme')}</Text>
         <View style={styles.row}>
           {(['light', 'solarized', 'dark'] as AzkarThemeName[]).map((name) => {
@@ -68,7 +67,10 @@ export function SettingsScreen() {
                 onPress={() => dispatch(setTheme(name))}
                 style={[
                   styles.themeCircle,
-                  { backgroundColor: t.bgColor, borderColor: selected ? THEME_SELECTED_BORDER[name] : 'transparent' },
+                  {
+                    backgroundColor: t.bgColor,
+                    borderColor: selected ? THEME_SELECTED_BORDER[name] : 'transparent',
+                  },
                 ]}
               >
                 <View style={[styles.themeDot, { backgroundColor: t.sliderBgActive }]} />
@@ -78,63 +80,104 @@ export function SettingsScreen() {
         </View>
       </View>
 
-      {/* Font scale */}
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+      <View
+        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
+      >
         <Text style={[styles.label, { color: colors.textColor }]}>{t('fontSize')}</Text>
         <View style={styles.row}>
           <Pressable
             onPress={() => dispatch(decrementFontScale())}
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+            ]}
           >
             <Ionicons name="remove" size={20} color={colors.textColor} />
           </Pressable>
           <Text style={[styles.valueText, { color: colors.textColor }]}>{fontScale.toFixed(1)}</Text>
           <Pressable
             onPress={() => dispatch(incrementFontScale())}
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+            ]}
           >
             <Ionicons name="add" size={20} color={colors.textColor} />
           </Pressable>
         </View>
       </View>
 
-      {/* Toggles */}
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+      <View
+        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
+      >
         <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
         <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
           <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
-          <View style={[styles.toggleBtn, { backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor, borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor }]}>
-            <Ionicons name={shuffle ? 'shuffle' : 'list-outline'} size={18} color={shuffle ? colors.iconColorActive : colors.textColor} />
+          <View
+            style={[
+              styles.toggleBtn,
+              {
+                backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor,
+                borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor,
+              },
+            ]}
+          >
+            <Ionicons
+              name={shuffle ? 'shuffle' : 'list-outline'}
+              size={18}
+              color={shuffle ? colors.iconColorActive : colors.textColor}
+            />
           </View>
         </Pressable>
         <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
           <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
-          <View style={[styles.toggleBtn, { backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor, borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor }]}>
-            <Ionicons name={showSubText ? 'eye-outline' : 'eye-off-outline'} size={18} color={showSubText ? colors.iconColorActive : colors.textColor} />
+          <View
+            style={[
+              styles.toggleBtn,
+              {
+                backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor,
+                borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor,
+              },
+            ]}
+          >
+            <Ionicons
+              name={showSubText ? 'eye-outline' : 'eye-off-outline'}
+              size={18}
+              color={showSubText ? colors.iconColorActive : colors.textColor}
+            />
           </View>
         </Pressable>
       </View>
 
-      {/* Total count */}
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
+      <View
+        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
+      >
         <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
         <View style={styles.row}>
           <Pressable
             onPress={handleResetTotalCount}
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+            ]}
           >
             <Ionicons name="trash-outline" size={20} color={colors.textColor} />
           </Pressable>
-          <Text style={[styles.countValue, { color: colors.iconColor, backgroundColor: colors.secondaryBgColor }]}>
+          <Text
+            style={[styles.countValue, { color: colors.iconColor, backgroundColor: colors.secondaryBgColor }]}
+          >
             {totalCount.toLocaleString()}
           </Text>
         </View>
       </View>
 
-
-      {/* Contact */}
-      <View style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}>
-        <Pressable onPress={() => setContactOpen((v) => !v)} style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}>
+      <View
+        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
+      >
+        <Pressable
+          onPress={() => setContactOpen((v) => !v)}
+          style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}
+        >
           <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>
             {contactOpen ? t('close') : t('contactMe')}
           </Text>
@@ -146,7 +189,14 @@ export function SettingsScreen() {
               onChangeText={setContactName}
               placeholder={t('namePlaceholder')}
               placeholderTextColor={colors.iconColor}
-              style={[styles.input, { color: colors.textColor, borderColor: colors.buttonBorderColor, backgroundColor: colors.bgColor }]}
+              style={[
+                styles.input,
+                {
+                  color: colors.textColor,
+                  borderColor: colors.buttonBorderColor,
+                  backgroundColor: colors.bgColor,
+                },
+              ]}
             />
             <TextInput
               value={contactMsg}
@@ -155,7 +205,15 @@ export function SettingsScreen() {
               placeholderTextColor={colors.iconColor}
               multiline
               numberOfLines={4}
-              style={[styles.input, styles.inputMultiline, { color: colors.textColor, borderColor: colors.buttonBorderColor, backgroundColor: colors.bgColor }]}
+              style={[
+                styles.input,
+                styles.inputMultiline,
+                {
+                  color: colors.textColor,
+                  borderColor: colors.buttonBorderColor,
+                  backgroundColor: colors.bgColor,
+                },
+              ]}
             />
             <Pressable
               onPress={() => Linking.openURL('https://github.com/mosafa697/azkar')}
@@ -164,13 +222,15 @@ export function SettingsScreen() {
               <Ionicons name="logo-github" size={16} color={colors.iconColor} />
               <Text style={[styles.githubText, { color: colors.iconColor }]}>{t('contributeGithub')}</Text>
             </Pressable>
-            <Pressable onPress={handleSendContact} style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}>
+            <Pressable
+              onPress={handleSendContact}
+              style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}
+            >
               <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>{t('send')}</Text>
             </Pressable>
           </View>
         )}
       </View>
-
     </ScrollView>
   );
 }
@@ -179,20 +239,74 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 16, gap: 12, paddingBottom: 32 },
   card: { borderRadius: 16, padding: 16, borderWidth: 1 },
-  label: { fontSize: 15, fontWeight: '700', marginBottom: 12, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
+  label: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 12,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+  },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  themeCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  themeCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   themeDot: { width: 16, height: 16, borderRadius: 8 },
-  iconBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  valueText: { fontSize: 16, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, flex: 1, textAlign: 'center' },
-  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  valueText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    flex: 1,
+    textAlign: 'center',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
   toggleText: { fontSize: 15, fontFamily: AZKAR_PRIMARY_FONT },
-  toggleBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  countValue: { fontSize: 16, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, overflow: 'hidden' },
+  toggleBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
   contactBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   contactBtnText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
   contactForm: { marginTop: 12, gap: 10 },
-  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+  },
   inputMultiline: { minHeight: 90, textAlignVertical: 'top' },
   githubRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
   githubText: { fontSize: 13, fontFamily: AZKAR_PRIMARY_FONT, textDecorationLine: 'underline' },

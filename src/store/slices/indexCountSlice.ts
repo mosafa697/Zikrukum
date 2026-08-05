@@ -43,5 +43,12 @@ const indexCountSlice = createSlice({
   },
 });
 
-export const { incrementIndex, decrementIndex, setIndexCount, setPhasesLengthCount, setIsLastPhrase, resetIndexCount } = indexCountSlice.actions;
+export const {
+  incrementIndex,
+  decrementIndex,
+  setIndexCount,
+  setPhasesLengthCount,
+  setIsLastPhrase,
+  resetIndexCount,
+} = indexCountSlice.actions;
 export default indexCountSlice.reducer;

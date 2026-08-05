@@ -8,14 +8,15 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "echo \"No lint configured yet\""
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\" --fix && prettier --write \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.1",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/native-stack": "^6.0.6",
     "@reduxjs/toolkit": "^2.0.0",
-    "expo": "^54",
+    "expo": "~54.0.0",
     "expo-clipboard": "~8.0.8",
     "expo-font": "~14.0.12",
     "expo-status-bar": "~3.0.9",
@@ -31,7 +32,11 @@
   "devDependencies": {
     "@types/react": "~19.1.10",
     "@types/react-native": "^0.73.0",
-    "babel-preset-expo": "~54.0.12",
-    "typescript": "^5.7.0"
+    "babel-preset-expo": "~54.0.10",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "typescript": "~5.9.2"
   }
 }

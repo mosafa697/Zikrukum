@@ -13,7 +13,13 @@ export type AzkarCategory = {
   phrases: AzkarPhrase[];
 };
 
-export const azkar: AzkarCategory[] = (azkarData as Array<{ id: number; category: string; array: Array<{ id: number; text: string; count: number; subtext: string }> }>).map((category) => ({
+export const azkar: AzkarCategory[] = (
+  azkarData as {
+    id: number;
+    category: string;
+    array: { id: number; text: string; count: number; subtext: string }[];
+  }[]
+).map((category) => ({
   id: category.id,
   title: category.category,
   phrases: category.array.map((phrase) => ({

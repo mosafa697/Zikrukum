@@ -31,11 +31,13 @@ export function FreeTasbihScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.bgColor }]}>
       <View style={[styles.card, { backgroundColor: theme.cardBgColor }]}>
-
         <View style={styles.header}>
           <Pressable
             onPress={() => setCount(0)}
-            style={[styles.iconBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+            ]}
             accessibilityLabel={t('reset')}
           >
             <Ionicons name="trash-outline" size={20} color={theme.textColor} />
@@ -57,9 +59,9 @@ export function FreeTasbihScreen() {
         </Pressable>
 
         <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>
-          {t('totalCounter')}{totalCount.toLocaleString()}
+          {t('totalCounter')}
+          {totalCount.toLocaleString()}
         </Text>
-
       </View>
     </View>
   );
@@ -67,9 +69,33 @@ export function FreeTasbihScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  card: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
-  header: { position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'flex-end' },
-  iconBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  card: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  header: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   value: { fontSize: 72, fontWeight: '800', marginBottom: 32, fontFamily: AZKAR_PRIMARY_FONT },
   tapBtn: { paddingHorizontal: 48, paddingVertical: 18, borderRadius: 20, borderWidth: 1 },
   tapBtnActive: { transform: [{ scale: 0.96 }] },

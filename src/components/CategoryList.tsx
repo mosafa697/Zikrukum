@@ -18,7 +18,10 @@ export function CategoryList() {
       {azkar.map((category) => (
         <Pressable
           key={category.id}
-          style={[styles.item, { borderColor: theme.buttonBorderColor, backgroundColor: theme.buttonBgColor }]}
+          style={[
+            styles.item,
+            { borderColor: theme.buttonBorderColor, backgroundColor: theme.buttonBgColor },
+          ]}
           onPress={() => navigation.navigate('Category', { categoryId: category.id.toString() })}
         >
           <Text style={[styles.itemText, { color: theme.textColor }]}>{category.title}</Text>

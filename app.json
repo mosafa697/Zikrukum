@@ -3,16 +3,25 @@
     "name": "Zikrukum",
     "slug": "zikrukum",
     "scheme": "zikrukum",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.azkar.zikrukum"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

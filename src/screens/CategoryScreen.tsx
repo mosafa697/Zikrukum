@@ -43,9 +43,10 @@ export function CategoryScreen() {
     if (categoryData?.phrases?.length) {
       dispatch(setPhases(categoryData.phrases));
       dispatch(setPhasesLengthCount(categoryData.phrases.length - 1));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClicks(new Array(categoryData.phrases.length).fill(0));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId]);
 
   // Restore the saved phrase index from storage (async)
@@ -54,7 +55,7 @@ export function CategoryScreen() {
       const saved = await getStoredValue<number>(`azkar-index-${categoryId}`, 0);
       dispatch(setIndexCount(saved));
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId]);
 
   // Persist current phrase index
@@ -79,6 +80,7 @@ export function CategoryScreen() {
   // Resize clicks array if phrase count changes (e.g. after shuffle)
   useEffect(() => {
     if (categoryPhrases.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClicks((prev) =>
         prev.length === categoryPhrases.length ? prev : new Array(categoryPhrases.length).fill(0)
       );
@@ -91,7 +93,7 @@ export function CategoryScreen() {
       dispatch(resetPhases());
       dispatch(resetIndexCount());
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePhraseClick = useCallback(() => {

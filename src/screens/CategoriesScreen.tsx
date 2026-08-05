@@ -21,7 +21,10 @@ export function CategoriesScreen() {
       headerRight: () => (
         <Pressable
           onPress={() => navigation.navigate('Settings')}
-          style={[styles.headerBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
+          style={[
+            styles.headerBtn,
+            { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+          ]}
           accessibilityLabel={t('settings')}
         >
           <Ionicons name="settings-outline" size={20} color={theme.textColor} />
@@ -30,17 +33,12 @@ export function CategoriesScreen() {
     });
   }, [navigation, theme]);
 
-  const filteredAzkar = azkar.filter((cat) =>
-    cat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAzkar = azkar.filter((cat) => cat.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bgColor }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
         <View style={[styles.card, { backgroundColor: theme.cardBgColor }]}>
-
-          {/* Quran verse + Hadith */}
           <Text style={[styles.quoteText, { color: theme.textColor }]}>
             {t('quranIntro')}
             <Text style={styles.bold}>{t('quranVerse')}</Text>
@@ -52,7 +50,6 @@ export function CategoriesScreen() {
             <Text style={{ fontSize: 13 }}>{t('hadithRef')}</Text>
           </Text>
 
-          {/* Search */}
           <TextInput
             placeholder={t('searchPlaceholder')}
             placeholderTextColor={theme.secondaryTextColor}
@@ -60,13 +57,19 @@ export function CategoriesScreen() {
             onChangeText={setSearchQuery}
             style={[
               styles.search,
-              { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor, color: theme.textColor },
+              {
+                backgroundColor: theme.buttonBgColor,
+                borderColor: theme.buttonBorderColor,
+                color: theme.textColor,
+              },
             ]}
           />
 
-          {/* Free tasbih always first */}
           <Pressable
-            style={[styles.categoryBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
+            style={[
+              styles.categoryBtn,
+              { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+            ]}
             onPress={() => navigation.navigate('FreeTasbih')}
           >
             <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
@@ -75,13 +78,15 @@ export function CategoriesScreen() {
           {filteredAzkar.map((category) => (
             <Pressable
               key={category.id}
-              style={[styles.categoryBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
+              style={[
+                styles.categoryBtn,
+                { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+              ]}
               onPress={() => navigation.navigate('Category', { categoryId: category.id.toString() })}
             >
               <Text style={[styles.categoryText, { color: theme.textColor }]}>{category.title}</Text>
             </Pressable>
           ))}
-
         </View>
       </ScrollView>
     </View>
@@ -91,8 +96,22 @@ export function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 32 },
-  card: { borderRadius: 20, padding: 16, gap: 10, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
-  quoteText: { fontSize: 15, lineHeight: 28, textAlign: 'center', fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
+  card: {
+    borderRadius: 20,
+    padding: 16,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  quoteText: {
+    fontSize: 15,
+    lineHeight: 28,
+    textAlign: 'center',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    writingDirection: 'rtl',
+  },
   bold: { fontWeight: '700' },
   search: {
     borderWidth: 1,
@@ -104,7 +123,21 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     writingDirection: 'rtl',
   },
-  categoryBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
+  categoryBtn: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
   categoryText: { fontSize: 17, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
-  headerBtn: { width: 37, height: 37, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginRight: 4 },
+  headerBtn: {
+    width: 37,
+    height: 37,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
 });

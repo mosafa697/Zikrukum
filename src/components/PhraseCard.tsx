@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -28,7 +28,14 @@ type PhraseCardProps = {
   categoryName: string;
 };
 
-export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack, categoryName }: PhraseCardProps) {
+export function PhraseCard({
+  phrase,
+  counter,
+  onPhraseClick,
+  isAnimating,
+  onBack,
+  categoryName,
+}: PhraseCardProps) {
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -55,49 +62,49 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
   const prevPhrase = allPhrases[indexCount - 1] ?? null;
   const nextPhrase = allPhrases[indexCount + 1] ?? null;
 
-  const translateX = useRef(new Animated.Value(0)).current;
+  // useMemo keeps Animated values stable across renders without touching refs during render
+  const translateX = useMemo(() => new Animated.Value(0), []);
   // Prev sits to the right (+screenWidth), next sits to the left (-screenWidth)
-  const prevOffset = useRef(new Animated.Value(0)).current;
-  const nextOffset = useRef(new Animated.Value(0)).current;
-  const prevTranslateX = useRef(Animated.add(translateX, prevOffset)).current;
-  const nextTranslateX = useRef(Animated.add(translateX, nextOffset)).current;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const prevOffset = useMemo(() => new Animated.Value(screenWidth), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const nextOffset = useMemo(() => new Animated.Value(-screenWidth), []);
+  const prevTranslateX = useMemo(() => Animated.add(translateX, prevOffset), [translateX, prevOffset]);
+  const nextTranslateX = useMemo(() => Animated.add(translateX, nextOffset), [translateX, nextOffset]);
 
-  // Keep offsets in sync when screen width is known (safe for portrait-only app)
-  prevOffset.setValue(screenWidth);
-  nextOffset.setValue(-screenWidth);
-
-  const onGestureEvent = Animated.event(
-    [{ nativeEvent: { translationX: translateX } }],
-    { useNativeDriver: true }
+  // Fabric requires onGestureEvent to be a plain function, not an AnimatedEvent object
+  const onGestureEvent = useCallback(
+    (event: any) => {
+      translateX.setValue(event.nativeEvent.translationX);
+    },
+    [translateX]
   );
 
-  // Swipe right = next phrase, swipe left = previous phrase (mirrors web react-swipeable behavior)
   const onHandlerStateChange = (event: any) => {
     if (event.nativeEvent.oldState !== State.ACTIVE) return;
     const dx = event.nativeEvent.translationX;
     if (Math.abs(dx) > SWIPE_THRESHOLD) {
       if (dx < 0 && !canGoBack) {
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: false }).start();
         return;
       }
       if (dx > 0 && !canGoForward) {
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: false }).start();
         return;
       }
       Animated.timing(translateX, {
         toValue: dx > 0 ? screenWidth : -screenWidth,
         duration: SWIPE_ANIMATION_DURATION,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }).start(() => {
         translateX.setValue(0);
         dispatch(dx > 0 ? incrementIndex() : decrementIndex());
       });
     } else {
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+      Animated.spring(translateX, { toValue: 0, useNativeDriver: false }).start();
     }
   };
 
-  // Mirrors ZekrCounter's useTimeGuardedCallback guard
   const guardedCounterPress = useTimeGuardedCallback(onPhraseClick, config.interaction.counterGuardMs);
 
   const startLongPress = () => {
@@ -125,18 +132,23 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
   return (
     <View style={[styles.outerContainer, { backgroundColor: colors.bgColor }]}>
       <View style={[styles.card, { backgroundColor: colors.cardBgColor }]}>
-
         <View style={styles.header}>
           <View style={[styles.headerSide, styles.headerRight]}>
             <Pressable
-              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
               onPress={onBack}
               accessibilityLabel={t('home')}
             >
               <Ionicons name="home-outline" size={20} color={colors.textColor} />
             </Pressable>
             <Pressable
-              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
               onPress={() => navigation.navigate('Settings')}
               accessibilityLabel={t('settings')}
             >
@@ -146,23 +158,32 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
 
           <View style={styles.headerCenter}>
             <View style={[styles.progressTrack, { backgroundColor: colors.sliderBg }]}>
-              <View style={[styles.progressFill, { width: `${progressPercentage}%` as any, backgroundColor: colors.sliderBgActive }]} />
-              <Text style={[styles.categoryLabel, { color: colors.textColor }]}>
-                {categoryName}
-              </Text>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${progressPercentage}%` as any, backgroundColor: colors.sliderBgActive },
+                ]}
+              />
+              <Text style={[styles.categoryLabel, { color: colors.textColor }]}>{categoryName}</Text>
             </View>
           </View>
 
           <View style={styles.headerSide}>
             <Pressable
-              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
               onPress={() => dispatch(decrementFontScale())}
               accessibilityLabel={t('decreaseFontSize')}
             >
               <Ionicons name="remove" size={20} color={colors.textColor} />
             </Pressable>
             <Pressable
-              style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }]}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
               onPress={() => dispatch(incrementFontScale())}
               accessibilityLabel={t('increaseFontSize')}
             >
@@ -179,18 +200,30 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
           failOffsetY={[-20, 20]}
         >
           <View style={styles.phraseArea}>
-
             {/* Previous phrase — sits to the right in RTL, slides in on left-swipe */}
             <Animated.View style={[styles.absoluteCard, { transform: [{ translateX: prevTranslateX }] }]}>
               {prevPhrase && (
-                <ScrollView contentContainerStyle={styles.phraseScrollContent} showsVerticalScrollIndicator={false}>
-                  <Text style={[styles.phraseText, { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 }]}>
+                <ScrollView
+                  contentContainerStyle={styles.phraseScrollContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <Text
+                    style={[
+                      styles.phraseText,
+                      { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+                    ]}
+                  >
                     {prevPhrase.text}
                   </Text>
                   {showSubText && prevPhrase.subtext ? (
                     <>
                       <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                      <Text
+                        style={[
+                          styles.subtext,
+                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
+                        ]}
+                      >
                         {prevPhrase.subtext}
                       </Text>
                     </>
@@ -207,14 +240,27 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
                 onPressOut={cancelLongPress}
                 style={styles.phraseAreaInner}
               >
-                <ScrollView contentContainerStyle={styles.phraseScrollContent} showsVerticalScrollIndicator={false}>
-                  <Text style={[styles.phraseText, { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 }]}>
+                <ScrollView
+                  contentContainerStyle={styles.phraseScrollContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <Text
+                    style={[
+                      styles.phraseText,
+                      { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+                    ]}
+                  >
                     {phrase.text}
                   </Text>
                   {showSubText && phrase.subtext ? (
                     <>
                       <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                      <Text
+                        style={[
+                          styles.subtext,
+                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
+                        ]}
+                      >
                         {phrase.subtext}
                       </Text>
                     </>
@@ -226,14 +272,27 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
             {/* Next phrase — sits to the left in RTL, slides in on right-swipe */}
             <Animated.View style={[styles.absoluteCard, { transform: [{ translateX: nextTranslateX }] }]}>
               {nextPhrase && (
-                <ScrollView contentContainerStyle={styles.phraseScrollContent} showsVerticalScrollIndicator={false}>
-                  <Text style={[styles.phraseText, { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 }]}>
+                <ScrollView
+                  contentContainerStyle={styles.phraseScrollContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <Text
+                    style={[
+                      styles.phraseText,
+                      { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+                    ]}
+                  >
                     {nextPhrase.text}
                   </Text>
                   {showSubText && nextPhrase.subtext ? (
                     <>
                       <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                      <Text
+                        style={[
+                          styles.subtext,
+                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
+                        ]}
+                      >
                         {nextPhrase.subtext}
                       </Text>
                     </>
@@ -241,14 +300,16 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
                 </ScrollView>
               )}
             </Animated.View>
-
           </View>
         </PanGestureHandler>
 
-        {/* Footer: previous | counter | next */}
         <View style={styles.footer}>
           <Pressable
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoForward && styles.invisible]}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              !canGoForward && styles.invisible,
+            ]}
             onPress={() => dispatch(incrementIndex())}
             disabled={!canGoForward}
             accessibilityLabel={t('nextDhikr')}
@@ -257,7 +318,11 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
           </Pressable>
 
           <Pressable
-            style={[styles.counterBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, isAnimating && styles.counterBtnActive]}
+            style={[
+              styles.counterBtn,
+              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              isAnimating && styles.counterBtnActive,
+            ]}
             onPress={guardedCounterPress}
             accessibilityLabel={`${t('remainingCount')}${remainingCount}`}
           >
@@ -265,7 +330,11 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
           </Pressable>
 
           <Pressable
-            style={[styles.iconBtn, { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor }, !canGoBack && styles.invisible]}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              !canGoBack && styles.invisible,
+            ]}
             onPress={() => dispatch(decrementIndex())}
             disabled={!canGoBack}
             accessibilityLabel={t('previousDhikr')}
@@ -273,7 +342,6 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
             <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
           </Pressable>
         </View>
-
       </View>
     </View>
   );
@@ -295,7 +363,13 @@ const styles = StyleSheet.create({
   headerSide: { flexDirection: 'row', gap: 8 },
   headerRight: { justifyContent: 'flex-end' },
   headerCenter: { flex: 1, alignItems: 'center', marginHorizontal: 8, gap: 4 },
-  progressTrack: { borderRadius: 999, overflow: 'hidden', width: '100%', justifyContent: 'center', alignItems: 'center' },
+  progressTrack: {
+    borderRadius: 999,
+    overflow: 'hidden',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   progressFill: { position: 'absolute', right: 0, top: 0, bottom: 0, borderRadius: 999 },
   categoryLabel: {
     fontSize: 11,
@@ -309,17 +383,36 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
     textShadowOffset: { width: 0, height: 0 },
   },
-  iconBtn: { width: 37, height: 37, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: {
+    width: 37,
+    height: 37,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   phraseArea: { flex: 1, overflow: 'hidden' },
   absoluteCard: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   phraseAreaInner: { flex: 1 },
   phraseScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
-  phraseText: { textAlign: 'center', writingDirection: 'rtl', fontFamily: AZKAR_PRIMARY_FONT, fontWeight: '700' },
+  phraseText: {
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    fontWeight: '700',
+  },
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
   subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   invisible: { opacity: 0 },
-  counterBtn: { width: 88, height: 88, borderRadius: 999, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  counterBtn: {
+    width: 88,
+    height: 88,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
   counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
 });
