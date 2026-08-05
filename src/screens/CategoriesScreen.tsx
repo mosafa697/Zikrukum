@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +15,20 @@ export function CategoriesScreen() {
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => navigation.navigate('Settings')}
+          style={[styles.headerBtn, { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor }]}
+          accessibilityLabel={t('settings')}
+        >
+          <Ionicons name="settings-outline" size={20} color={theme.textColor} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, theme]);
 
   const filteredAzkar = azkar.filter((cat) =>
     cat.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -91,4 +106,5 @@ const styles = StyleSheet.create({
   },
   categoryBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
   categoryText: { fontSize: 17, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
+  headerBtn: { width: 37, height: 37, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginRight: 4 },
 });
