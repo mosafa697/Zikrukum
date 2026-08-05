@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
@@ -32,9 +32,12 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const { width: screenWidth } = useWindowDimensions();
+
   const indexCount = useSelector((state: RootState) => state.indexCount.value);
   const phasesLength = useSelector((state: RootState) => state.indexCount.phasesLength);
   const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
+  const allPhrases = useSelector((state: RootState) => state.phases.value);
   const showSubText = useSelector((state: RootState) => state.subText.value);
   const fontScale = useSelector((state: RootState) => state.fontScale.value);
   const themeName = useSelector((state: RootState) => state.theme.value);
@@ -48,7 +51,20 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
   const canGoBack = indexCount > 0;
   const canGoForward = !isLastPhrase;
 
+  // Adjacent phrases for the carousel
+  const prevPhrase = allPhrases[indexCount - 1] ?? null;
+  const nextPhrase = allPhrases[indexCount + 1] ?? null;
+
   const translateX = useRef(new Animated.Value(0)).current;
+  // Prev sits to the right (+screenWidth), next sits to the left (-screenWidth)
+  const prevOffset = useRef(new Animated.Value(0)).current;
+  const nextOffset = useRef(new Animated.Value(0)).current;
+  const prevTranslateX = useRef(Animated.add(translateX, prevOffset)).current;
+  const nextTranslateX = useRef(Animated.add(translateX, nextOffset)).current;
+
+  // Keep offsets in sync when screen width is known (safe for portrait-only app)
+  prevOffset.setValue(screenWidth);
+  nextOffset.setValue(-screenWidth);
 
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: translateX } }],
@@ -69,7 +85,7 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
         return;
       }
       Animated.timing(translateX, {
-        toValue: dx > 0 ? 500 : -500,
+        toValue: dx > 0 ? screenWidth : -screenWidth,
         duration: SWIPE_ANIMATION_DURATION,
         useNativeDriver: true,
       }).start(() => {
@@ -155,43 +171,78 @@ export function PhraseCard({ phrase, counter, onPhraseClick, isAnimating, onBack
           </View>
         </View>
 
-        {/* Phrase content area — swipe left = previous, swipe right = next */}
+        {/* Carousel: prev/current/next phrases slide together during the gesture */}
         <PanGestureHandler
           onGestureEvent={onGestureEvent}
           onHandlerStateChange={onHandlerStateChange}
           activeOffsetX={[-5, 5]}
           failOffsetY={[-20, 20]}
         >
-          <Animated.View style={[styles.phraseArea, { transform: [{ translateX }] }]}>
-            <Pressable
-              onPress={handleContentPress}
-              onLongPress={startLongPress}
-              onPressOut={cancelLongPress}
-              style={styles.phraseAreaInner}
-            >
-              <ScrollView
-                contentContainerStyle={styles.phraseScrollContent}
-                showsVerticalScrollIndicator={false}
+          <View style={styles.phraseArea}>
+
+            {/* Previous phrase — sits to the right in RTL, slides in on left-swipe */}
+            <Animated.View style={[styles.absoluteCard, { transform: [{ translateX: prevTranslateX }] }]}>
+              {prevPhrase && (
+                <ScrollView contentContainerStyle={styles.phraseScrollContent} showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.phraseText, { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 }]}>
+                    {prevPhrase.text}
+                  </Text>
+                  {showSubText && prevPhrase.subtext ? (
+                    <>
+                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+                      <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                        {prevPhrase.subtext}
+                      </Text>
+                    </>
+                  ) : null}
+                </ScrollView>
+              )}
+            </Animated.View>
+
+            {/* Current phrase — center */}
+            <Animated.View style={[styles.absoluteCard, { transform: [{ translateX }] }]}>
+              <Pressable
+                onPress={handleContentPress}
+                onLongPress={startLongPress}
+                onPressOut={cancelLongPress}
+                style={styles.phraseAreaInner}
               >
-                <Text
-                  style={[
-                    styles.phraseText,
-                    { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
-                  ]}
-                >
-                  {phrase.text}
-                </Text>
-                {showSubText && phrase.subtext ? (
-                  <>
-                    <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                    <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
-                      {phrase.subtext}
-                    </Text>
-                  </>
-                ) : null}
-              </ScrollView>
-            </Pressable>
-          </Animated.View>
+                <ScrollView contentContainerStyle={styles.phraseScrollContent} showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.phraseText, { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 }]}>
+                    {phrase.text}
+                  </Text>
+                  {showSubText && phrase.subtext ? (
+                    <>
+                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+                      <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                        {phrase.subtext}
+                      </Text>
+                    </>
+                  ) : null}
+                </ScrollView>
+              </Pressable>
+            </Animated.View>
+
+            {/* Next phrase — sits to the left in RTL, slides in on right-swipe */}
+            <Animated.View style={[styles.absoluteCard, { transform: [{ translateX: nextTranslateX }] }]}>
+              {nextPhrase && (
+                <ScrollView contentContainerStyle={styles.phraseScrollContent} showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.phraseText, { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 }]}>
+                    {nextPhrase.text}
+                  </Text>
+                  {showSubText && nextPhrase.subtext ? (
+                    <>
+                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+                      <Text style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}>
+                        {nextPhrase.subtext}
+                      </Text>
+                    </>
+                  ) : null}
+                </ScrollView>
+              )}
+            </Animated.View>
+
+          </View>
         </PanGestureHandler>
 
         {/* Footer: previous | counter | next */}
@@ -260,6 +311,7 @@ const styles = StyleSheet.create({
   },
   iconBtn: { width: 37, height: 37, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   phraseArea: { flex: 1, overflow: 'hidden' },
+  absoluteCard: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   phraseAreaInner: { flex: 1 },
   phraseScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
   phraseText: { textAlign: 'center', writingDirection: 'rtl', fontFamily: AZKAR_PRIMARY_FONT, fontWeight: '700' },
