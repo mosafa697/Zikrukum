@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import { Pressable, StyleSheet, View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,6 +38,23 @@ export function CategoryScreen() {
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [clicks, setClicks] = useState<number[]>([]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => navigation.navigate('Settings')}
+          style={[
+            styles.headerBtn,
+            { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+          ]}
+          accessibilityLabel={t('settings')}
+        >
+          <Ionicons name="settings-outline" size={20} color={theme.textColor} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, theme]);
 
   // Load phrases and reset per-phrase click counters when category changes
   useEffect(() => {
@@ -116,6 +134,12 @@ export function CategoryScreen() {
     setTimeout(() => setIsAnimating(false), 300);
   }, [clicks, index, categoryPhrases, dispatch]);
 
+  const handleReset = useCallback(async () => {
+    await removeStoredValue(`azkar-index-${categoryId}`);
+    dispatch(setIndexCount(0));
+    setClicks(new Array(categoryData?.phrases?.length ?? 0).fill(0));
+  }, [categoryId, categoryData?.phrases?.length, dispatch]);
+
   // Home button: clear saved index and return to Categories
   const handleBack = useCallback(async () => {
     await removeStoredValue(`azkar-index-${categoryId}`);
@@ -141,6 +165,7 @@ export function CategoryScreen() {
       onPhraseClick={handlePhraseClick}
       isAnimating={isAnimating}
       onBack={handleBack}
+      onReset={handleReset}
       categoryName={categoryData.title}
     />
   );
@@ -149,4 +174,13 @@ export function CategoryScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { fontSize: 20, textAlign: 'center', fontFamily: AZKAR_PRIMARY_FONT },
+  headerBtn: {
+    width: 37,
+    height: 37,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
 });

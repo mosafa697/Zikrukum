@@ -1,12 +1,9 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/RootNavigator';
 import { decrementIndex, incrementIndex } from '../store/slices/indexCountSlice';
 import { decrementFontScale, incrementFontScale } from '../store/slices/fontScaleSlice';
 import { RootState } from '../store';
@@ -25,6 +22,7 @@ type PhraseCardProps = {
   onPhraseClick: () => void;
   isAnimating: boolean;
   onBack: () => void;
+  onReset: () => void;
   categoryName: string;
 };
 
@@ -34,10 +32,10 @@ export function PhraseCard({
   onPhraseClick,
   isAnimating,
   onBack,
+  onReset,
   categoryName,
 }: PhraseCardProps) {
   const dispatch = useDispatch();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const { width: screenWidth } = useWindowDimensions();
 
@@ -149,10 +147,10 @@ export function PhraseCard({
                 styles.iconBtn,
                 { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
               ]}
-              onPress={() => navigation.navigate('Settings')}
-              accessibilityLabel={t('settings')}
+              onPress={onReset}
+              accessibilityLabel={t('reset')}
             >
-              <Ionicons name="settings-outline" size={20} color={colors.textColor} />
+              <Ionicons name="refresh-outline" size={20} color={colors.textColor} />
             </Pressable>
           </View>
 
