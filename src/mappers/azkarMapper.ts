@@ -26,6 +26,7 @@ const CATEGORY_ICON_MAP: Record<number, string> = {
   19: 'hands', // الدعاء للميت في الصلاة عليه — prayer hands
   20: 'hands', // الدعاء عند إدخال الميت القبر — burial
   21: 'hands', // الدعاء بعد دفن الميت — flower/seedling
+  22: 'calendar-alt', // سنن يوم الجمعة — Friday calendar
   122: 'kaaba', // دعاء يوم عَرَفَة — kaaba/hajj
 };
 

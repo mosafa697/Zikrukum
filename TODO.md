@@ -27,7 +27,7 @@
 	- Define the missing-audio behavior clearly: disable or hide the play button when no audio exists, and show a lightweight fallback message or icon instead of failing silently.
 	- Make the auto-play-next flow respect navigation and end-of-list boundaries, so it only advances when a next zikr exists and the user has not disabled the feature.
 
-- [ ] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` and include its data in the dataset so it appears alongside the other zikr categories.
+- [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` and include its data in the dataset so it appears alongside the other zikr categories.
 
 - [ ] **Notifications** — Add a notification feature that reminds the user twice every day, once in the morning and once in the evening, and also sends a weekly Friday reminder for the `اذكار يوم الجمعة` category. Add the notification customization options to the settings page so the user can enable, disable, and adjust the reminder behavior.
 
