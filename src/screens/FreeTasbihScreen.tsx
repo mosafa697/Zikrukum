@@ -93,10 +93,6 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 4,
     gap: 24,
   },
   header: {
