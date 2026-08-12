@@ -14,6 +14,8 @@ export const ar = {
   hadithText: 'يقولُ اللَّه تعالى: أنا عِنْدَ ظَنِّ عَبْدِي بي، وأنا معهُ إذا ذَكَرَنِي',
   hadithRef: '.صحيح البخاري 7405',
   searchPlaceholder: 'ابحث عن فئة...',
+  homeSubtitle: 'هوية بصرية هادئة ومريحة: أخضر زمردي عميق، ذهبي دافئ، وخط عربي تقليدي',
+  dailyVerse: 'آية اليوم',
 
   // CategoryScreen
   loadingDhikr: 'جارٍ تحميل الذكر...',

@@ -10,6 +10,7 @@ import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
 import { t } from '../i18n';
+import { toHindiDigits } from '../utils/numberFormatting';
 
 // Border color shown around the selected theme circle
 const THEME_SELECTED_BORDER: Record<AzkarThemeName, string> = {
@@ -94,7 +95,9 @@ export function SettingsScreen() {
           >
             <Ionicons name="remove" size={20} color={colors.textColor} />
           </Pressable>
-          <Text style={[styles.valueText, { color: colors.textColor }]}>{fontScale.toFixed(1)}</Text>
+          <Text style={[styles.valueText, { color: colors.textColor }]}>
+            {toHindiDigits(fontScale.toFixed(1))}
+          </Text>
           <Pressable
             onPress={() => dispatch(incrementFontScale())}
             style={[
@@ -166,7 +169,7 @@ export function SettingsScreen() {
           <Text
             style={[styles.countValue, { color: colors.iconColor, backgroundColor: colors.secondaryBgColor }]}
           >
-            {totalCount.toLocaleString()}
+            {toHindiDigits(totalCount)}
           </Text>
         </View>
       </View>
