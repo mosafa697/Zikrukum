@@ -12,6 +12,7 @@ import { config } from '../config/config';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
+import { toHindiDigits } from '../utils/numberFormatting';
 
 const SWIPE_THRESHOLD = 50;
 const SWIPE_ANIMATION_DURATION = 200;
@@ -322,9 +323,11 @@ export function PhraseCard({
               isAnimating && styles.counterBtnActive,
             ]}
             onPress={guardedCounterPress}
-            accessibilityLabel={`${t('remainingCount')}${remainingCount}`}
+            accessibilityLabel={`${t('remainingCount')}${toHindiDigits(remainingCount)}`}
           >
-            <Text style={[styles.counterText, { color: colors.iconColor }]}>{remainingCount}</Text>
+            <Text style={[styles.counterText, { color: colors.iconColor }]}>
+              {toHindiDigits(remainingCount)}
+            </Text>
           </Pressable>
 
           <Pressable
