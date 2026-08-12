@@ -1,25 +1,42 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { azkar } from '../mappers/azkarMapper';
 import { RootState } from '../store';
 import { AZKAR_PRIMARY_FONT, AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
-import { toHindiDigits } from '../utils/numberFormatting';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
+import { toggleFavouriteCategory } from '../store/slices/favouriteCategoriesSlice';
 
 export function CategoriesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const dispatch = useDispatch();
   const themeName = useSelector((state: RootState) => state.theme.value);
+  const favouriteCategoryIds = useSelector((state: RootState) => state.favouriteCategories.ids);
   const theme = getAzkarTheme(themeName);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredAzkar = azkar.filter((cat) => cat.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredAzkar = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const matchingCategories = azkar.filter((cat) =>
+      cat.title.toLowerCase().includes(normalizedQuery),
+    );
+
+    return [...matchingCategories].sort((a, b) => {
+      const aFav = favouriteCategoryIds.includes(a.id) ? 1 : 0;
+      const bFav = favouriteCategoryIds.includes(b.id) ? 1 : 0;
+      if (aFav !== bFav) {
+        return bFav - aFav;
+      }
+
+      return a.id - b.id;
+    });
+  }, [favouriteCategoryIds, searchQuery]);
 
   return (
     <LinearGradient colors={['#FBF7ED', '#EFE7D5']} style={styles.gradient}>
@@ -63,43 +80,50 @@ export function CategoriesScreen() {
           ]}
           onPress={() => navigation.navigate('FreeTasbih')}
         >
-          <Text
-            style={[
-              styles.categoryCount,
-              { color: theme.secondaryTextColor, borderColor: theme.buttonBorderColor },
-            ]}
-          >
-            —
-          </Text>
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
           <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
             <Ionicons name="leaf" size={18} color={theme.textColor} />
           </LinearGradient>
         </Pressable>
 
-        {filteredAzkar.map((category) => (
-          <Pressable
-            key={category.id}
-            style={[
-              styles.categoryBtn,
-              { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
-            ]}
-            onPress={() => navigation.navigate('Category', { categoryId: category.id.toString() })}
-          >
-            <Text
+        {filteredAzkar.map((category) => {
+          const isFavourite = favouriteCategoryIds.includes(category.id);
+
+          return (
+            <Pressable
+              key={category.id}
               style={[
-                styles.categoryCount,
-                { color: theme.secondaryTextColor, borderColor: theme.buttonBorderColor },
+                styles.categoryBtn,
+                { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
               ]}
+              onPress={() => navigation.navigate('Category', { categoryId: category.id.toString() })}
             >
-              {toHindiDigits(category.phrases.length)}
-            </Text>
-            <Text style={[styles.categoryText, { color: theme.textColor }]}>{category.title}</Text>
-            <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
-              <FontAwesome5 name={category.icon} size={18} color={theme.textColor} />
-            </LinearGradient>
-          </Pressable>
-        ))}
+              <View style={styles.categoryMeta}>
+                <Pressable
+                  accessibilityLabel={
+                    isFavourite ? `Remove ${category.title} from favourites` : `Add ${category.title} to favourites`
+                  }
+                  hitSlop={10}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    dispatch(toggleFavouriteCategory(category.id));
+                  }}
+                  style={styles.favoriteButton}
+                >
+                  <Ionicons
+                    name={isFavourite ? 'star' : 'star-outline'}
+                    size={18}
+                    color={isFavourite ? '#BB9A4F' : theme.secondaryTextColor}
+                  />
+                </Pressable>
+              </View>
+              <Text style={[styles.categoryText, { color: theme.textColor }]}>{category.title}</Text>
+              <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
+                <FontAwesome5 name={category.icon} size={18} color={theme.textColor} />
+              </LinearGradient>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </LinearGradient>
   );
@@ -183,6 +207,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  categoryMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  favoriteButton: {
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   categoryIcon: {
     width: 38,

@@ -4,6 +4,7 @@ import { incrementTotalCount, resetTotalCount, setTotalCount } from './slices/to
 import { toggleShuffle } from './slices/phasesSlice';
 import { decrementFontScale, incrementFontScale, setFontScale } from './slices/fontScaleSlice';
 import { toggleAppearance } from './slices/subTextSlice';
+import { setFavouriteCategories, toggleFavouriteCategory } from './slices/favouriteCategoriesSlice';
 import { getStoredValue, setStoredValue } from '../utils/storage';
 import { config } from '../config/config';
 import type { AzkarThemeName } from '../theme/azkarTheme';
@@ -49,13 +50,22 @@ listenerMiddleware.startListening({
   },
 });
 
+listenerMiddleware.startListening({
+  matcher: isAnyOf(toggleFavouriteCategory, setFavouriteCategories),
+  effect: async (_, api) => {
+    const { favouriteCategories } = api.getState() as { favouriteCategories: { ids: number[] } };
+    await setStoredValue('favouriteCategories', favouriteCategories.ids);
+  },
+});
+
 export async function loadPersistedState() {
-  const [theme, totalCount, shuffle, fontScale, subText] = await Promise.all([
+  const [theme, totalCount, shuffle, fontScale, subText, favouriteCategories] = await Promise.all([
     getStoredValue<AzkarThemeName>('theme', 'solarized'),
     getStoredValue<number>('totalCount', 0),
     getStoredValue<boolean>('shufflePhases', false),
     getStoredValue<number>('fontScale', config.font.defaultScale),
     getStoredValue<boolean>('subText', true),
+    getStoredValue<number[]>('favouriteCategories', []),
   ]);
 
   return {
@@ -64,5 +74,6 @@ export async function loadPersistedState() {
     phases: { value: [], shuffle, wasShuffled: false },
     fontScale: { value: fontScale },
     subText: { value: subText },
+    favouriteCategories: { ids: favouriteCategories },
   };
 }

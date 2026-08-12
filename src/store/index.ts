@@ -5,6 +5,7 @@ import totalCountReducer from './slices/totalCountSlice';
 import themeReducer from './slices/themeSlice';
 import fontScaleReducer from './slices/fontScaleSlice';
 import subTextReducer from './slices/subTextSlice';
+import favouriteCategoriesReducer from './slices/favouriteCategoriesSlice';
 import { listenerMiddleware } from './persistence';
 
 const rootReducer = combineReducers({
@@ -14,6 +15,7 @@ const rootReducer = combineReducers({
   theme: themeReducer,
   fontScale: fontScaleReducer,
   subText: subTextReducer,
+  favouriteCategories: favouriteCategoriesReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
