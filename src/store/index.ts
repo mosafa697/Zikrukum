@@ -6,6 +6,8 @@ import themeReducer from './slices/themeSlice';
 import fontScaleReducer from './slices/fontScaleSlice';
 import subTextReducer from './slices/subTextSlice';
 import favouriteCategoriesReducer from './slices/favouriteCategoriesSlice';
+import audioReducer from './slices/audioSlice';
+import playbackReducer from './slices/playbackSlice';
 import { listenerMiddleware } from './persistence';
 
 const rootReducer = combineReducers({
@@ -16,6 +18,8 @@ const rootReducer = combineReducers({
   fontScale: fontScaleReducer,
   subText: subTextReducer,
   favouriteCategories: favouriteCategoriesReducer,
+  audio: audioReducer,
+  playback: playbackReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

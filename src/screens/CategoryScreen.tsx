@@ -21,6 +21,7 @@ import { PhraseCard } from '../components/PhraseCard';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/storage';
 import { t } from '../i18n';
+import { useZikrAudio } from '../audio/useZikrAudio';
 
 export function CategoryScreen() {
   const dispatch = useDispatch();
@@ -35,6 +36,22 @@ export function CategoryScreen() {
   const wasShuffled = useSelector((state: RootState) => state.phases.wasShuffled);
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
+  const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
+  const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
+
+  const currentPhrase = categoryPhrases[index];
+
+  const handleAudioEnded = useCallback(() => {
+    if (!autoPlayNext) return;
+    if (isLastPhrase) return;
+    dispatch(incrementIndex());
+  }, [autoPlayNext, isLastPhrase, dispatch]);
+
+  const { status: audioStatus, audioAvailable, toggle: toggleAudio } = useZikrAudio({
+    phrase: currentPhrase,
+    category: categoryData,
+    onEnded: handleAudioEnded,
+  });
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [clicks, setClicks] = useState<number[]>([]);
@@ -148,8 +165,6 @@ export function CategoryScreen() {
     navigation.navigate('Categories');
   }, [categoryId, dispatch, navigation]);
 
-  const currentPhrase = categoryPhrases[index];
-
   if (!categoryData || !currentPhrase) {
     return (
       <View style={[styles.container, { backgroundColor: theme.bgColor }]}>
@@ -167,6 +182,9 @@ export function CategoryScreen() {
       onBack={handleBack}
       onReset={handleReset}
       categoryName={categoryData.title}
+      audioAvailable={audioAvailable}
+      audioStatus={audioStatus}
+      onToggleAudio={toggleAudio}
     />
   );
 }

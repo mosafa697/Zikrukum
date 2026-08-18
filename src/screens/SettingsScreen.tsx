@@ -8,6 +8,7 @@ import { toggleAppearance } from '../store/slices/subTextSlice';
 import { incrementFontScale, decrementFontScale } from '../store/slices/fontScaleSlice';
 import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
+import { toggleAutoPlayNext } from '../store/slices/audioSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { toHindiDigits } from '../utils/numberFormatting';
@@ -26,6 +27,7 @@ export function SettingsScreen() {
   const fontScale = useSelector((state: RootState) => state.fontScale.value);
   const shuffle = useSelector((state: RootState) => state.phases.shuffle);
   const totalCount = useSelector((state: RootState) => state.totalCount.value);
+  const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
   const colors = getAzkarTheme(theme);
 
   const [contactOpen, setContactOpen] = useState(false);
@@ -147,6 +149,24 @@ export function SettingsScreen() {
               name={showSubText ? 'eye-outline' : 'eye-off-outline'}
               size={18}
               color={showSubText ? colors.iconColorActive : colors.textColor}
+            />
+          </View>
+        </Pressable>
+        <Pressable onPress={() => dispatch(toggleAutoPlayNext())} style={styles.toggleRow}>
+          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioLabel')}</Text>
+          <View
+            style={[
+              styles.toggleBtn,
+              {
+                backgroundColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBgColor,
+                borderColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBorderColor,
+              },
+            ]}
+          >
+            <Ionicons
+              name={autoPlayNext ? 'volume-high' : 'volume-mute-outline'}
+              size={18}
+              color={autoPlayNext ? colors.iconColorActive : colors.textColor}
             />
           </View>
         </Pressable>

@@ -50,4 +50,10 @@ export const ar = {
   nextDhikr: 'الذكر التالي',
   remainingCount: 'العدد المتبقي ',
   previousDhikr: 'الذكر السابق',
+  playAudio: 'تشغيل الصوت',
+  pauseAudio: 'إيقاف الصوت',
+  noAudio: 'لا يوجد صوت',
+
+  // SettingsScreen
+  audioLabel: 'تشغيل الصوت تلقائياً',
 } as const;

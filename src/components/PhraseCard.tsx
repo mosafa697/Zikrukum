@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { toHindiDigits } from '../utils/numberFormatting';
+import type { PlaybackStatus } from '../store/slices/playbackSlice';
 
 const SWIPE_THRESHOLD = 50;
 const SWIPE_ANIMATION_DURATION = 200;
@@ -25,6 +26,9 @@ type PhraseCardProps = {
   onBack: () => void;
   onReset: () => void;
   categoryName: string;
+  audioAvailable: boolean;
+  audioStatus: PlaybackStatus;
+  onToggleAudio: () => void;
 };
 
 export function PhraseCard({
@@ -35,6 +39,9 @@ export function PhraseCard({
   onBack,
   onReset,
   categoryName,
+  audioAvailable,
+  audioStatus,
+  onToggleAudio,
 }: PhraseCardProps) {
   const dispatch = useDispatch();
 
@@ -330,6 +337,32 @@ export function PhraseCard({
             </Text>
           </Pressable>
 
+          {audioAvailable ? (
+            <Pressable
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
+              onPress={onToggleAudio}
+              disabled={audioStatus === 'loading'}
+              accessibilityLabel={audioStatus === 'playing' ? t('pauseAudio') : t('playAudio')}
+            >
+              {audioStatus === 'loading' ? (
+                <ActivityIndicator size="small" color={colors.textColor} />
+              ) : (
+                <Ionicons
+                  name={audioStatus === 'playing' ? 'pause' : 'play'}
+                  size={20}
+                  color={colors.textColor}
+                />
+              )}
+            </Pressable>
+          ) : (
+            <View style={[styles.iconBtn, styles.noAudioBtn]}>
+              <Ionicons name="musical-notes-outline" size={16} color={colors.secondaryTextColor} />
+            </View>
+          )}
+
           <Pressable
             style={[
               styles.iconBtn,
@@ -416,4 +449,5 @@ const styles = StyleSheet.create({
   },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
   counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
+  noAudioBtn: { opacity: 0.4 },
 });

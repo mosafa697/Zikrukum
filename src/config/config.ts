@@ -1,4 +1,8 @@
 export const config = {
+  audio: {
+    baseUrl: 'https://zikr-audio.example.com/',
+    cacheDir: 'zikr-audio',
+  },
   font: {
     minScale: 0.6,
     maxScale: 2.0,

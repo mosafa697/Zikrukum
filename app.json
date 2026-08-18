@@ -21,7 +21,8 @@
       "package": "com.azkar.zikrukum"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-audio"
     ]
   }
 }

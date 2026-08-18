@@ -20,7 +20,7 @@
 
 - [ ] **Seamless Navigation Header** — Remove the visible separator between the native header bar and the screen content: set `headerTransparent: true` (or match header background to `bgColor`), hide the bottom border/shadow, and blend the title/back-button tint into the page so the header feels like a natural part of each screen rather than a floating toolbar.
 
-- [ ] **Audio Playback** — Add audio support for every zikr, using the existing `audio` / `filename` fields in the dataset as the source of truth.
+- [x] **Audio Playback** — Add audio support for every zikr, using the existing `audio` / `filename` fields in the dataset as the source of truth.
 	- Add a play button on the zikr screen near the main phrase controls so users can play the current zikr without leaving the page.
 	- Add a new settings toggle for auto-playing the next zikr audio when the current one ends; default state should be `on` and it should be persisted in the store like the other preferences.
 	- Decide the audio delivery strategy with app size as the priority: prefer remote audio URLs with local caching if it keeps the bundle smaller, and only bundle files offline when the UX or reliability requires it.
