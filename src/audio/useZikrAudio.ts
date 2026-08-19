@@ -3,7 +3,12 @@ import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { useDispatch, useSelector } from 'react-redux';
 import { resolveAudioSource, type AudioSource } from './audioSource';
 import { ensureCached } from './audioCache';
-import { setPlaybackStatus, setPlaybackError, resetPlayback } from '../store/slices/playbackSlice';
+import {
+  setCurrentPhrase,
+  setPlaybackStatus,
+  setPlaybackError,
+  resetPlayback,
+} from '../store/slices/playbackSlice';
 import type { RootState } from '../store';
 import type { AzkarPhrase, AzkarCategory } from '../mappers/azkarMapper';
 import type { PlaybackStatus } from '../store/slices/playbackSlice';
@@ -36,6 +41,7 @@ async function removePlayer(player: AudioPlayer): Promise<void> {
 export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions): UseZikrAudioResult {
   const dispatch = useDispatch();
   const playbackState = useSelector((s: RootState) => s.playback);
+  const audioEnabled = useSelector((s: RootState) => s.audio.audioEnabled);
 
   const phraseId = phrase?.id ?? -1;
 
@@ -51,9 +57,6 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
 
   useEffect(() => {
     currentPhraseIdRef.current = phraseId;
-    return () => {
-      // Cleanup when phrase changes
-    };
   }, [phraseId]);
 
   useEffect(() => {
@@ -113,7 +116,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
   }, [source, phraseId, dispatch, onEnded]);
 
   const toggle = useCallback(async () => {
-    if (source.kind === 'missing') return;
+    if (!audioEnabled || source.kind === 'missing') return;
 
     const player = playerRef.current;
 
@@ -134,7 +137,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
       loaded.play();
       dispatch(setPlaybackStatus('playing'));
     }
-  }, [source, ensurePlayer, dispatch]);
+  }, [audioEnabled, source, ensurePlayer, dispatch]);
 
   const stop = useCallback(async () => {
     if (playerRef.current) {
@@ -156,6 +159,14 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
     dispatch(setPlaybackStatus('idle'));
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(setCurrentPhrase(phraseId >= 0 ? phraseId : null));
+    if (!audioEnabled) return;
+    return () => {
+      void stop();
+    };
+  }, [audioEnabled, dispatch, phraseId, stop]);
+
   // Determine what status to expose
   const status: PlaybackStatus = useMemo(() => {
     if (source.kind === 'missing') return 'missing';
@@ -163,7 +174,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
     return playbackState.status;
   }, [source.kind, playbackState.currentPhraseId, playbackState.status, phraseId]);
 
-  const audioAvailable = source.kind === 'remote';
+  const audioAvailable = source.kind === 'remote' && status !== 'error';
 
   return { status, audioAvailable, toggle, stop };
 }

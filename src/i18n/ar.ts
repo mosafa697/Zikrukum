@@ -55,5 +55,6 @@ export const ar = {
   noAudio: 'لا يوجد صوت',
 
   // SettingsScreen
+  audioEnabledLabel: 'تفعيل تشغيل الصوت',
   audioLabel: 'تشغيل الصوت تلقائياً',
 } as const;

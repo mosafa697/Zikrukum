@@ -1,5 +1,14 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +35,7 @@ type PhraseCardProps = {
   onBack: () => void;
   onReset: () => void;
   categoryName: string;
+  audioEnabled: boolean;
   audioAvailable: boolean;
   audioStatus: PlaybackStatus;
   onToggleAudio: () => void;
@@ -39,6 +49,7 @@ export function PhraseCard({
   onBack,
   onReset,
   categoryName,
+  audioEnabled,
   audioAvailable,
   audioStatus,
   onToggleAudio,
@@ -308,8 +319,9 @@ export function PhraseCard({
             </Animated.View>
           </View>
         </PanGestureHandler>
-
-        <View style={styles.footer}>
+      </View>
+      <View style={styles.footer}>
+        {/* 
           <Pressable
             style={[
               styles.iconBtn,
@@ -322,7 +334,9 @@ export function PhraseCard({
           >
             <Ionicons name="chevron-back" size={22} color={colors.textColor} />
           </Pressable>
+        */}
 
+        <View style={styles.counterGroup}>
           <Pressable
             style={[
               styles.counterBtn,
@@ -336,15 +350,15 @@ export function PhraseCard({
               {toHindiDigits(remainingCount)}
             </Text>
           </Pressable>
-
-          {audioAvailable ? (
+          {audioEnabled && audioAvailable ? (
             <Pressable
               style={[
-                styles.iconBtn,
+                styles.audioBtn,
+                styles.audioControl,
                 { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
               ]}
               onPress={onToggleAudio}
-              disabled={audioStatus === 'loading'}
+              disabled={audioStatus === 'loading' || audioStatus === 'error'}
               accessibilityLabel={audioStatus === 'playing' ? t('pauseAudio') : t('playAudio')}
             >
               {audioStatus === 'loading' ? (
@@ -358,11 +372,11 @@ export function PhraseCard({
               )}
             </Pressable>
           ) : (
-            <View style={[styles.iconBtn, styles.noAudioBtn]}>
-              <Ionicons name="musical-notes-outline" size={16} color={colors.secondaryTextColor} />
-            </View>
+            <View style={[styles.audioBtnPlaceholder, styles.audioControl]} />
           )}
+        </View>
 
+        {/* 
           <Pressable
             style={[
               styles.iconBtn,
@@ -375,7 +389,7 @@ export function PhraseCard({
           >
             <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
           </Pressable>
-        </View>
+        */}
       </View>
     </View>
   );
@@ -437,7 +451,8 @@ const styles = StyleSheet.create({
   },
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
   subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  counterGroup: { position: 'relative' },
   invisible: { opacity: 0 },
   counterBtn: {
     width: 88,
@@ -447,7 +462,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  audioBtn: {
+    width: 54,
+    height: 54,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  audioBtnPlaceholder: { width: 54, height: 54 },
+  audioControl: { position: 'absolute', right: -64, top: 17 },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
   counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
-  noAudioBtn: { opacity: 0.4 },
 });

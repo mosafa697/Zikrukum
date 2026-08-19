@@ -37,17 +37,22 @@ export function CategoryScreen() {
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
   const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
+  const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
   const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
 
   const currentPhrase = categoryPhrases[index];
 
   const handleAudioEnded = useCallback(() => {
-    if (!autoPlayNext) return;
+    if (!audioEnabled || !autoPlayNext) return;
     if (isLastPhrase) return;
     dispatch(incrementIndex());
-  }, [autoPlayNext, isLastPhrase, dispatch]);
+  }, [audioEnabled, autoPlayNext, isLastPhrase, dispatch]);
 
-  const { status: audioStatus, audioAvailable, toggle: toggleAudio } = useZikrAudio({
+  const {
+    status: audioStatus,
+    audioAvailable,
+    toggle: toggleAudio,
+  } = useZikrAudio({
     phrase: currentPhrase,
     category: categoryData,
     onEnded: handleAudioEnded,
@@ -78,7 +83,6 @@ export function CategoryScreen() {
     if (categoryData?.phrases?.length) {
       dispatch(setPhases(categoryData.phrases));
       dispatch(setPhasesLengthCount(categoryData.phrases.length - 1));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClicks(new Array(categoryData.phrases.length).fill(0));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,7 +119,6 @@ export function CategoryScreen() {
   // Resize clicks array if phrase count changes (e.g. after shuffle)
   useEffect(() => {
     if (categoryPhrases.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClicks((prev) =>
         prev.length === categoryPhrases.length ? prev : new Array(categoryPhrases.length).fill(0)
       );
@@ -182,6 +185,7 @@ export function CategoryScreen() {
       onBack={handleBack}
       onReset={handleReset}
       categoryName={categoryData.title}
+      audioEnabled={audioEnabled}
       audioAvailable={audioAvailable}
       audioStatus={audioStatus}
       onToggleAudio={toggleAudio}
