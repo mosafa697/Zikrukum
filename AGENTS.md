@@ -52,6 +52,7 @@ Zikrukum/
     │   └── audioCache.ts       # Downloads remote audio into expo-file-system cache dir
     ├── components/             # Shared UI components
     │   ├── PhraseCard.tsx      # Azkar phrase card (carousel item)
+    │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── config/
     │   └── config.ts           # App constants: audio baseUrl, font scale limits, interaction guards (ms)
@@ -98,7 +99,7 @@ Single native stack (`RootStackParamList`), headers hidden (`headerShown: false`
 
 - `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`
 
-Screen titles are intentionally empty; each screen builds its own header row.
+Non-home screens use the shared `ScreenHeader` component (chromeless back chevron on the left, centered title, optional right action); `PhraseCard` keeps its own custom header with the progress pill. The top safe-area strip is themed via `SafeAreaView` inside `RootNavigator` (matches `theme.bgColor`), not in `App.tsx`.
 
 ### State Management (Redux Toolkit)
 

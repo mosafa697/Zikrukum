@@ -1,7 +1,7 @@
 import React from 'react';
-import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { CategoriesScreen } from '../screens/CategoriesScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
@@ -24,21 +24,22 @@ export function RootNavigator() {
   const theme = getAzkarTheme(themeName);
 
   return (
-    <NavigationContainer>
-      <View style={{ flex: 1, backgroundColor: theme.buttonBgColor }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bgColor }} edges={['top']}>
+      <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Categories"
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: theme.buttonBgColor },
+            headerTransparent: true,
+            contentStyle: { backgroundColor: theme.bgColor },
           }}
         >
           <Stack.Screen name="Categories" component={CategoriesScreen} />
-          <Stack.Screen name="Category" component={CategoryScreen} options={{ title: '' }} />
-          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: '' }} />
-          <Stack.Screen name="FreeTasbih" component={FreeTasbihScreen} options={{ title: '' }} />
+          <Stack.Screen name="Category" component={CategoryScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="FreeTasbih" component={FreeTasbihScreen} />
         </Stack.Navigator>
-      </View>
-    </NavigationContainer>
+      </NavigationContainer>
+    </SafeAreaView>
   );
 }

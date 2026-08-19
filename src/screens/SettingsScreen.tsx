@@ -11,6 +11,7 @@ import { toggleShuffle } from '../store/slices/phasesSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { toHindiDigits } from '../utils/numberFormatting';
+import { ScreenHeader } from '../components/ScreenHeader';
 
 // Border color shown around the selected theme circle
 const THEME_SELECTED_BORDER: Record<AzkarThemeName, string> = {
@@ -50,191 +51,209 @@ export function SettingsScreen() {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgColor }]}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View
-        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
-      >
-        <Text style={[styles.label, { color: colors.textColor }]}>{t('systemTheme')}</Text>
-        <View style={styles.row}>
-          {(['light', 'solarized', 'dark'] as AzkarThemeName[]).map((name) => {
-            const t = AZKAR_THEME_MAP[name];
-            const selected = theme === name;
-            return (
-              <Pressable
-                key={name}
-                onPress={() => dispatch(setTheme(name))}
+    <View style={[styles.container, { backgroundColor: colors.bgColor }]}>
+      <ScreenHeader title={t('settings')} showBack />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+          ]}
+        >
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('systemTheme')}</Text>
+          <View style={styles.row}>
+            {(['light', 'solarized', 'dark'] as AzkarThemeName[]).map((name) => {
+              const t = AZKAR_THEME_MAP[name];
+              const selected = theme === name;
+              return (
+                <Pressable
+                  key={name}
+                  onPress={() => dispatch(setTheme(name))}
+                  style={[
+                    styles.themeCircle,
+                    {
+                      backgroundColor: t.bgColor,
+                      borderColor: selected ? THEME_SELECTED_BORDER[name] : 'transparent',
+                    },
+                  ]}
+                >
+                  <View style={[styles.themeDot, { backgroundColor: t.sliderBgActive }]} />
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+          ]}
+        >
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('fontSize')}</Text>
+          <View style={styles.row}>
+            <Pressable
+              onPress={() => dispatch(decrementFontScale())}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
+            >
+              <Ionicons name="remove" size={20} color={colors.textColor} />
+            </Pressable>
+            <Text style={[styles.valueText, { color: colors.textColor }]}>
+              {toHindiDigits(fontScale.toFixed(1))}
+            </Text>
+            <Pressable
+              onPress={() => dispatch(incrementFontScale())}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
+            >
+              <Ionicons name="add" size={20} color={colors.textColor} />
+            </Pressable>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+          ]}
+        >
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
+          <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={shuffle ? 'shuffle' : 'list-outline'}
+                size={18}
+                color={shuffle ? colors.iconColorActive : colors.textColor}
+              />
+            </View>
+          </Pressable>
+          <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={showSubText ? 'eye-outline' : 'eye-off-outline'}
+                size={18}
+                color={showSubText ? colors.iconColorActive : colors.textColor}
+              />
+            </View>
+          </Pressable>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+          ]}
+        >
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
+          <View style={styles.row}>
+            <Pressable
+              onPress={handleResetTotalCount}
+              style={[
+                styles.iconBtn,
+                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+              ]}
+            >
+              <Ionicons name="trash-outline" size={20} color={colors.textColor} />
+            </Pressable>
+            <Text
+              style={[
+                styles.countValue,
+                { color: colors.iconColor, backgroundColor: colors.secondaryBgColor },
+              ]}
+            >
+              {toHindiDigits(totalCount)}
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+          ]}
+        >
+          <Pressable
+            onPress={() => setContactOpen((v) => !v)}
+            style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}
+          >
+            <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>
+              {contactOpen ? t('close') : t('contactMe')}
+            </Text>
+          </Pressable>
+          {contactOpen && (
+            <View style={styles.contactForm}>
+              <TextInput
+                value={contactName}
+                onChangeText={setContactName}
+                placeholder={t('namePlaceholder')}
+                placeholderTextColor={colors.iconColor}
                 style={[
-                  styles.themeCircle,
+                  styles.input,
                   {
-                    backgroundColor: t.bgColor,
-                    borderColor: selected ? THEME_SELECTED_BORDER[name] : 'transparent',
+                    color: colors.textColor,
+                    borderColor: colors.buttonBorderColor,
+                    backgroundColor: colors.bgColor,
                   },
                 ]}
+              />
+              <TextInput
+                value={contactMsg}
+                onChangeText={setContactMsg}
+                placeholder={t('messagePlaceholder')}
+                placeholderTextColor={colors.iconColor}
+                multiline
+                numberOfLines={4}
+                style={[
+                  styles.input,
+                  styles.inputMultiline,
+                  {
+                    color: colors.textColor,
+                    borderColor: colors.buttonBorderColor,
+                    backgroundColor: colors.bgColor,
+                  },
+                ]}
+              />
+              <Pressable
+                onPress={() => Linking.openURL('https://github.com/mosafa697/azkar')}
+                style={styles.githubRow}
               >
-                <View style={[styles.themeDot, { backgroundColor: t.sliderBgActive }]} />
+                <Ionicons name="logo-github" size={16} color={colors.iconColor} />
+                <Text style={[styles.githubText, { color: colors.iconColor }]}>{t('contributeGithub')}</Text>
               </Pressable>
-            );
-          })}
+              <Pressable
+                onPress={handleSendContact}
+                style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}
+              >
+                <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>{t('send')}</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
-      </View>
-
-      <View
-        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
-      >
-        <Text style={[styles.label, { color: colors.textColor }]}>{t('fontSize')}</Text>
-        <View style={styles.row}>
-          <Pressable
-            onPress={() => dispatch(decrementFontScale())}
-            style={[
-              styles.iconBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-            ]}
-          >
-            <Ionicons name="remove" size={20} color={colors.textColor} />
-          </Pressable>
-          <Text style={[styles.valueText, { color: colors.textColor }]}>
-            {toHindiDigits(fontScale.toFixed(1))}
-          </Text>
-          <Pressable
-            onPress={() => dispatch(incrementFontScale())}
-            style={[
-              styles.iconBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-            ]}
-          >
-            <Ionicons name="add" size={20} color={colors.textColor} />
-          </Pressable>
-        </View>
-      </View>
-
-      <View
-        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
-      >
-        <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
-        <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
-          <View
-            style={[
-              styles.toggleBtn,
-              {
-                backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor,
-                borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor,
-              },
-            ]}
-          >
-            <Ionicons
-              name={shuffle ? 'shuffle' : 'list-outline'}
-              size={18}
-              color={shuffle ? colors.iconColorActive : colors.textColor}
-            />
-          </View>
-        </Pressable>
-        <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
-          <View
-            style={[
-              styles.toggleBtn,
-              {
-                backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor,
-                borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor,
-              },
-            ]}
-          >
-            <Ionicons
-              name={showSubText ? 'eye-outline' : 'eye-off-outline'}
-              size={18}
-              color={showSubText ? colors.iconColorActive : colors.textColor}
-            />
-          </View>
-        </Pressable>
-      </View>
-
-      <View
-        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
-      >
-        <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
-        <View style={styles.row}>
-          <Pressable
-            onPress={handleResetTotalCount}
-            style={[
-              styles.iconBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-            ]}
-          >
-            <Ionicons name="trash-outline" size={20} color={colors.textColor} />
-          </Pressable>
-          <Text
-            style={[styles.countValue, { color: colors.iconColor, backgroundColor: colors.secondaryBgColor }]}
-          >
-            {toHindiDigits(totalCount)}
-          </Text>
-        </View>
-      </View>
-
-      <View
-        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
-      >
-        <Pressable
-          onPress={() => setContactOpen((v) => !v)}
-          style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}
-        >
-          <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>
-            {contactOpen ? t('close') : t('contactMe')}
-          </Text>
-        </Pressable>
-        {contactOpen && (
-          <View style={styles.contactForm}>
-            <TextInput
-              value={contactName}
-              onChangeText={setContactName}
-              placeholder={t('namePlaceholder')}
-              placeholderTextColor={colors.iconColor}
-              style={[
-                styles.input,
-                {
-                  color: colors.textColor,
-                  borderColor: colors.buttonBorderColor,
-                  backgroundColor: colors.bgColor,
-                },
-              ]}
-            />
-            <TextInput
-              value={contactMsg}
-              onChangeText={setContactMsg}
-              placeholder={t('messagePlaceholder')}
-              placeholderTextColor={colors.iconColor}
-              multiline
-              numberOfLines={4}
-              style={[
-                styles.input,
-                styles.inputMultiline,
-                {
-                  color: colors.textColor,
-                  borderColor: colors.buttonBorderColor,
-                  backgroundColor: colors.bgColor,
-                },
-              ]}
-            />
-            <Pressable
-              onPress={() => Linking.openURL('https://github.com/mosafa697/azkar')}
-              style={styles.githubRow}
-            >
-              <Ionicons name="logo-github" size={16} color={colors.iconColor} />
-              <Text style={[styles.githubText, { color: colors.iconColor }]}>{t('contributeGithub')}</Text>
-            </Pressable>
-            <Pressable
-              onPress={handleSendContact}
-              style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}
-            >
-              <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>{t('send')}</Text>
-            </Pressable>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

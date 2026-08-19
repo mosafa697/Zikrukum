@@ -133,24 +133,10 @@ export function PhraseCard({
       <View style={[styles.card, { backgroundColor: colors.cardBgColor }]}>
         <View style={styles.header}>
           <View style={[styles.headerSide, styles.headerRight]}>
-            <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
-              onPress={onBack}
-              accessibilityLabel={t('home')}
-            >
-              <Ionicons name="home-outline" size={20} color={colors.textColor} />
+            <Pressable style={styles.headerIconBtn} onPress={onBack} accessibilityLabel={t('back')}>
+              <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
             </Pressable>
-            <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
-              onPress={onReset}
-              accessibilityLabel={t('reset')}
-            >
+            <Pressable style={styles.headerIconBtn} onPress={onReset} accessibilityLabel={t('reset')}>
               <Ionicons name="refresh-outline" size={20} color={colors.textColor} />
             </Pressable>
           </View>
@@ -169,20 +155,14 @@ export function PhraseCard({
 
           <View style={styles.headerSide}>
             <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
+              style={styles.headerIconBtn}
               onPress={() => dispatch(decrementFontScale())}
               accessibilityLabel={t('decreaseFontSize')}
             >
               <Ionicons name="remove" size={20} color={colors.textColor} />
             </Pressable>
             <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
+              style={styles.headerIconBtn}
               onPress={() => dispatch(incrementFontScale())}
               accessibilityLabel={t('increaseFontSize')}
             >
@@ -389,6 +369,13 @@ const styles = StyleSheet.create({
     height: 37,
     borderRadius: 10,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIconBtn: {
+    width: 37,
+    height: 37,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },

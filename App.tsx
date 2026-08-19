@@ -3,7 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { createAppStore, type AppStore } from './src/store';
 import { loadPersistedState } from './src/store/persistence';
@@ -37,9 +37,7 @@ export default function App() {
       <Provider store={appStore}>
         <SafeAreaProvider>
           <StatusBar style="auto" />
-          <SafeAreaView style={{ flex: 1, backgroundColor: '#FBF7ED' }} edges={['top']}>
-            <RootNavigator />
-          </SafeAreaView>
+          <RootNavigator />
         </SafeAreaProvider>
       </Provider>
     </GestureHandlerRootView>
