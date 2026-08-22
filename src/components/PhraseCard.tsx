@@ -351,6 +351,22 @@ export function PhraseCard({
                 />
               )}
             </Pressable>
+          ) : audioEnabled && audioStatus === 'error' ? (
+            <Pressable
+              style={[styles.audioFallback, styles.audioControl]}
+              onPress={onToggleAudio}
+              accessibilityLabel={t('retryAudio')}
+            >
+              <Ionicons name="alert-circle-outline" size={18} color={colors.secondaryTextColor} />
+              <Text style={[styles.audioFallbackText, { color: colors.secondaryTextColor }]}>
+                {t('audioError')}
+              </Text>
+            </Pressable>
+          ) : audioEnabled ? (
+            <View style={[styles.audioFallback, styles.audioControl]}>
+              <Ionicons name="volume-mute-outline" size={18} color={colors.secondaryTextColor} />
+              <Text style={[styles.audioFallbackText, { color: colors.secondaryTextColor }]}>{t('noAudio')}</Text>
+            </View>
           ) : (
             <View style={[styles.audioBtnPlaceholder, styles.audioControl]} />
           )}
@@ -458,6 +474,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   audioBtnPlaceholder: { width: 54, height: 54 },
+  audioFallback: {
+    minWidth: 84,
+    minHeight: 54,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  audioFallbackText: { fontSize: 9, textAlign: 'center', fontFamily: AZKAR_PRIMARY_FONT },
   audioControl: { position: 'absolute', right: -64, top: 17 },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
   counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_COUNTER_FONT },

@@ -54,6 +54,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
   const subscriptionRef = useRef<{ remove: () => void } | null>(null);
   const isLoadingRef = useRef(false);
   const currentPhraseIdRef = useRef<number>(phraseId);
+  const loadRequestRef = useRef(0);
 
   useEffect(() => {
     currentPhraseIdRef.current = phraseId;
@@ -61,6 +62,8 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
 
   useEffect(() => {
     return () => {
+      loadRequestRef.current += 1;
+      isLoadingRef.current = false;
       subscriptionRef.current?.remove();
       subscriptionRef.current = null;
       if (playerRef.current) {
@@ -78,14 +81,16 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
     if (isLoadingRef.current) return null;
 
     isLoadingRef.current = true;
+    const requestId = ++loadRequestRef.current;
     dispatch(setPlaybackStatus('loading'));
 
     try {
       const localUri = await ensureCached(source.url, source.filename);
       const player = loadPlayer(localUri);
 
-      if (currentPhraseIdRef.current !== phraseId) {
-        removePlayer(player);
+      if (requestId !== loadRequestRef.current || currentPhraseIdRef.current !== phraseId) {
+        isLoadingRef.current = false;
+        void removePlayer(player);
         return null;
       }
 
@@ -94,6 +99,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
           return;
         }
         if (status.didJustFinish && !status.loop) {
+          void player.seekTo(0);
           dispatch(setPlaybackStatus('idle'));
           onEnded?.();
         } else if (status.playing) {
@@ -107,7 +113,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
       isLoadingRef.current = false;
       return player;
     } catch {
-      if (currentPhraseIdRef.current === phraseId) {
+      if (requestId === loadRequestRef.current && currentPhraseIdRef.current === phraseId) {
         dispatch(setPlaybackError('playbackError'));
       }
       isLoadingRef.current = false;
@@ -125,6 +131,10 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
         player.pause();
         dispatch(setPlaybackStatus('paused'));
       } else {
+        const isAtEnd = player.duration > 0 && player.currentTime >= player.duration - 0.05;
+        if (isAtEnd) {
+          await player.seekTo(0);
+        }
         player.play();
         dispatch(setPlaybackStatus('playing'));
       }
@@ -140,21 +150,26 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
   }, [audioEnabled, source, ensurePlayer, dispatch]);
 
   const stop = useCallback(async () => {
-    if (playerRef.current) {
+    loadRequestRef.current += 1;
+    isLoadingRef.current = false;
+
+    const player = playerRef.current;
+    playerRef.current = null;
+    subscriptionRef.current?.remove();
+    subscriptionRef.current = null;
+
+    if (player) {
       try {
-        playerRef.current.pause();
-        await playerRef.current.seekTo(0);
+        player.pause();
+        await player.seekTo(0);
       } catch {
         // ignore
       }
-      subscriptionRef.current?.remove();
-      subscriptionRef.current = null;
       try {
-        playerRef.current.remove();
+        player.remove();
       } catch {
         // ignore
       }
-      playerRef.current = null;
     }
     dispatch(setPlaybackStatus('idle'));
   }, [dispatch]);

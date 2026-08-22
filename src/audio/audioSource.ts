@@ -9,14 +9,17 @@ export function resolveAudioSource(
   phrase: AzkarPhrase,
   category: AzkarCategory
 ): AudioSource {
-  const filename = phrase.filename ?? category.audioRef?.filename;
-  const audio = phrase.audio ?? category.audioRef?.audio;
+  const filename = phrase.filename?.trim() || category.audioRef?.filename?.trim();
+  const audio = phrase.audio?.trim() || category.audioRef?.audio?.trim();
 
   if (!filename && !audio) {
     return { kind: 'missing' };
   }
 
-  const resolvedFilename = filename ?? audio?.replace(/^\/audio\//, '').replace(/\.mp3$/, '') ?? '';
+  const resolvedFilename = (filename ?? audio?.replace(/^\/audio\//, '').replace(/\.mp3$/, '') ?? '').replace(
+    /\.mp3$/i,
+    ''
+  );
 
   if (!resolvedFilename) {
     return { kind: 'missing' };

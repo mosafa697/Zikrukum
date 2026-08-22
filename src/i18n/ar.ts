@@ -54,6 +54,8 @@ export const ar = {
   playAudio: 'تشغيل الصوت',
   pauseAudio: 'إيقاف الصوت',
   noAudio: 'لا يوجد صوت',
+  audioError: 'تعذر تشغيل الصوت',
+  retryAudio: 'إعادة محاولة تشغيل الصوت',
 
   // SettingsScreen
   audioEnabledLabel: 'تفعيل تشغيل الصوت',

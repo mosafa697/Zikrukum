@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -38,12 +38,14 @@ export function CategoryScreen() {
   const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
   const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
   const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
+  const shouldAutoPlayRef = useRef(false);
 
   const currentPhrase = categoryPhrases[index];
 
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
     if (isLastPhrase) return;
+    shouldAutoPlayRef.current = true;
     dispatch(incrementIndex());
   }, [audioEnabled, autoPlayNext, isLastPhrase, dispatch]);
 
@@ -56,6 +58,12 @@ export function CategoryScreen() {
     category: categoryData,
     onEnded: handleAudioEnded,
   });
+
+  useEffect(() => {
+    if (!shouldAutoPlayRef.current || !audioEnabled || !currentPhrase) return;
+    shouldAutoPlayRef.current = false;
+    void toggleAudio();
+  }, [audioEnabled, currentPhrase, toggleAudio]);
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [clicks, setClicks] = useState<number[]>([]);
