@@ -47,3 +47,9 @@
 	- for light theme: use whity and shine color to highlight the text and contrast the borders, hint could use here white and relaxed shiny blue.
 	- for solarized theme: use aye comfortable colors, hint could use color here the suitable degree of dark green and gold colors.
 	- for dark theme: use dark, matte and aye comfortable colors, hint could be between black and blue
+
+- [ ] fix refrechment zikr when sliding right or left on mobile screens
+
+- [ ] replace the back button icon to be look at the other side (left)
+
+- [ ] center the word of "مسبحة حرة" at the categories page
