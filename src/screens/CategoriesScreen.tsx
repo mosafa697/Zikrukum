@@ -12,6 +12,7 @@ import { AZKAR_PRIMARY_FONT, AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/az
 import { t } from '../i18n';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { toggleFavouriteCategory } from '../store/slices/favouriteCategoriesSlice';
+import { ScreenHeader } from '../components/ScreenHeader';
 
 export function CategoriesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -23,9 +24,7 @@ export function CategoriesScreen() {
 
   const filteredAzkar = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    const matchingCategories = azkar.filter((cat) =>
-      cat.title.toLowerCase().includes(normalizedQuery),
-    );
+    const matchingCategories = azkar.filter((cat) => cat.title.toLowerCase().includes(normalizedQuery));
 
     return [...matchingCategories].sort((a, b) => {
       const aFav = favouriteCategoryIds.includes(a.id) ? 1 : 0;
@@ -39,23 +38,31 @@ export function CategoriesScreen() {
   }, [favouriteCategoryIds, searchQuery]);
 
   return (
-    <LinearGradient colors={['#FBF7ED', '#EFE7D5']} style={styles.gradient}>
-      <View style={styles.headerRow}>
-        <Text style={[styles.pageTitle, { color: theme.textColor, fontFamily: AZKAR_TITLE_FONT }]}>
-          {t('adhkar')}
-        </Text>
-        <Pressable
-          onPress={() => navigation.navigate('Settings')}
-          style={[styles.headerBtn, { borderColor: theme.buttonBorderColor }]}
-          accessibilityLabel={t('settings')}
-        >
-          <SimpleLineIcons name="settings" size={12} color={theme.textColor} />
-        </Pressable>
-      </View>
+    <LinearGradient colors={theme.bgGradient} style={styles.gradient}>
+      <ScreenHeader
+        title={t('adhkar')}
+        rightAction={
+          <Pressable
+            onPress={() => navigation.navigate('Settings')}
+            hitSlop={8}
+            accessibilityLabel={t('settings')}
+            style={styles.headerActionBtn}
+          >
+            <SimpleLineIcons name="settings" size={18} color={theme.textColor} />
+          </Pressable>
+        }
+      />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={['#2F5D50', '#1E3F36']} style={styles.quoteCard}>
-          <Text style={styles.quoteArabic}>{t('quranVerse')}</Text>
-          <Text style={styles.quoteRef}>{t('quranRef')}</Text>
+        <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('quranIntro')}</Text>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('quranVerse')}</Text>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('quranRef')}</Text>
+        </LinearGradient>
+
+        <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('hadithIntro')}</Text>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('hadithText')}</Text>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('hadithRef')}</Text>
         </LinearGradient>
 
         <TextInput
@@ -81,8 +88,8 @@ export function CategoriesScreen() {
           onPress={() => navigation.navigate('FreeTasbih')}
         >
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
-          <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
-            <Ionicons name="leaf" size={18} color={theme.textColor} />
+          <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
+            <Ionicons name="leaf" size={18} color={theme.accentTextColor} />
           </LinearGradient>
         </Pressable>
 
@@ -101,7 +108,9 @@ export function CategoriesScreen() {
               <View style={styles.categoryMeta}>
                 <Pressable
                   accessibilityLabel={
-                    isFavourite ? `Remove ${category.title} from favourites` : `Add ${category.title} to favourites`
+                    isFavourite
+                      ? `Remove ${category.title} from favourites`
+                      : `Add ${category.title} to favourites`
                   }
                   hitSlop={10}
                   onPress={(event) => {
@@ -118,8 +127,8 @@ export function CategoriesScreen() {
                 </Pressable>
               </View>
               <Text style={[styles.categoryText, { color: theme.textColor }]}>{category.title}</Text>
-              <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
-                <FontAwesome5 name={category.icon} size={18} color={theme.textColor} />
+              <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
+                <FontAwesome5 name={category.icon} size={18} color={theme.accentTextColor} />
               </LinearGradient>
             </Pressable>
           );
@@ -131,23 +140,13 @@ export function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
-  headerRow: {
-    paddingHorizontal: 16,
-    paddingTop: 18,
+  headerActionBtn: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
-    paddingBottom: 8,
-    marginBottom: 8,
   },
   scrollContent: { padding: 16, paddingBottom: 32 },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    fontFamily: AZKAR_PRIMARY_FONT,
-    textAlign: 'center',
-    marginTop: 0,
-  },
   pageSub: {
     fontSize: 13,
     textAlign: 'center',
@@ -173,17 +172,22 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
   },
+  quoteIntro: {
+    fontSize: 12,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    marginBottom: 6,
+  },
   quoteArabic: {
     fontSize: 22,
     lineHeight: 44,
-    color: '#F3ECD8',
-    fontFamily: 'AmiriBold',
+    fontFamily: AZKAR_TITLE_FONT,
     textAlign: 'right',
     marginBottom: 10,
   },
   quoteRef: {
     fontSize: 11,
-    color: '#E9DBB3',
     textAlign: 'right',
     fontFamily: AZKAR_PRIMARY_FONT,
   },
@@ -242,16 +246,5 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderWidth: 1,
     borderRadius: 999,
-  },
-  headerBtn: {
-    position: 'absolute',
-    right: 16,
-    top: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FBF7ED',
-    padding: 12,
   },
 });

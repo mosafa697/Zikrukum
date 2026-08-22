@@ -1,6 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { Text, TouchableOpacity, Animated, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { AZKAR_COUNTER_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { formatNumber } from '../utils/numberFormatting';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -13,15 +17,17 @@ const MAX_COUNT = 1000;
 // ─── Props ───────────────────────────────────────────────────────────────────
 interface TasbihButtonProps {
   readonly onPress: () => void;
-  readonly label?: string;
   readonly count?: number;
+  readonly accessibilityLabel?: string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
-export function TasbihButton({ onPress, label = 'سبّح', count = 0 }: TasbihButtonProps) {
-  const breathe = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const animatedSize = useRef(new Animated.Value(BASE_SIZE)).current;
+export function TasbihButton({ onPress, count = 0, accessibilityLabel }: TasbihButtonProps) {
+  const themeName = useSelector((state: RootState) => state.theme.value);
+  const theme = getAzkarTheme(themeName);
+  const breathe = useMemo(() => new Animated.Value(0), []);
+  const scaleAnim = useMemo(() => new Animated.Value(1), []);
+  const animatedSize = useMemo(() => new Animated.Value(BASE_SIZE), []);
 
   // ── Breathing animation ───────────────────────────────────────────────────
   useEffect(() => {
@@ -92,7 +98,7 @@ export function TasbihButton({ onPress, label = 'سبّح', count = 0 }: TasbihB
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? formatNumber(count)}
     >
       {/* Hit area grows with the button */}
       <Animated.View
@@ -109,6 +115,7 @@ export function TasbihButton({ onPress, label = 'سبّح', count = 0 }: TasbihB
           style={[
             styles.glowRing,
             {
+              backgroundColor: theme.tasbihGlowColor,
               opacity: glowOpacity,
               transform: [{ scale: scaleAnim }],
               width: glowSize,
@@ -123,6 +130,7 @@ export function TasbihButton({ onPress, label = 'سبّح', count = 0 }: TasbihB
           style={[
             styles.buttonWrap,
             {
+              shadowColor: theme.tasbihShadowColor,
               transform: [{ scale: scaleAnim }],
               width: innerSize,
               height: innerSize,
@@ -139,15 +147,15 @@ export function TasbihButton({ onPress, label = 'سبّح', count = 0 }: TasbihB
           >
             <Defs>
               <RadialGradient id="tasbihGrad" cx="38%" cy="35%" r="65%" fx="38%" fy="38%">
-                <Stop offset="0%" stopColor="#517D6D" stopOpacity="1" />
-                <Stop offset="45%" stopColor="#426159" stopOpacity="1" />
-                <Stop offset="100%" stopColor="#2d5046" stopOpacity="1" />
+                <Stop offset="0%" stopColor={theme.tasbihGradient[0]} stopOpacity="1" />
+                <Stop offset="45%" stopColor={theme.tasbihGradient[1]} stopOpacity="1" />
+                <Stop offset="100%" stopColor={theme.tasbihGradient[2]} stopOpacity="1" />
               </RadialGradient>
             </Defs>
             <Circle cx={MAX_SIZE / 2} cy={MAX_SIZE / 2} r={MAX_SIZE / 2} fill="url(#tasbihGrad)" />
           </Svg>
 
-          <Text style={styles.label}>{label}</Text>
+          <Text style={[styles.label, { color: theme.tasbihTextColor }]}>{formatNumber(count)}</Text>
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -158,21 +166,19 @@ export function TasbihButton({ onPress, label = 'سبّح', count = 0 }: TasbihB
 const styles = StyleSheet.create({
   glowRing: {
     position: 'absolute',
-    backgroundColor: 'rgba(233, 219, 179, 0.5)',
   },
   buttonWrap: {
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1E3F36',
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
     elevation: 16,
   },
   label: {
-    fontFamily: 'AmiriBold',
-    fontSize: 32,
+    fontFamily: AZKAR_COUNTER_FONT,
+    fontSize: 48,
     fontWeight: '900',
     color: '#F3ECD8',
     textAlign: 'center',

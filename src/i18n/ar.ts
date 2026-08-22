@@ -4,6 +4,7 @@ export const ar = {
   dhikrDetails: 'تفاصيل الذكر',
   settings: 'الإعدادات',
   freeTasbih: 'مسبحة حرة',
+  back: 'رجوع',
 
   // CategoriesScreen
   quranIntro: 'قال الله تعالى: ',

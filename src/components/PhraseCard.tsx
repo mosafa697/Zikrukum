@@ -19,9 +19,9 @@ import { RootState } from '../store';
 import type { AzkarPhrase } from '../mappers/azkarMapper';
 import { config } from '../config/config';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
-import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { AZKAR_PRIMARY_FONT, AZKAR_COUNTER_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
-import { toHindiDigits } from '../utils/numberFormatting';
+import { formatNumber } from '../utils/numberFormatting';
 import type { PlaybackStatus } from '../store/slices/playbackSlice';
 
 const SWIPE_THRESHOLD = 50;
@@ -151,24 +151,10 @@ export function PhraseCard({
       <View style={[styles.card, { backgroundColor: colors.cardBgColor }]}>
         <View style={styles.header}>
           <View style={[styles.headerSide, styles.headerRight]}>
-            <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
-              onPress={onBack}
-              accessibilityLabel={t('home')}
-            >
-              <Ionicons name="home-outline" size={20} color={colors.textColor} />
+            <Pressable style={styles.headerIconBtn} onPress={onBack} accessibilityLabel={t('back')}>
+              <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
             </Pressable>
-            <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
-              onPress={onReset}
-              accessibilityLabel={t('reset')}
-            >
+            <Pressable style={styles.headerIconBtn} onPress={onReset} accessibilityLabel={t('reset')}>
               <Ionicons name="refresh-outline" size={20} color={colors.textColor} />
             </Pressable>
           </View>
@@ -187,20 +173,14 @@ export function PhraseCard({
 
           <View style={styles.headerSide}>
             <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
+              style={styles.headerIconBtn}
               onPress={() => dispatch(decrementFontScale())}
               accessibilityLabel={t('decreaseFontSize')}
             >
               <Ionicons name="remove" size={20} color={colors.textColor} />
             </Pressable>
             <Pressable
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
+              style={styles.headerIconBtn}
               onPress={() => dispatch(incrementFontScale())}
               accessibilityLabel={t('increaseFontSize')}
             >
@@ -344,10 +324,10 @@ export function PhraseCard({
               isAnimating && styles.counterBtnActive,
             ]}
             onPress={guardedCounterPress}
-            accessibilityLabel={`${t('remainingCount')}${toHindiDigits(remainingCount)}`}
+            accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
           >
             <Text style={[styles.counterText, { color: colors.iconColor }]}>
-              {toHindiDigits(remainingCount)}
+              {formatNumber(remainingCount)}
             </Text>
           </Pressable>
           {audioEnabled && audioAvailable ? (
@@ -439,6 +419,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerIconBtn: {
+    width: 37,
+    height: 37,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   phraseArea: { flex: 1, overflow: 'hidden' },
   absoluteCard: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   phraseAreaInner: { flex: 1 },
@@ -473,5 +460,5 @@ const styles = StyleSheet.create({
   audioBtnPlaceholder: { width: 54, height: 54 },
   audioControl: { position: 'absolute', right: -64, top: 17 },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
-  counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
+  counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_COUNTER_FONT },
 });

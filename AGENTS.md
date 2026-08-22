@@ -52,6 +52,7 @@ Zikrukum/
     │   └── audioCache.ts       # Downloads remote audio into expo-file-system cache dir
     ├── components/             # Shared UI components
     │   ├── PhraseCard.tsx      # Azkar phrase card (carousel item)
+    │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── config/
     │   └── config.ts           # App constants: audio baseUrl, font scale limits, interaction guards (ms)
@@ -98,7 +99,7 @@ Single native stack (`RootStackParamList`), headers hidden (`headerShown: false`
 
 - `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`
 
-Screen titles are intentionally empty; each screen builds its own header row.
+Non-home screens use the shared `ScreenHeader` component (chromeless back chevron on the left, centered title, optional right action); `PhraseCard` keeps its own custom header with the progress pill. The top safe-area strip is themed via `SafeAreaView` inside `RootNavigator` (matches `theme.bgColor`), not in `App.tsx`.
 
 ### State Management (Redux Toolkit)
 
@@ -135,7 +136,12 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 
 - Themes live in `AZKAR_THEME_MAP` (`src/theme/azkarTheme.ts`): `light`, `solarized`, `dark` (default: solarized).
 - Access pattern in screens: `const themeName = useSelector((s: RootState) => s.theme.value); const theme = getAzkarTheme(themeName);`
-- Palette: warm sand backgrounds (`#EFE7D5`/`#FBF7ED`), deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`).
+- Palette direction per theme:
+  - `light`: clean white/sand surfaces, emerald primary, relaxed shiny blue active accents.
+  - `solarized`: warm sand backgrounds, deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`).
+  - `dark`: matte black-blue surfaces, blue primary accents, comfortable low-saturation text.
+- Theme tokens include gradient pairs for page background (`bgGradient`), verse/hadith banners (`verseGradient`), icon chips (`accentGradient`), and the Free Tasbih button (`tasbihGradient`), plus matching text/glow/shadow colors. Screens should use these tokens instead of hardcoded redesign colors so all three themes adapt consistently.
+- Fonts: `AZKAR_PRIMARY_FONT`/`AZKAR_TITLE_FONT` use `ScheherazadeNew` (Regular-only face). Use `AZKAR_COUNTER_FONT` (`TajawalBold` = `Tajawal-ExtraBold.ttf`) for numeric counters, since `fontWeight` has no bold face to resolve against on the regular-only Scheherazade font.
 - The redesign reference (`adhkar-redesign.html`) is the visual source of truth for ongoing UI work.
 
 ### Data Flow (Azkar Content)
