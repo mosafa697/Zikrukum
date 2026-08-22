@@ -10,7 +10,7 @@ import { t } from '../i18n';
 import { RootState } from '../store';
 import { incrementTotalCount } from '../store/slices/totalCountSlice';
 import { AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
-import { toHindiDigits } from '../utils/numberFormatting';
+import { formatNumber } from '../utils/numberFormatting';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 
 export function FreeTasbihScreen() {
@@ -28,7 +28,7 @@ export function FreeTasbihScreen() {
   const handleTap = useTimeGuardedCallback(tap, config.interaction.freeTasbihTapGuardMs);
 
   return (
-    <LinearGradient colors={['#FBF7ED', '#EFE7D5']} style={styles.gradient}>
+    <LinearGradient colors={theme.bgGradient} style={styles.gradient}>
       <View style={styles.card}>
         <ScreenHeader
           title={t('freeTasbih')}
@@ -46,15 +46,14 @@ export function FreeTasbihScreen() {
           }
         />
 
-        {/* Count display */}
-        <View style={styles.countWrapper}>
-          <Text style={[styles.value, { color: theme.sliderBgActive }]}>{toHindiDigits(count)}</Text>
+        <View style={styles.counterArea}>
+          <TasbihButton
+            onPress={handleTap}
+            count={count}
+            accessibilityLabel={`${t('tasbih')}، ${formatNumber(count)}`}
+          />
         </View>
 
-        {/* Tasbih button — receives count so it can grow */}
-        <TasbihButton onPress={handleTap} label={t('tasbih')} count={count} />
-
-        {/* Total counter chip */}
         <View
           style={[
             styles.totalChip,
@@ -63,7 +62,7 @@ export function FreeTasbihScreen() {
         >
           <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>
             {t('totalCounter')}
-            {toHindiDigits(totalCount)}
+            {formatNumber(totalCount)}
           </Text>
         </View>
       </View>
@@ -80,7 +79,6 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
-    gap: 24,
   },
   headerActionBtn: {
     width: 40,
@@ -89,22 +87,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   header: { paddingHorizontal: 0, paddingTop: 0, width: '100%' },
-  countWrapper: {
+  counterArea: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 28,
     width: '100%',
-  },
-  value: {
-    fontSize: 72,
-    fontWeight: '800',
-    fontFamily: AZKAR_TITLE_FONT,
   },
   totalChip: {
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    marginTop: 24,
   },
   meta: {
     fontSize: 14,

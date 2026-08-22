@@ -10,7 +10,9 @@ import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
 import { t } from '../i18n';
-import { toHindiDigits } from '../utils/numberFormatting';
+import { formatNumber } from '../utils/numberFormatting';
+import { removeStoredValue } from '../utils/storage';
+import { azkar } from '../mappers/azkarMapper';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 // Border color shown around the selected theme circle
@@ -32,6 +34,7 @@ export function SettingsScreen() {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactName, setContactName] = useState('');
   const [contactMsg, setContactMsg] = useState('');
+  const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
 
   const handleSendContact = () => {
     if (!contactName.trim() || !contactMsg.trim()) {
@@ -43,11 +46,10 @@ export function SettingsScreen() {
     Linking.openURL(`mailto:?subject=${subject}&body=${body}`);
   };
 
-  const handleResetTotalCount = () => {
-    Alert.alert(t('reset'), t('resetConfirm'), [
-      { text: t('cancel'), style: 'cancel' },
-      { text: t('confirm'), style: 'destructive', onPress: () => dispatch(resetTotalCount()) },
-    ]);
+  const handleResetTotalCount = async () => {
+    await Promise.all(azkar.map((category) => removeStoredValue(`azkar-index-${category.id}`)));
+    dispatch(resetTotalCount());
+    setResetConfirmVisible(false);
   };
 
   return (
@@ -102,7 +104,7 @@ export function SettingsScreen() {
               <Ionicons name="remove" size={20} color={colors.textColor} />
             </Pressable>
             <Text style={[styles.valueText, { color: colors.textColor }]}>
-              {toHindiDigits(fontScale.toFixed(1))}
+              {formatNumber(fontScale.toFixed(1))}
             </Text>
             <Pressable
               onPress={() => dispatch(incrementFontScale())}
@@ -168,25 +170,53 @@ export function SettingsScreen() {
           ]}
         >
           <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
-          <View style={styles.row}>
-            <Pressable
-              onPress={handleResetTotalCount}
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
-            >
-              <Ionicons name="trash-outline" size={20} color={colors.textColor} />
-            </Pressable>
-            <Text
-              style={[
-                styles.countValue,
-                { color: colors.iconColor, backgroundColor: colors.secondaryBgColor },
-              ]}
-            >
-              {toHindiDigits(totalCount)}
-            </Text>
-          </View>
+          {resetConfirmVisible ? (
+            <View style={styles.row}>
+              <Pressable
+                onPress={() => setResetConfirmVisible(false)}
+                style={[
+                  styles.confirmBtn,
+                  { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+                ]}
+              >
+                <Text style={[styles.confirmBtnText, { color: colors.textColor }]}>{t('cancel')}</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleResetTotalCount}
+                style={[styles.confirmBtn, styles.destructiveBtn, { backgroundColor: colors.sliderBgActive }]}
+              >
+                <Text style={[styles.confirmBtnText, { color: colors.iconColorActive }]}>{t('confirm')}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.row}>
+              <Pressable
+                onPress={() => setResetConfirmVisible(true)}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t('reset')}
+                android_ripple={{ color: colors.buttonHoverBgColor, borderless: false }}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    backgroundColor: pressed ? colors.buttonHoverBgColor : colors.buttonBgColor,
+                    borderColor: colors.buttonBorderColor,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="trash-outline" size={20} color={colors.textColor} />
+              </Pressable>
+              <Text
+                style={[
+                  styles.countValue,
+                  { color: colors.iconColor, backgroundColor: colors.secondaryBgColor },
+                ]}
+              >
+                {formatNumber(totalCount)}
+              </Text>
+            </View>
+          )}
         </View>
 
         <View
@@ -316,6 +346,22 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
     overflow: 'hidden',
+  },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  destructiveBtn: { borderWidth: 0 },
+  confirmBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
   },
   contactBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   contactBtnText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },

@@ -136,7 +136,12 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 
 - Themes live in `AZKAR_THEME_MAP` (`src/theme/azkarTheme.ts`): `light`, `solarized`, `dark` (default: solarized).
 - Access pattern in screens: `const themeName = useSelector((s: RootState) => s.theme.value); const theme = getAzkarTheme(themeName);`
-- Palette: warm sand backgrounds (`#EFE7D5`/`#FBF7ED`), deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`).
+- Palette direction per theme:
+  - `light`: clean white/sand surfaces, emerald primary, relaxed shiny blue active accents.
+  - `solarized`: warm sand backgrounds, deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`).
+  - `dark`: matte black-blue surfaces, blue primary accents, comfortable low-saturation text.
+- Theme tokens include gradient pairs for page background (`bgGradient`), verse/hadith banners (`verseGradient`), icon chips (`accentGradient`), and the Free Tasbih button (`tasbihGradient`), plus matching text/glow/shadow colors. Screens should use these tokens instead of hardcoded redesign colors so all three themes adapt consistently.
+- Fonts: `AZKAR_PRIMARY_FONT`/`AZKAR_TITLE_FONT` use `ScheherazadeNew` (Regular-only face). Use `AZKAR_COUNTER_FONT` (`TajawalBold` = `Tajawal-ExtraBold.ttf`) for numeric counters, since `fontWeight` has no bold face to resolve against on the regular-only Scheherazade font.
 - The redesign reference (`adhkar-redesign.html`) is the visual source of truth for ongoing UI work.
 
 ### Data Flow (Azkar Content)

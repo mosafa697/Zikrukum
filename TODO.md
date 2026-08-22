@@ -37,5 +37,13 @@
 
 - [x] **Add Hadith on Home Screen** — Display a hadith section on the home screen directly below the ayah block, following the same visual style as the existing home content.
 
-- [ ] **Refactor Free Tasbih Layout** — Center the Free Tasbih screen title and keep the counter fixed in a stable on-screen position so it does not shift with other content.
+- [x] **Refactor Free Tasbih Layout** — Center the Free Tasbih screen title and keep the counter fixed in a stable on-screen position so it does not shift with other content, and remove the centered word "سبح" and put the number inside the circle, and follow the themes styles.
 
+- [x] fix the theme in home page
+
+- [x] switch the numbers format to be english not hindi
+
+- [x] enhance the color palette of each theme to be look suitable and harmonic:
+	- for light theme: use whity and shine color to highlight the text and contrast the borders, hint could use here white and relaxed shiny blue.
+	- for solarized theme: use aye comfortable colors, hint could use color here the suitable degree of dark green and gold colors.
+	- for dark theme: use dark, matte and aye comfortable colors, hint could be between black and blue

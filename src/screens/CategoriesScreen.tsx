@@ -8,7 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { azkar } from '../mappers/azkarMapper';
 import { RootState } from '../store';
-import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { AZKAR_PRIMARY_FONT, AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { toggleFavouriteCategory } from '../store/slices/favouriteCategoriesSlice';
@@ -38,7 +38,7 @@ export function CategoriesScreen() {
   }, [favouriteCategoryIds, searchQuery]);
 
   return (
-    <LinearGradient colors={['#FBF7ED', '#EFE7D5']} style={styles.gradient}>
+    <LinearGradient colors={theme.bgGradient} style={styles.gradient}>
       <ScreenHeader
         title={t('adhkar')}
         rightAction={
@@ -53,16 +53,16 @@ export function CategoriesScreen() {
         }
       />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={['#2F5D50', '#1E3F36']} style={styles.quoteCard}>
-          <Text style={styles.quoteIntro}>{t('quranIntro')}</Text>
-          <Text style={styles.quoteArabic}>{t('quranVerse')}</Text>
-          <Text style={styles.quoteRef}>{t('quranRef')}</Text>
+        <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('quranIntro')}</Text>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('quranVerse')}</Text>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('quranRef')}</Text>
         </LinearGradient>
 
-        <LinearGradient colors={['#2F5D50', '#1E3F36']} style={styles.quoteCard}>
-          <Text style={styles.quoteIntro}>{t('hadithIntro')}</Text>
-          <Text style={styles.quoteArabic}>{t('hadithText')}</Text>
-          <Text style={styles.quoteRef}>{t('hadithRef')}</Text>
+        <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('hadithIntro')}</Text>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('hadithText')}</Text>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('hadithRef')}</Text>
         </LinearGradient>
 
         <TextInput
@@ -88,8 +88,8 @@ export function CategoriesScreen() {
           onPress={() => navigation.navigate('FreeTasbih')}
         >
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
-          <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
-            <Ionicons name="leaf" size={18} color={theme.textColor} />
+          <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
+            <Ionicons name="leaf" size={18} color={theme.accentTextColor} />
           </LinearGradient>
         </Pressable>
 
@@ -127,8 +127,8 @@ export function CategoriesScreen() {
                 </Pressable>
               </View>
               <Text style={[styles.categoryText, { color: theme.textColor }]}>{category.title}</Text>
-              <LinearGradient colors={['#E9DBB3', '#c4b188']} style={styles.categoryIcon}>
-                <FontAwesome5 name={category.icon} size={18} color={theme.textColor} />
+              <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
+                <FontAwesome5 name={category.icon} size={18} color={theme.accentTextColor} />
               </LinearGradient>
             </Pressable>
           );
@@ -174,7 +174,6 @@ const styles = StyleSheet.create({
   },
   quoteIntro: {
     fontSize: 12,
-    color: '#E9DBB3',
     textAlign: 'right',
     writingDirection: 'rtl',
     fontFamily: AZKAR_PRIMARY_FONT,
@@ -183,14 +182,12 @@ const styles = StyleSheet.create({
   quoteArabic: {
     fontSize: 22,
     lineHeight: 44,
-    color: '#F3ECD8',
-    fontFamily: 'AmiriBold',
+    fontFamily: AZKAR_TITLE_FONT,
     textAlign: 'right',
     marginBottom: 10,
   },
   quoteRef: {
     fontSize: 11,
-    color: '#E9DBB3',
     textAlign: 'right',
     fontFamily: AZKAR_PRIMARY_FONT,
   },

@@ -10,9 +10,9 @@ import { RootState } from '../store';
 import type { AzkarPhrase } from '../mappers/azkarMapper';
 import { config } from '../config/config';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
-import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { AZKAR_PRIMARY_FONT, AZKAR_COUNTER_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
-import { toHindiDigits } from '../utils/numberFormatting';
+import { formatNumber } from '../utils/numberFormatting';
 
 const SWIPE_THRESHOLD = 50;
 const SWIPE_ANIMATION_DURATION = 200;
@@ -303,10 +303,10 @@ export function PhraseCard({
               isAnimating && styles.counterBtnActive,
             ]}
             onPress={guardedCounterPress}
-            accessibilityLabel={`${t('remainingCount')}${toHindiDigits(remainingCount)}`}
+            accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
           >
             <Text style={[styles.counterText, { color: colors.iconColor }]}>
-              {toHindiDigits(remainingCount)}
+              {formatNumber(remainingCount)}
             </Text>
           </Pressable>
 
@@ -402,5 +402,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
-  counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_PRIMARY_FONT },
+  counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_COUNTER_FONT },
 });
