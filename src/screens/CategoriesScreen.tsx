@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -21,6 +21,23 @@ export function CategoriesScreen() {
   const favouriteCategoryIds = useSelector((state: RootState) => state.favouriteCategories.ids);
   const theme = getAzkarTheme(themeName);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchAnim = useMemo(() => new Animated.Value(0), []);
+
+  const toggleSearch = useCallback(() => {
+    setIsSearchOpen((prev) => {
+      const next = !prev;
+      Animated.timing(searchAnim, {
+        toValue: next ? 1 : 0,
+        duration: 180,
+        useNativeDriver: false,
+      }).start();
+      if (!next) {
+        setSearchQuery('');
+      }
+      return next;
+    });
+  }, [searchAnim]);
 
   const filteredAzkar = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -41,6 +58,20 @@ export function CategoriesScreen() {
     <LinearGradient colors={theme.bgGradient} style={styles.gradient}>
       <ScreenHeader
         title={t('adhkar')}
+        leftAction={
+          <Pressable
+            onPress={toggleSearch}
+            hitSlop={8}
+            accessibilityLabel={isSearchOpen ? t('closeSearch') : t('search')}
+            style={styles.headerActionBtn}
+          >
+            <Ionicons
+              name={isSearchOpen ? 'close' : 'search'}
+              size={20}
+              color={theme.textColor}
+            />
+          </Pressable>
+        }
         rightAction={
           <Pressable
             onPress={() => navigation.navigate('Settings')}
@@ -50,6 +81,34 @@ export function CategoriesScreen() {
           >
             <SimpleLineIcons name="settings" size={18} color={theme.textColor} />
           </Pressable>
+        }
+        bottom={
+          <Animated.View
+            style={[
+              styles.searchWrap,
+              {
+                opacity: searchAnim,
+                maxHeight: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 88] }),
+              },
+            ]}
+            pointerEvents={isSearchOpen ? 'auto' : 'none'}
+          >
+            <View
+              style={[
+                styles.searchField,
+                { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+              ]}
+            >
+              <TextInput
+                placeholder={t('searchPlaceholder')}
+                placeholderTextColor={theme.secondaryTextColor}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus={isSearchOpen}
+                style={[styles.search, { color: theme.textColor }]}
+              />
+            </View>
+          </Animated.View>
         }
       />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -65,21 +124,6 @@ export function CategoriesScreen() {
           <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('hadithRef')}</Text>
         </LinearGradient>
 
-        <TextInput
-          placeholder={t('searchPlaceholder')}
-          placeholderTextColor={theme.secondaryTextColor}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={[
-            styles.search,
-            {
-              backgroundColor: theme.buttonBgColor,
-              borderColor: theme.buttonBorderColor,
-              color: theme.textColor,
-            },
-          ]}
-        />
-
         <Pressable
           style={[
             styles.categoryBtn,
@@ -87,6 +131,18 @@ export function CategoriesScreen() {
           ]}
           onPress={() => navigation.navigate('FreeTasbih')}
         >
+          <View style={styles.categoryMeta}>
+            <Pressable
+              hitSlop={10}
+              style={styles.favoriteButton}
+            >
+              <Ionicons
+                name={'pin'}
+                size={18}
+                color={theme.secondaryTextColor}
+              />
+            </Pressable>
+          </View>
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
           <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
             <Ionicons name="leaf" size={18} color={theme.accentTextColor} />
@@ -191,16 +247,22 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontFamily: AZKAR_PRIMARY_FONT,
   },
-  search: {
+  searchWrap: {
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
+  searchField: {
     borderWidth: 1,
     borderRadius: 14,
+    overflow: 'hidden',
+  },
+  search: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
     fontFamily: AZKAR_PRIMARY_FONT,
     textAlign: 'right',
     writingDirection: 'rtl',
-    marginBottom: 16,
   },
   categoryBtn: {
     borderWidth: 1,

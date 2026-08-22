@@ -14,12 +14,23 @@ type ScreenHeaderProps = {
   showBack?: boolean;
   onBack?: () => void;
   rightAction?: React.ReactNode;
+  leftAction?: React.ReactNode;
+  bottom?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 };
 
-// Shared chromeless header: back chevron on the left, centered title, optional right action.
+// Shared chromeless header: optional left action (or back chevron), centered title, optional right action,
+// and an optional bottom row that renders directly under the header.
 // Buttons sit directly on the screen background so the header blends into the page.
-export function ScreenHeader({ title, showBack = false, onBack, rightAction, style }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  showBack = false,
+  onBack,
+  rightAction,
+  leftAction,
+  bottom,
+  style,
+}: ScreenHeaderProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
@@ -33,16 +44,21 @@ export function ScreenHeader({ title, showBack = false, onBack, rightAction, sty
   };
 
   return (
-    <View style={[styles.headerRow, style]}>
-      <View style={styles.slot}>
-        {showBack ? (
-          <Pressable onPress={handleBack} hitSlop={8} accessibilityLabel={t('back')} style={styles.actionBtn}>
-            <Ionicons name="chevron-back" size={24} color={theme.textColor} />
-          </Pressable>
-        ) : null}
+    <View style={style}>
+      <View style={styles.headerRow}>
+        <View style={styles.slot}>
+          {leftAction ? (
+            leftAction
+          ) : showBack ? (
+            <Pressable onPress={handleBack} hitSlop={8} accessibilityLabel={t('back')} style={styles.actionBtn}>
+              <Ionicons name="chevron-back" size={24} color={theme.textColor} />
+            </Pressable>
+          ) : null}
+        </View>
+        <Text style={[styles.title, { color: theme.textColor }]}>{title}</Text>
+        <View style={[styles.slot, styles.slotRight]}>{rightAction}</View>
       </View>
-      <Text style={[styles.title, { color: theme.textColor }]}>{title}</Text>
-      <View style={[styles.slot, styles.slotRight]}>{rightAction}</View>
+      {bottom}
     </View>
   );
 }
