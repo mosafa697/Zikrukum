@@ -37,7 +37,7 @@ export function ScreenHeader({ title, showBack = false, onBack, rightAction, sty
       <View style={styles.slot}>
         {showBack ? (
           <Pressable onPress={handleBack} hitSlop={8} accessibilityLabel={t('back')} style={styles.actionBtn}>
-            <Ionicons name="chevron-forward" size={24} color={theme.textColor} />
+            <Ionicons name="chevron-back" size={24} color={theme.textColor} />
           </Pressable>
         ) : null}
       </View>

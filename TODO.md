@@ -14,7 +14,7 @@
 
 - [x] **Relocate Settings Button & Add Reset Progress** — Move the Settings gear icon from the zikr (CategoryScreen) header to the home (CategoriesScreen) header as a fixed button. Remove it from the zikr header and replace it with a "Reset" button (e.g. `refresh-outline` / `restart` icon) that resets the current zikr's progress back to zero.
 
-- [ ] **UI Redesign (all screens)** — Restyle all screens to match the reference design in [`adhkar-redesign.html`](adhkar-redesign.html): warm sand background (`#F4EEE0`), deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`), card surfaces (`#FBF7ED`), rounded category cards with icon chip + count pill, gradient verse banner on home, gold ring counter on the zikr screen, large circular tasbih button with breathing animation, and grouped settings cards. All 3 themes (light / solarized / dark) share the same visual structure with adapted colour palettes.
+- [x] **UI Redesign (all screens)** — Restyle all screens to match the reference design in [`adhkar-redesign.html`](adhkar-redesign.html): warm sand background (`#F4EEE0`), deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`), card surfaces (`#FBF7ED`), rounded category cards with icon chip + count pill, gradient verse banner on home, gold ring counter on the zikr screen, large circular tasbih button with breathing animation, and grouped settings cards. All 3 themes (light / solarized / dark) share the same visual structure with adapted colour palettes.
 
 - [x] **Favourite Categories** — Add a favourite (star/heart) toggle button to each category card; persist favourited category IDs in the store, and sort the home screen list so favourited categories appear first in order, and replace it with count of zikr category number
 
@@ -48,8 +48,8 @@
 	- for solarized theme: use aye comfortable colors, hint could use color here the suitable degree of dark green and gold colors.
 	- for dark theme: use dark, matte and aye comfortable colors, hint could be between black and blue
 
-- [ ] fix refrechment zikr when sliding right or left on mobile screens
+- [x] replace the back button icon to be look at the other side (left)
 
-- [ ] replace the back button icon to be look at the other side (left)
+- [ ] fix refreshment zikr when sliding right or left on mobile screens, i thin it reload the previous zikr for milliseconds and then load the wanted zikr, we dont need to have this trembling  
 
-- [ ] center the word of "مسبحة حرة" at the categories page
+- [ ] center the category of "مسبحة حرة" at the categories page as the text is little bit to right as it has not contained the favorite icon
