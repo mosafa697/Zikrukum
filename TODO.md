@@ -20,12 +20,21 @@
 
 - [x] **Seamless Navigation Header** — Remove the visible separator between the native header bar and the screen content: set `headerTransparent: true` (or match header background to `bgColor`), hide the bottom border/shadow, and blend the title/back-button tint into the page so the header feels like a natural part of each screen rather than a floating toolbar.
 
-- [x] **Audio Playback** — Add audio support for every zikr, using the existing `audio` / `filename` fields in the dataset as the source of truth.
-	- Audio playback is controlled from Settings; when enabled, a play button appears above the counter for the current zikr.
-	- Add a new settings toggle for auto-playing the next zikr audio when the current one ends; default state should be `on` and it should be persisted in the store like the other preferences.
-	- Decide the audio delivery strategy with app size as the priority: prefer remote audio URLs with local caching if it keeps the bundle smaller, and only bundle files offline when the UX or reliability requires it.
-	- Define the missing-audio behavior clearly: disable or hide the play button when no audio exists, and show a lightweight fallback message or icon instead of failing silently.
-	- Make the auto-play-next flow respect navigation and end-of-list boundaries, so it only advances when a next zikr exists and the user has not disabled the feature.
+- [ ] **Complete Media Audio Playback** — Finish and verify audio playback using the dataset `audio` / `filename` fields as the source of truth.
+	- [x] Add `expo-audio` playback with remote MP3 loading and local cache support.
+	- [x] Add the Settings controls for enabling audio and auto-playing the next zikr; persist both preferences.
+	- [x] Add play/pause, loading, replay-after-finish, and player cleanup behavior.
+	- [x] Make auto-play-next stop at the final phrase and replace the current player before starting the next phrase.
+	- [x] Handle navigation and loading races so stale downloads cannot attach to another phrase or block future playback.
+	- [x] Normalize empty audio metadata and support phrase-level/category-level source fallback.
+	- [x] Show separate themed feedback for missing audio (`noAudio`) and playback errors (`audioError`), with retry support.
+	- [ ] Choose a production audio host. Use Cloudflare R2, Supabase Storage, Firebase Storage, S3/CloudFront, or a managed VPS. Do not use Google Drive public links for production playback.
+	- [ ] Replace `config.audio.baseUrl` (`https://zikr-audio.example.com/`) with the real HTTPS audio URL.
+	- [ ] Upload the MP3 files using paths compatible with the resolver, such as `audio/248.mp3`, and verify every referenced URL returns `200` with `Content-Type: audio/mpeg` and byte-range support.
+	- [ ] Configure CORS for Expo Web and configure CDN caching for public audio files.
+	- [ ] Decide whether playback must continue while the app is backgrounded or the screen is locked. If required, configure the Expo Audio session, background playback, Android media notifications, and iOS background audio mode.
+	- [ ] Test Android, iOS, and Web: first play, pause/resume, replay, offline cached play, network failure, retry, phrase navigation during download, auto-play-next, final phrase, and missing audio.
+	- [ ] Future data task: add or intentionally approve missing audio entries in the dataset, including categories `1`, `21`, and `122` and any phrases with empty audio fields.
 
 - [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` and include its data in the dataset so it appears alongside the other zikr categories.
 
