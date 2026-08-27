@@ -33,6 +33,9 @@
 	- [x] Create `src/audio/audioAssets.ts` with a static `Record<filename, require(...)>` resolver for bundled MP3 URIs via `expo-asset`.
 	- [x] Update `src/audio/useZikrAudio.ts` to load the local asset URI directly into `createAudioPlayer`, dropping network fetch paths.
 	- [x] Update `src/config/config.ts` to remove the placeholder CDN `baseUrl` / `cacheDir` and document the local asset path convention.
+	- [x] Redesign the zikr reader audio player to match the reference image: play/pause/finished/loading/missing states, progress bar with current/total time, and placement between the zikr text and source info.
+	- [x] Track playback `currentTime` / `duration` in the `playback` slice and poll while playing for a live progress bar.
+	- [x] Hide the audio player entirely when audio is disabled in Settings or the current phrase has no audio file (`missing`).
 	- [x] Add a one-time cache/migration helper to clear any legacy remote-download audio cache from `expo-file-system` so old cached MP3s do not conflict with local assets.
 	- [x] Clear old audio/filename data from `src/dataset/azkar-sample.json` so the app reports missing audio until new clips are available.
 	- [ ] When new audio data is available: collect the MP3 clips, place them under `assets/audio/`, populate `src/audio/audioAssets.ts`, and fill the `audio` / `filename` fields in `src/dataset/azkar-sample.json`.

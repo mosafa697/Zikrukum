@@ -89,6 +89,6 @@ export async function loadPersistedState() {
     subText: { value: subText },
     favouriteCategories: { ids: favouriteCategories },
     audio: { autoPlayNext, audioEnabled },
-    playback: { currentPhraseId: null, status: 'idle' as const },
+    playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
   };
 }

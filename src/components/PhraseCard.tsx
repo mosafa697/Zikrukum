@@ -1,14 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Animated,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +14,7 @@ import { AZKAR_PRIMARY_FONT, AZKAR_COUNTER_FONT, getAzkarTheme } from '../theme/
 import { t } from '../i18n';
 import { formatNumber } from '../utils/numberFormatting';
 import type { PlaybackStatus } from '../store/slices/playbackSlice';
+import { AudioPlayerBar } from './AudioPlayerBar';
 
 const SWIPE_THRESHOLD = 50;
 const SWIPE_ANIMATION_DURATION = 200;
@@ -212,19 +204,6 @@ export function PhraseCard({
                   >
                     {prevPhrase.text}
                   </Text>
-                  {showSubText && prevPhrase.subtext ? (
-                    <>
-                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text
-                        style={[
-                          styles.subtext,
-                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
-                        ]}
-                      >
-                        {prevPhrase.subtext}
-                      </Text>
-                    </>
-                  ) : null}
                 </ScrollView>
               )}
             </Animated.View>
@@ -249,19 +228,6 @@ export function PhraseCard({
                   >
                     {phrase.text}
                   </Text>
-                  {showSubText && phrase.subtext ? (
-                    <>
-                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text
-                        style={[
-                          styles.subtext,
-                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
-                        ]}
-                      >
-                        {phrase.subtext}
-                      </Text>
-                    </>
-                  ) : null}
                 </ScrollView>
               </Pressable>
             </Animated.View>
@@ -281,24 +247,30 @@ export function PhraseCard({
                   >
                     {nextPhrase.text}
                   </Text>
-                  {showSubText && nextPhrase.subtext ? (
-                    <>
-                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text
-                        style={[
-                          styles.subtext,
-                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
-                        ]}
-                      >
-                        {nextPhrase.subtext}
-                      </Text>
-                    </>
-                  ) : null}
                 </ScrollView>
               )}
             </Animated.View>
           </View>
         </PanGestureHandler>
+
+        <AudioPlayerBar
+          status={audioStatus}
+          audioEnabled={audioEnabled}
+          audioAvailable={audioAvailable}
+          onToggle={onToggleAudio}
+          colors={colors}
+        />
+
+        {showSubText && phrase.subtext ? (
+          <>
+            <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+            <Text
+              style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}
+            >
+              {phrase.subtext}
+            </Text>
+          </>
+        ) : null}
       </View>
       <View style={styles.footer}>
         {/* 
@@ -316,63 +288,19 @@ export function PhraseCard({
           </Pressable>
         */}
 
-        <View style={styles.counterGroup}>
-          <Pressable
-            style={[
-              styles.counterBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              isAnimating && styles.counterBtnActive,
-            ]}
-            onPress={guardedCounterPress}
-            accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
-          >
-            <Text style={[styles.counterText, { color: colors.iconColor }]}>
-              {formatNumber(remainingCount)}
-            </Text>
-          </Pressable>
-          {audioEnabled && audioAvailable ? (
-            <Pressable
-              style={[
-                styles.audioBtn,
-                styles.audioControl,
-                { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              ]}
-              onPress={onToggleAudio}
-              disabled={audioStatus === 'loading' || audioStatus === 'error'}
-              accessibilityLabel={audioStatus === 'playing' ? t('pauseAudio') : t('playAudio')}
-            >
-              {audioStatus === 'loading' ? (
-                <ActivityIndicator size="small" color={colors.textColor} />
-              ) : (
-                <Ionicons
-                  name={audioStatus === 'playing' ? 'pause' : 'play'}
-                  size={20}
-                  color={colors.textColor}
-                />
-              )}
-            </Pressable>
-          ) : audioEnabled && audioStatus === 'error' ? (
-            <Pressable
-              style={[styles.audioFallback, styles.audioControl]}
-              onPress={onToggleAudio}
-              accessibilityLabel={t('retryAudio')}
-            >
-              <Ionicons name="alert-circle-outline" size={18} color={colors.secondaryTextColor} />
-              <Text style={[styles.audioFallbackText, { color: colors.secondaryTextColor }]}>
-                {t('audioError')}
-              </Text>
-            </Pressable>
-          ) : audioEnabled ? (
-            <View style={[styles.audioFallback, styles.audioControl]}>
-              <Ionicons name="volume-mute-outline" size={18} color={colors.secondaryTextColor} />
-              <Text style={[styles.audioFallbackText, { color: colors.secondaryTextColor }]}>
-                {t('noAudio')}
-              </Text>
-            </View>
-          ) : (
-            <View style={[styles.audioBtnPlaceholder, styles.audioControl]} />
-          )}
-        </View>
+        <Pressable
+          style={[
+            styles.counterBtn,
+            { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+            isAnimating && styles.counterBtnActive,
+          ]}
+          onPress={guardedCounterPress}
+          accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
+        >
+          <Text style={[styles.counterText, { color: colors.iconColor }]}>
+            {formatNumber(remainingCount)}
+          </Text>
+        </Pressable>
 
         {/* 
           <Pressable
@@ -457,7 +385,6 @@ const styles = StyleSheet.create({
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
   subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
   footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  counterGroup: { position: 'relative' },
   invisible: { opacity: 0 },
   counterBtn: {
     width: 88,
@@ -467,25 +394,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  audioBtn: {
-    width: 54,
-    height: 54,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  audioBtnPlaceholder: { width: 54, height: 54 },
-  audioFallback: {
-    minWidth: 84,
-    minHeight: 54,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  audioFallbackText: { fontSize: 9, textAlign: 'center', fontFamily: AZKAR_PRIMARY_FONT },
-  audioControl: { position: 'absolute', right: -64, top: 17 },
   counterBtnActive: { transform: [{ scale: 0.94 }] },
   counterText: { fontSize: 32, fontWeight: '800', fontFamily: AZKAR_COUNTER_FONT },
 });
