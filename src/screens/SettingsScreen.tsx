@@ -121,94 +121,97 @@ export function SettingsScreen() {
           </View>
         </View>
 
-      <View
-        style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
-      >
-        <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
-        <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
-          <View
-            style={[
-              styles.toggleBtn,
-              {
-                backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor,
-                borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor,
-              },
-            ]}
-          >
-            <Ionicons
-              name={shuffle ? 'shuffle' : 'list-outline'}
-              size={18}
-              color={shuffle ? colors.iconColorActive : colors.textColor}
-            />
-          </View>
-        </Pressable>
-        <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
-          <View
-            style={[
-              styles.toggleBtn,
-              {
-                backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor,
-                borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor,
-              },
-            ]}
-          >
-            <Ionicons
-              name={showSubText ? 'eye-outline' : 'eye-off-outline'}
-              size={18}
-              color={showSubText ? colors.iconColorActive : colors.textColor}
-            />
-          </View>
-        </Pressable>
-        <Pressable onPress={() => dispatch(toggleAudioEnabled())} style={styles.toggleRow}>
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioEnabledLabel')}</Text>
-          <View
-            style={[
-              styles.toggleBtn,
-              {
-                backgroundColor: audioEnabled ? colors.sliderBgActive : colors.buttonBgColor,
-                borderColor: audioEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
-              },
-            ]}
-          >
-            <Ionicons
-              name={audioEnabled ? 'volume-high' : 'volume-mute-outline'}
-              size={18}
-              color={audioEnabled ? colors.iconColorActive : colors.textColor}
-            />
-          </View>
-        </Pressable>
-        <Pressable
-          onPress={() => dispatch(toggleAutoPlayNext())}
-          disabled={!audioEnabled}
-          style={[styles.toggleRow, !audioEnabled && styles.disabledToggleRow]}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+          ]}
         >
-          <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioLabel')}</Text>
-          <View
-            style={[
-              styles.toggleBtn,
-              !audioEnabled && styles.disabledToggleBtn,
-              {
-                backgroundColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBgColor,
-                borderColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBorderColor,
-              },
-            ]}
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
+          <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={shuffle ? 'shuffle' : 'list-outline'}
+                size={18}
+                color={shuffle ? colors.iconColorActive : colors.textColor}
+              />
+            </View>
+          </Pressable>
+          <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={showSubText ? 'eye-outline' : 'eye-off-outline'}
+                size={18}
+                color={showSubText ? colors.iconColorActive : colors.textColor}
+              />
+            </View>
+          </Pressable>
+          <Pressable onPress={() => dispatch(toggleAudioEnabled())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioEnabledLabel')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: audioEnabled ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: audioEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={audioEnabled ? 'volume-high' : 'volume-mute-outline'}
+                size={18}
+                color={audioEnabled ? colors.iconColorActive : colors.textColor}
+              />
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => dispatch(toggleAutoPlayNext())}
+            disabled={!audioEnabled}
+            style={[styles.toggleRow, !audioEnabled && styles.disabledToggleRow]}
           >
-            <Ionicons
-              name={autoPlayNext ? 'volume-high' : 'volume-mute-outline'}
-              size={18}
-              color={
-                !audioEnabled
-                  ? colors.secondaryTextColor
-                  : autoPlayNext
-                    ? colors.iconColorActive
-                    : colors.textColor
-              }
-            />
-          </View>
-        </Pressable>
-      </View>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioLabel')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                !audioEnabled && styles.disabledToggleBtn,
+                {
+                  backgroundColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={autoPlayNext ? 'volume-high' : 'volume-mute-outline'}
+                size={18}
+                color={
+                  !audioEnabled
+                    ? colors.secondaryTextColor
+                    : autoPlayNext
+                      ? colors.iconColorActive
+                      : colors.textColor
+                }
+              />
+            </View>
+          </Pressable>
+        </View>
 
         <View
           style={[

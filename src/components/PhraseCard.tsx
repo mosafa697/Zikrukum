@@ -365,7 +365,9 @@ export function PhraseCard({
           ) : audioEnabled ? (
             <View style={[styles.audioFallback, styles.audioControl]}>
               <Ionicons name="volume-mute-outline" size={18} color={colors.secondaryTextColor} />
-              <Text style={[styles.audioFallbackText, { color: colors.secondaryTextColor }]}>{t('noAudio')}</Text>
+              <Text style={[styles.audioFallbackText, { color: colors.secondaryTextColor }]}>
+                {t('noAudio')}
+              </Text>
             </View>
           ) : (
             <View style={[styles.audioBtnPlaceholder, styles.audioControl]} />

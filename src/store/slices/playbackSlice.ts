@@ -43,6 +43,5 @@ const playbackSlice = createSlice({
   },
 });
 
-export const { setCurrentPhrase, setPlaybackStatus, setPlaybackError, resetPlayback } =
-  playbackSlice.actions;
+export const { setCurrentPhrase, setPlaybackStatus, setPlaybackError, resetPlayback } = playbackSlice.actions;
 export default playbackSlice.reducer;

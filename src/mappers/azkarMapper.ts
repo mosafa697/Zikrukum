@@ -54,13 +54,13 @@ export const azkar: AzkarCategory[] = (
     id: number;
     category: string;
     array: {
-      id: number; 
-      text: string; 
-      count: number; 
-      subtext: string 
+      id: number;
+      text: string;
+      count: number;
+      subtext: string;
       audio: string;
       filename: string;
-}[];
+    }[];
   }[]
 ).map((category) => ({
   id: category.id,
