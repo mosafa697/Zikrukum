@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { useDispatch, useSelector } from 'react-redux';
 import { resolveAudioSource, type AudioSource } from './audioSource';
-import { ensureCached } from './audioCache';
+import { resolveLocalAudioUri } from './audioAssets';
 import {
   setCurrentPhrase,
   setPlaybackStatus,
@@ -85,7 +85,13 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
     dispatch(setPlaybackStatus('loading'));
 
     try {
-      const localUri = await ensureCached(source.url, source.filename);
+      const localUri = source.kind === 'local' ? await resolveLocalAudioUri(source.filename) : null;
+      if (!localUri) {
+        dispatch(setPlaybackError('playbackError'));
+        isLoadingRef.current = false;
+        return null;
+      }
+
       const player = loadPlayer(localUri);
 
       if (requestId !== loadRequestRef.current || currentPhraseIdRef.current !== phraseId) {
@@ -189,7 +195,7 @@ export function useZikrAudio({ phrase, category, onEnded }: UseZikrAudioOptions)
     return playbackState.status;
   }, [source.kind, playbackState.currentPhraseId, playbackState.status, phraseId]);
 
-  const audioAvailable = source.kind === 'remote' && status !== 'error';
+  const audioAvailable = source.kind === 'local' && status !== 'error';
 
   return { status, audioAvailable, toggle, stop };
 }

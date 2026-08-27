@@ -20,20 +20,24 @@
 
 - [x] **Seamless Navigation Header** — Remove the visible separator between the native header bar and the screen content: set `headerTransparent: true` (or match header background to `bgColor`), hide the bottom border/shadow, and blend the title/back-button tint into the page so the header feels like a natural part of each screen rather than a floating toolbar.
 
-- [ ] **Complete Media Audio Playback** — Finish and verify audio playback using the dataset `audio` / `filename` fields as the source of truth.
-	- [x] Add `expo-audio` playback with remote MP3 loading and local cache support.
+- [ ] **Complete Media Audio Playback** — Finish and verify audio playback using the dataset `audio` / `filename` fields as the source of truth, with all audio clips bundled locally inside the app (no remote CDN).
+	- [x] Add `expo-audio` playback, originally with remote MP3 loading and local cache support.
 	- [x] Add the Settings controls for enabling audio and auto-playing the next zikr; persist both preferences.
 	- [x] Add play/pause, loading, replay-after-finish, and player cleanup behavior.
 	- [x] Make auto-play-next stop at the final phrase and replace the current player before starting the next phrase.
-	- [x] Handle navigation and loading races so stale downloads cannot attach to another phrase or block future playback.
+	- [x] Handle navigation and loading races so stale operations cannot attach to another phrase or block future playback.
 	- [x] Normalize empty audio metadata and support phrase-level/category-level source fallback.
 	- [x] Show separate themed feedback for missing audio (`noAudio`) and playback errors (`audioError`), with retry support.
-	- [ ] Choose a production audio host. Use Cloudflare R2, Supabase Storage, Firebase Storage, S3/CloudFront, or a managed VPS. Do not use Google Drive public links for production playback.
-	- [ ] Replace `config.audio.baseUrl` (`https://zikr-audio.example.com/`) with the real HTTPS audio URL.
-	- [ ] Upload the MP3 files using paths compatible with the resolver, such as `audio/248.mp3`, and verify every referenced URL returns `200` with `Content-Type: audio/mpeg` and byte-range support.
-	- [ ] Configure CORS for Expo Web and configure CDN caching for public audio files.
+	- [x] Refactor `src/audio/audioSource.ts` to resolve audio to `{ kind: 'local'; filename: string } | { kind: 'missing' }` instead of remote URLs.
+	- [x] Refactor `src/audio/audioCache.ts` into a legacy-cache cleanup helper; remove remote download / `expo-file-system` cache logic.
+	- [x] Create `src/audio/audioAssets.ts` with a static `Record<filename, require(...)>` resolver for bundled MP3 URIs via `expo-asset`.
+	- [x] Update `src/audio/useZikrAudio.ts` to load the local asset URI directly into `createAudioPlayer`, dropping network fetch paths.
+	- [x] Update `src/config/config.ts` to remove the placeholder CDN `baseUrl` / `cacheDir` and document the local asset path convention.
+	- [x] Add a one-time cache/migration helper to clear any legacy remote-download audio cache from `expo-file-system` so old cached MP3s do not conflict with local assets.
+	- [x] Clear old audio/filename data from `src/dataset/azkar-sample.json` so the app reports missing audio until new clips are available.
+	- [ ] When new audio data is available: collect the MP3 clips, place them under `assets/audio/`, populate `src/audio/audioAssets.ts`, and fill the `audio` / `filename` fields in `src/dataset/azkar-sample.json`.
 	- [ ] Decide whether playback must continue while the app is backgrounded or the screen is locked. If required, configure the Expo Audio session, background playback, Android media notifications, and iOS background audio mode.
-	- [ ] Test Android, iOS, and Web: first play, pause/resume, replay, offline cached play, network failure, retry, phrase navigation during download, auto-play-next, final phrase, and missing audio.
+	- [ ] Test Android, iOS, and Web: first play, pause/resume, replay, phrase navigation, auto-play-next, final phrase, and missing audio.
 	- [ ] Future data task: add or intentionally approve missing audio entries in the dataset, including categories `1`, `21`, and `122` and any phrases with empty audio fields.
 
 - [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` and include its data in the dataset so it appears alongside the other zikr categories.

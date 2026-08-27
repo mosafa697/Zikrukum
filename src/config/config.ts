@@ -1,7 +1,7 @@
 export const config = {
   audio: {
-    baseUrl: 'https://zikr-audio.example.com/',
-    cacheDir: 'zikr-audio',
+    /** Local bundled asset directory (relative to project root). Clips are resolved via `expo-asset`. */
+    assetDir: 'assets/audio',
   },
   font: {
     minScale: 0.6,

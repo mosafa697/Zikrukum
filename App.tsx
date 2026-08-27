@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { createAppStore, type AppStore } from './src/store';
 import { loadPersistedState } from './src/store/persistence';
+import { clearLegacyAudioCache } from './src/audio/audioCache';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 export default function App() {
@@ -22,6 +23,10 @@ export default function App() {
   // Load persisted settings before first render
   useEffect(() => {
     loadPersistedState().then((state) => setAppStore(createAppStore(state)));
+    // Clean up any audio files left over from the old remote-download implementation
+    clearLegacyAudioCache().catch(() => {
+      // ignore cleanup errors
+    });
   }, []);
 
   if (!fontsLoaded || !appStore) {

@@ -55,7 +55,7 @@ Zikrukum/
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── config/
-    │   └── config.ts           # App constants: audio baseUrl, font scale limits, interaction guards (ms)
+    │   └── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
     ├── dataset/
     │   └── azkar-sample.json   # Bundled azkar data (categories + phrases, Arabic text)
     ├── i18n/
@@ -161,9 +161,11 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 ### Audio
 
 - Source of truth: `audio` / `filename` fields in the dataset (per-phrase or per-category `audioRef`).
-- `audioSource.ts` resolves a phrase to `{ kind: 'remote', url, filename }` or `{ kind: 'missing' }`.
-- `audioCache.ts` downloads remote MP3s to the Expo cache dir (`FileSystem.cacheDirectory + config.audio.cacheDir`) and reuses cached files.
-- Base URL is configured in `config.audio.baseUrl`.
+- Audio clips are bundled locally inside the app under `assets/audio/` and resolved through `expo-asset`.
+- `audioSource.ts` resolves a phrase to `{ kind: 'local', uri, filename }` or `{ kind: 'missing' }`.
+- `audioAssets.ts` builds a static `Record<filename, require(...)>` map so Metro bundles every referenced MP3 and returns a playable URI.
+- `audioCache.ts` is kept only for clearing any legacy remote-download cache; there is no remote URL or CDN fetch path.
+- The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
 
 ### Internationalization
 
