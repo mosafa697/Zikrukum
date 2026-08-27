@@ -99,7 +99,7 @@ Single native stack (`RootStackParamList`), headers hidden (`headerShown: false`
 
 - `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`
 
-Non-home screens use the shared `ScreenHeader` component (chromeless back chevron on the left, centered title, optional right action); `PhraseCard` keeps its own custom header with the progress pill. The top safe-area strip is themed via `SafeAreaView` inside `RootNavigator` (matches `theme.bgColor`), not in `App.tsx`.
+Non-home screens use the shared `ScreenHeader` component (chromeless: optional `leftAction` slot or back chevron, centered title, optional `rightAction` slot, and an optional `bottom` row that renders directly under the header); `PhraseCard` keeps its own custom header with the progress pill. The top safe-area strip is themed via `SafeAreaView` inside `RootNavigator` (matches `theme.bgColor`), not in `App.tsx`.
 
 ### State Management (Redux Toolkit)
 

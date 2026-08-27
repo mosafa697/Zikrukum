@@ -8,17 +8,28 @@
       "android",
       "web"
     ],
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
     ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4EEE0"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "package": "com.azkar.zikrukum"
+      "package": "com.azkar.zikrukum",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android/adaptive-foreground.png",
+        "backgroundColor": "#F4EEE0"
+      }
     },
     "plugins": [
       "expo-font",
