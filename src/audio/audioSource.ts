@@ -10,7 +10,8 @@ export type AudioSource = { kind: 'local'; filename: string } | { kind: 'missing
  * Keys are the stripped filenames from the dataset (no `/audio/` prefix, no `.mp3` extension).
  */
 const AUDIO_ASSETS: Record<string, number> = {
-  '1-1': require('../../assets/audio/1-1.mp3'),
+  // for example:
+  // '1-1': require('../../assets/audio/1-1.mp3'),
 };
 
 function stripAudioPath(value: string): string {
