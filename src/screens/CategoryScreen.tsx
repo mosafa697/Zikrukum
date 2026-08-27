@@ -56,6 +56,7 @@ export function CategoryScreen() {
   } = useZikrAudio({
     phrase: currentPhrase,
     category: categoryData,
+    repeatCount: currentPhrase?.count ?? 1,
     onEnded: handleAudioEnded,
   });
 
