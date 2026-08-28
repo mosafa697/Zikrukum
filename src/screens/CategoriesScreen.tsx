@@ -65,11 +65,7 @@ export function CategoriesScreen() {
             accessibilityLabel={isSearchOpen ? t('closeSearch') : t('search')}
             style={styles.headerActionBtn}
           >
-            <Ionicons
-              name={isSearchOpen ? 'close' : 'search'}
-              size={20}
-              color={theme.textColor}
-            />
+            <Ionicons name={isSearchOpen ? 'close' : 'search'} size={20} color={theme.textColor} />
           </Pressable>
         }
         rightAction={
@@ -132,15 +128,8 @@ export function CategoriesScreen() {
           onPress={() => navigation.navigate('FreeTasbih')}
         >
           <View style={styles.categoryMeta}>
-            <Pressable
-              hitSlop={10}
-              style={styles.favoriteButton}
-            >
-              <Ionicons
-                name={'pin'}
-                size={18}
-                color={theme.secondaryTextColor}
-              />
+            <Pressable hitSlop={10} style={styles.favoriteButton}>
+              <Ionicons name={'pin'} size={18} color={theme.secondaryTextColor} />
             </Pressable>
           </View>
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>

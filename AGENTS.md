@@ -48,8 +48,7 @@ Zikrukum/
 ├── assets/                     # Fonts, icons
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
-    │   ├── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
-    │   └── audioCache.ts       # Clears legacy remote-download cache
+    │   └── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
     ├── components/             # Shared UI components
     │   ├── PhraseCard.tsx      # Azkar phrase card (carousel item)
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
@@ -164,7 +163,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 - Audio clips are bundled locally inside the app under `assets/audio/` and resolved through `expo-asset`.
 - `audioSource.ts` resolves a phrase to `{ kind: 'local', filename }` or `{ kind: 'missing' }`, then loads the matching local asset and verifies it exists via `expo-file-system` before returning a playable URI.
 - Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file.
-- `audioCache.ts` is kept only for clearing any legacy remote-download cache; there is no remote URL or CDN fetch path.
+- There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
 
 ### Internationalization

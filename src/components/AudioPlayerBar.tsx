@@ -127,7 +127,6 @@ export function AudioPlayerBar({
   }
 
   const label = getStatusLabel(status);
-  const isMissing = status === 'missing';
   const isError = status === 'error';
   const showProgress = status === 'playing' || status === 'paused';
 
@@ -144,7 +143,7 @@ export function AudioPlayerBar({
           <ProgressBar currentTime={currentTime} duration={duration} colors={colors} />
         ) : (
           <Text style={[styles.metaText, { color: colors.secondaryTextColor }]}>
-            {isMissing ? t('audioNoRecordingSubtext') : isError ? t('retryAudio') : formatAudioTime(duration)}
+            {isError ? t('retryAudio') : formatAudioTime(duration)}
           </Text>
         )}
       </View>
