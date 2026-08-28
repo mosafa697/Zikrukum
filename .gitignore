@@ -3,3 +3,6 @@ node_modules/
 pc-api-key.json
 *.jks
 *.keystore
+
+.venv-audio/
+.expo

@@ -13,6 +13,8 @@ import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { AZKAR_PRIMARY_FONT, AZKAR_COUNTER_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { formatNumber } from '../utils/numberFormatting';
+import type { PlaybackStatus } from '../store/slices/playbackSlice';
+import { AudioPlayerBar } from './AudioPlayerBar';
 
 const SWIPE_THRESHOLD = 50;
 const SWIPE_ANIMATION_DURATION = 200;
@@ -25,6 +27,10 @@ type PhraseCardProps = {
   onBack: () => void;
   onReset: () => void;
   categoryName: string;
+  audioEnabled: boolean;
+  audioAvailable: boolean;
+  audioStatus: PlaybackStatus;
+  onToggleAudio: () => void;
 };
 
 export function PhraseCard({
@@ -35,6 +41,10 @@ export function PhraseCard({
   onBack,
   onReset,
   categoryName,
+  audioEnabled,
+  audioAvailable,
+  audioStatus,
+  onToggleAudio,
 }: PhraseCardProps) {
   const dispatch = useDispatch();
 
@@ -194,19 +204,6 @@ export function PhraseCard({
                   >
                     {prevPhrase.text}
                   </Text>
-                  {showSubText && prevPhrase.subtext ? (
-                    <>
-                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text
-                        style={[
-                          styles.subtext,
-                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
-                        ]}
-                      >
-                        {prevPhrase.subtext}
-                      </Text>
-                    </>
-                  ) : null}
                 </ScrollView>
               )}
             </Animated.View>
@@ -231,19 +228,6 @@ export function PhraseCard({
                   >
                     {phrase.text}
                   </Text>
-                  {showSubText && phrase.subtext ? (
-                    <>
-                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text
-                        style={[
-                          styles.subtext,
-                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
-                        ]}
-                      >
-                        {phrase.subtext}
-                      </Text>
-                    </>
-                  ) : null}
                 </ScrollView>
               </Pressable>
             </Animated.View>
@@ -263,26 +247,33 @@ export function PhraseCard({
                   >
                     {nextPhrase.text}
                   </Text>
-                  {showSubText && nextPhrase.subtext ? (
-                    <>
-                      <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-                      <Text
-                        style={[
-                          styles.subtext,
-                          { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
-                        ]}
-                      >
-                        {nextPhrase.subtext}
-                      </Text>
-                    </>
-                  ) : null}
                 </ScrollView>
               )}
             </Animated.View>
           </View>
         </PanGestureHandler>
 
-        <View style={styles.footer}>
+        <AudioPlayerBar
+          status={audioStatus}
+          audioEnabled={audioEnabled}
+          audioAvailable={audioAvailable}
+          onToggle={onToggleAudio}
+          colors={colors}
+        />
+
+        {showSubText && phrase.subtext ? (
+          <>
+            <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+            <Text
+              style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}
+            >
+              {phrase.subtext}
+            </Text>
+          </>
+        ) : null}
+      </View>
+      <View style={styles.footer}>
+        {/* 
           <Pressable
             style={[
               styles.iconBtn,
@@ -295,21 +286,23 @@ export function PhraseCard({
           >
             <Ionicons name="chevron-back" size={22} color={colors.textColor} />
           </Pressable>
+        */}
 
-          <Pressable
-            style={[
-              styles.counterBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              isAnimating && styles.counterBtnActive,
-            ]}
-            onPress={guardedCounterPress}
-            accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
-          >
-            <Text style={[styles.counterText, { color: colors.iconColor }]}>
-              {formatNumber(remainingCount)}
-            </Text>
-          </Pressable>
+        <Pressable
+          style={[
+            styles.counterBtn,
+            { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
+            isAnimating && styles.counterBtnActive,
+          ]}
+          onPress={guardedCounterPress}
+          accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
+        >
+          <Text style={[styles.counterText, { color: colors.iconColor }]}>
+            {formatNumber(remainingCount)}
+          </Text>
+        </Pressable>
 
+        {/* 
           <Pressable
             style={[
               styles.iconBtn,
@@ -322,7 +315,7 @@ export function PhraseCard({
           >
             <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
           </Pressable>
-        </View>
+        */}
       </View>
     </View>
   );
@@ -391,7 +384,7 @@ const styles = StyleSheet.create({
   },
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
   subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
   invisible: { opacity: 0 },
   counterBtn: {
     width: 88,

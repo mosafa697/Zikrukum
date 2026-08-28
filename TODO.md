@@ -20,12 +20,28 @@
 
 - [x] **Seamless Navigation Header** — Remove the visible separator between the native header bar and the screen content: set `headerTransparent: true` (or match header background to `bgColor`), hide the bottom border/shadow, and blend the title/back-button tint into the page so the header feels like a natural part of each screen rather than a floating toolbar.
 
-- [ ] **Audio Playback** — Add audio support for every zikr, using the existing `audio` / `filename` fields in the dataset as the source of truth.
-	- Add a play button on the zikr screen near the main phrase controls so users can play the current zikr without leaving the page.
-	- Add a new settings toggle for auto-playing the next zikr audio when the current one ends; default state should be `on` and it should be persisted in the store like the other preferences.
-	- Decide the audio delivery strategy with app size as the priority: prefer remote audio URLs with local caching if it keeps the bundle smaller, and only bundle files offline when the UX or reliability requires it.
-	- Define the missing-audio behavior clearly: disable or hide the play button when no audio exists, and show a lightweight fallback message or icon instead of failing silently.
-	- Make the auto-play-next flow respect navigation and end-of-list boundaries, so it only advances when a next zikr exists and the user has not disabled the feature.
+- [ ] **Complete Media Audio Playback** — Finish and verify audio playback using the dataset `audio` / `filename` fields as the source of truth, with all audio clips bundled locally inside the app (no remote CDN).
+	- [x] Add `expo-audio` playback, originally with remote MP3 loading and local cache support.
+	- [x] Add the Settings controls for enabling audio and auto-playing the next zikr; persist both preferences.
+	- [x] Add play/pause, loading, replay-after-finish, and player cleanup behavior.
+	- [x] Make auto-play-next stop at the final phrase and replace the current player before starting the next phrase.
+	- [x] Handle navigation and loading races so stale operations cannot attach to another phrase or block future playback.
+	- [x] Normalize empty audio metadata and support phrase-level/category-level source fallback.
+	- [x] Show separate themed feedback for missing audio (`noAudio`) and playback errors (`audioError`), with retry support.
+	- [x] Refactor `src/audio/audioSource.ts` to resolve audio to `{ kind: 'local'; filename: string } | { kind: 'missing' }` instead of remote URLs.
+	- [x] ~~Refactor `src/audio/audioCache.ts` into a legacy-cache cleanup helper; remove remote download / `expo-file-system` cache logic.~~ Removed: legacy cache cleanup no longer needed.
+	- [x] Create `src/audio/audioAssets.ts` with a static `Record<filename, require(...)>` resolver for bundled MP3 URIs via `expo-asset`.
+	- [x] Update `src/audio/useZikrAudio.ts` to load the local asset URI directly into `createAudioPlayer`, dropping network fetch paths.
+	- [x] Update `src/config/config.ts` to remove the placeholder CDN `baseUrl` / `cacheDir` and document the local asset path convention.
+	- [x] Redesign the zikr reader audio player to match the reference image: play/pause/finished/loading/missing states, progress bar with current/total time, and placement between the zikr text and source info.
+	- [x] Track playback `currentTime` / `duration` in the `playback` slice and poll while playing for a live progress bar.
+	- [x] Hide the audio player entirely when audio is disabled in Settings or the current phrase has no audio file (`missing`).
+	- [x] ~~Add a one-time cache/migration helper to clear any legacy remote-download audio cache from `expo-file-system` so old cached MP3s do not conflict with local assets.~~ Removed along with `src/audio/audioCache.ts`.
+	- [x] Clear old audio/filename data from `src/dataset/azkar-sample.json` so the app reports missing audio until new clips are available.
+	- [ ] When new audio data is available: collect the MP3 clips, place them under `assets/audio/`, populate `src/audio/audioAssets.ts`, and fill the `audio` / `filename` fields in `src/dataset/azkar-sample.json`.
+	- [ ] Decide whether playback must continue while the app is backgrounded or the screen is locked. If required, configure the Expo Audio session, background playback, Android media notifications, and iOS background audio mode.
+	- [ ] Test Android, iOS, and Web: first play, pause/resume, replay, phrase navigation, auto-play-next, final phrase, and missing audio.
+	- [ ] Future data task: add or intentionally approve missing audio entries in the dataset, including categories `1`, `21`, and `122` and any phrases with empty audio fields.
 
 - [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` and include its data in the dataset so it appears alongside the other zikr categories.
 
@@ -52,4 +68,5 @@
 
 - [ ] fix refreshment zikr when sliding right or left on mobile screens, i thin it reload the previous zikr for milliseconds and then load the wanted zikr, we dont need to have this trembling  
 
-- [ ] center the category of "مسبحة حرة" at the categories page as the text is little bit to right as it has not contained the favorite icon
+- [ ] center the category of "مسبحة حرة" at the categories page
+ as the text is little bit to right as it has not contained the favorite icon

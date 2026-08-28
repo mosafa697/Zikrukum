@@ -1,4 +1,8 @@
 export const config = {
+  audio: {
+    /** Local bundled asset directory (relative to project root). Clips are resolved via `expo-asset`. */
+    assetDir: 'assets/audio',
+  },
   font: {
     minScale: 0.6,
     maxScale: 2.0,

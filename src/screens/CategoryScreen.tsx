@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import { PhraseCard } from '../components/PhraseCard';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/storage';
 import { t } from '../i18n';
+import { useZikrAudio } from '../audio/useZikrAudio';
 
 export function CategoryScreen() {
   const dispatch = useDispatch();
@@ -34,6 +35,36 @@ export function CategoryScreen() {
   const wasShuffled = useSelector((state: RootState) => state.phases.wasShuffled);
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
+  const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
+  const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
+  const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
+  const shouldAutoPlayRef = useRef(false);
+
+  const currentPhrase = categoryPhrases[index];
+
+  const handleAudioEnded = useCallback(() => {
+    if (!audioEnabled || !autoPlayNext) return;
+    if (isLastPhrase) return;
+    shouldAutoPlayRef.current = true;
+    dispatch(incrementIndex());
+  }, [audioEnabled, autoPlayNext, isLastPhrase, dispatch]);
+
+  const {
+    status: audioStatus,
+    audioAvailable,
+    toggle: toggleAudio,
+  } = useZikrAudio({
+    phrase: currentPhrase,
+    category: categoryData,
+    repeatCount: currentPhrase?.count ?? 1,
+    onEnded: handleAudioEnded,
+  });
+
+  useEffect(() => {
+    if (!shouldAutoPlayRef.current || !audioEnabled || !currentPhrase) return;
+    shouldAutoPlayRef.current = false;
+    void toggleAudio();
+  }, [audioEnabled, currentPhrase, toggleAudio]);
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [clicks, setClicks] = useState<number[]>([]);
@@ -128,8 +159,6 @@ export function CategoryScreen() {
     navigation.navigate('Categories');
   }, [categoryId, dispatch, navigation]);
 
-  const currentPhrase = categoryPhrases[index];
-
   if (!categoryData || !currentPhrase) {
     return (
       <View style={[styles.container, { backgroundColor: theme.bgColor }]}>
@@ -147,6 +176,10 @@ export function CategoryScreen() {
       onBack={handleBack}
       onReset={handleReset}
       categoryName={categoryData.title}
+      audioEnabled={audioEnabled}
+      audioAvailable={audioAvailable}
+      audioStatus={audioStatus}
+      onToggleAudio={toggleAudio}
     />
   );
 }

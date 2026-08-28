@@ -35,6 +35,8 @@ export type AzkarPhrase = {
   text: string;
   count: number;
   subtext: string;
+  audio?: string;
+  filename?: string;
 };
 
 export type AzkarCategory = {
@@ -42,13 +44,23 @@ export type AzkarCategory = {
   title: string;
   icon: FontAwesome5Name;
   phrases: AzkarPhrase[];
+  audioRef?: { audio: string; filename: string };
 };
 
 export const azkar: AzkarCategory[] = (
   azkarData as {
+    filename: any;
+    audio: any;
     id: number;
     category: string;
-    array: { id: number; text: string; count: number; subtext: string }[];
+    array: {
+      id: number;
+      text: string;
+      count: number;
+      subtext: string;
+      audio: string;
+      filename: string;
+    }[];
   }[]
 ).map((category) => ({
   id: category.id,
@@ -59,5 +71,11 @@ export const azkar: AzkarCategory[] = (
     text: phrase.text,
     count: phrase.count,
     subtext: phrase.subtext,
+    audio: phrase.audio,
+    filename: phrase.filename,
   })),
+  audioRef:
+    category.audio || category.filename
+      ? { audio: category.audio ?? '', filename: category.filename ?? '' }
+      : undefined,
 }));

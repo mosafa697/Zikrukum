@@ -53,4 +53,20 @@ export const ar = {
   nextDhikr: 'الذكر التالي',
   remainingCount: 'العدد المتبقي ',
   previousDhikr: 'الذكر السابق',
+  playAudio: 'تشغيل الصوت',
+  pauseAudio: 'إيقاف الصوت',
+  noAudio: 'لا يوجد صوت',
+  audioError: 'تعذر تشغيل الصوت',
+  retryAudio: 'إعادة محاولة تشغيل الصوت',
+  audioDefaultLabel: 'زر التشغيل (الافتراضية)',
+  audioPlayingLabel: 'أثناء التشغيل',
+  audioPausedLabel: 'متوقف مؤقتاً',
+  audioFinishedLabel: 'انتهى التشغيل',
+  audioLoadingLabel: 'جاري التحميل',
+  audioNoRecordingLabel: 'لا يوجد تسجيل صوتي',
+  audioNoRecordingSubtext: 'لا يتوفر تسجيل صوتي',
+
+  // SettingsScreen
+  audioEnabledLabel: 'تفعيل تشغيل الصوت',
+  audioLabel: 'تشغيل الصوت تلقائياً',
 } as const;

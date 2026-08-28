@@ -5,6 +5,7 @@ import { toggleShuffle } from './slices/phasesSlice';
 import { decrementFontScale, incrementFontScale, setFontScale } from './slices/fontScaleSlice';
 import { toggleAppearance } from './slices/subTextSlice';
 import { setFavouriteCategories, toggleFavouriteCategory } from './slices/favouriteCategoriesSlice';
+import { toggleAutoPlayNext, toggleAudioEnabled } from './slices/audioSlice';
 import { getStoredValue, setStoredValue } from '../utils/storage';
 import { config } from '../config/config';
 import type { AzkarThemeName } from '../theme/azkarTheme';
@@ -58,15 +59,27 @@ listenerMiddleware.startListening({
   },
 });
 
+listenerMiddleware.startListening({
+  matcher: isAnyOf(toggleAutoPlayNext, toggleAudioEnabled),
+  effect: async (_, api) => {
+    const { audio } = api.getState() as { audio: { autoPlayNext: boolean; audioEnabled: boolean } };
+    await setStoredValue('autoPlayNext', audio.autoPlayNext);
+    await setStoredValue('audioEnabled', audio.audioEnabled);
+  },
+});
+
 export async function loadPersistedState() {
-  const [theme, totalCount, shuffle, fontScale, subText, favouriteCategories] = await Promise.all([
-    getStoredValue<AzkarThemeName>('theme', 'solarized'),
-    getStoredValue<number>('totalCount', 0),
-    getStoredValue<boolean>('shufflePhases', false),
-    getStoredValue<number>('fontScale', config.font.defaultScale),
-    getStoredValue<boolean>('subText', true),
-    getStoredValue<number[]>('favouriteCategories', []),
-  ]);
+  const [theme, totalCount, shuffle, fontScale, subText, favouriteCategories, autoPlayNext, audioEnabled] =
+    await Promise.all([
+      getStoredValue<AzkarThemeName>('theme', 'solarized'),
+      getStoredValue<number>('totalCount', 0),
+      getStoredValue<boolean>('shufflePhases', false),
+      getStoredValue<number>('fontScale', config.font.defaultScale),
+      getStoredValue<boolean>('subText', true),
+      getStoredValue<number[]>('favouriteCategories', []),
+      getStoredValue<boolean>('autoPlayNext', true),
+      getStoredValue<boolean>('audioEnabled', true),
+    ]);
 
   return {
     theme: { value: theme, list: ['light', 'solarized', 'dark'] as AzkarThemeName[] },
@@ -75,5 +88,7 @@ export async function loadPersistedState() {
     fontScale: { value: fontScale },
     subText: { value: subText },
     favouriteCategories: { ids: favouriteCategories },
+    audio: { autoPlayNext, audioEnabled },
+    playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
   };
 }

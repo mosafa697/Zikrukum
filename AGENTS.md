@@ -47,15 +47,14 @@ Zikrukum/
 ├── adhkar-redesign.html        # UI redesign reference (design source of truth)
 ├── assets/                     # Fonts, icons
 └── src/
-    ├── audio/                  # Audio source resolution + file caching
-    │   ├── audioSource.ts      # Resolves phrase/category audio fields -> remote URL or 'missing'
-    │   └── audioCache.ts       # Downloads remote audio into expo-file-system cache dir
+    ├── audio/                  # Audio source resolution + local bundled assets
+    │   └── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
     ├── components/             # Shared UI components
     │   ├── PhraseCard.tsx      # Azkar phrase card (carousel item)
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── config/
-    │   └── config.ts           # App constants: audio baseUrl, font scale limits, interaction guards (ms)
+    │   └── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
     ├── dataset/
     │   └── azkar-sample.json   # Bundled azkar data (categories + phrases, Arabic text)
     ├── i18n/
@@ -161,9 +160,11 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 ### Audio
 
 - Source of truth: `audio` / `filename` fields in the dataset (per-phrase or per-category `audioRef`).
-- `audioSource.ts` resolves a phrase to `{ kind: 'remote', url, filename }` or `{ kind: 'missing' }`.
-- `audioCache.ts` downloads remote MP3s to the Expo cache dir (`FileSystem.cacheDirectory + config.audio.cacheDir`) and reuses cached files.
-- Base URL is configured in `config.audio.baseUrl`.
+- Audio clips are bundled locally inside the app under `assets/audio/` and resolved through `expo-asset`.
+- `audioSource.ts` resolves a phrase to `{ kind: 'local', filename }` or `{ kind: 'missing' }`, then loads the matching local asset and verifies it exists via `expo-file-system` before returning a playable URI.
+- Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file.
+- There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
+- The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
 
 ### Internationalization
 

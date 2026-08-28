@@ -50,7 +50,12 @@ export function ScreenHeader({
           {leftAction ? (
             leftAction
           ) : showBack ? (
-            <Pressable onPress={handleBack} hitSlop={8} accessibilityLabel={t('back')} style={styles.actionBtn}>
+            <Pressable
+              onPress={handleBack}
+              hitSlop={8}
+              accessibilityLabel={t('back')}
+              style={styles.actionBtn}
+            >
               <Ionicons name="chevron-back" size={24} color={theme.textColor} />
             </Pressable>
           ) : null}
