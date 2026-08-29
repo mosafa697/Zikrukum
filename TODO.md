@@ -8,7 +8,7 @@
 
 - [x] **Settings Button on Home Screen** — Gear icon added to the `CategoriesScreen` navigation header via `useLayoutEffect`; tapping it navigates directly to Settings.
 
-- [x] **Carousel Swipe Navigation** — Replaced the single-card swipe with a true carousel: prev/current/next phrases are rendered as three absolute-positioned cards sharing the same `translateX`, so adjacent phrases slide into view in real time as the user drags.
+- [x] **Phrase Pager Swipe Navigation (Refactored)** — Replaced the buggy 3-card `PanGestureHandler`/`Animated` carousel (which flickered: it animated cards then swapped content underneath, and `useNativeDriver` was off) with a virtualized horizontal `FlatList` pager — one page per phrase, `pagingEnabled`, pages sized to the phrase area, vertical scroll per page for long text. RTL swipe direction (swipe right = next) is guaranteed on iOS/Android (native `forceRTL`) and web (`scaleX: -1` mirror); bidirectional Redux ↔ pager index sync via `expectedIndexRef` covers reset, counter-complete, audio auto-advance and saved-index restore without loops or flicker.
 
 - [x] **Code Cleanup & Lint** — ESLint (`eslint-config-expo`) + Prettier configured; `npm run lint` / `npm run lint:fix` added; all errors resolved (including refactoring Animated values from `useRef` to `useMemo`); redundant JSX section comments removed across all screens.
 
@@ -66,7 +66,7 @@
 
 - [x] replace the back button icon to be look at the other side (left)
 
-- [ ] fix refreshment zikr when sliding right or left on mobile screens, i thin it reload the previous zikr for milliseconds and then load the wanted zikr, we dont need to have this trembling  
+- [x] fix refreshment zikr when sliding right or left on mobile — the flicker (previous zikr reloading for a few milliseconds) came from the old carousel swapping phrases underneath the animated transform; the `FlatList` pager transitions natively with no content swap, so it is flicker-free.  
 
 - [ ] center the category of "مسبحة حرة" at the categories page
  as the text is little bit to right as it has not contained the favorite icon

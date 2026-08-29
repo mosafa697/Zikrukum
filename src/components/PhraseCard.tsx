@@ -1,10 +1,21 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  FlatList,
+  I18nManager,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+  type ListRenderItemInfo,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { decrementIndex, incrementIndex } from '../store/slices/indexCountSlice';
+import { setIndexCount } from '../store/slices/indexCountSlice';
 import { decrementFontScale, incrementFontScale } from '../store/slices/fontScaleSlice';
 import { RootState } from '../store';
 import type { AzkarPhrase } from '../mappers/azkarMapper';
@@ -16,8 +27,14 @@ import { formatNumber } from '../utils/numberFormatting';
 import type { PlaybackStatus } from '../store/slices/playbackSlice';
 import { AudioPlayerBar } from './AudioPlayerBar';
 
-const SWIPE_THRESHOLD = 50;
-const SWIPE_ANIMATION_DURATION = 200;
+// Fallback commit runs a short time after the last scroll event so web (no
+// momentum events) and slow drag releases still sync the Redux index to the page.
+const SWIPE_SETTLE_MS = 120;
+
+// Native builds force RTL app-wide (I18nManager.forceRTL in index.ts), so the
+// horizontal list already pages right-to-left there. On web forceRTL is a no-op,
+// so the list pages left-to-right; we mirror it (scaleX: -1) to present RTL.
+const RTL_MIRROR_SCALE = I18nManager.isRTL ? 1 : -1;
 
 type PhraseCardProps = {
   phrase: AzkarPhrase;
@@ -48,11 +65,8 @@ export function PhraseCard({
 }: PhraseCardProps) {
   const dispatch = useDispatch();
 
-  const { width: screenWidth } = useWindowDimensions();
-
-  const indexCount = useSelector((state: RootState) => state.indexCount.value);
+  const index = useSelector((state: RootState) => state.indexCount.value);
   const phasesLength = useSelector((state: RootState) => state.indexCount.phasesLength);
-  const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
   const allPhrases = useSelector((state: RootState) => state.phases.value);
   const showSubText = useSelector((state: RootState) => state.subText.value);
   const fontScale = useSelector((state: RootState) => state.fontScale.value);
@@ -62,81 +76,182 @@ export function PhraseCard({
   const [longPressTriggered, setLongPressTriggered] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const progressPercentage = phasesLength > 0 ? (indexCount / phasesLength) * 100 : 0;
+  const [pageSize, setPageSize] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+  const pagerRef = useRef<FlatList<AzkarPhrase>>(null);
+  const expectedIndexRef = useRef(index);
+  const latestOffsetRef = useRef(0);
+  const isFirstSync = useRef(true);
+  const isDraggingRef = useRef(false);
+  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const progressPercentage = phasesLength > 0 ? (index / phasesLength) * 100 : 0;
   const remainingCount = Math.max(phrase.count - counter, 0);
-  const canGoBack = indexCount > 0;
-  const canGoForward = !isLastPhrase;
 
-  // Adjacent phrases for the carousel
-  const prevPhrase = allPhrases[indexCount - 1] ?? null;
-  const nextPhrase = allPhrases[indexCount + 1] ?? null;
-
-  // useMemo keeps Animated values stable across renders without touching refs during render
-  const translateX = useMemo(() => new Animated.Value(0), []);
-  // Prev sits to the right (+screenWidth), next sits to the left (-screenWidth)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const prevOffset = useMemo(() => new Animated.Value(screenWidth), []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const nextOffset = useMemo(() => new Animated.Value(-screenWidth), []);
-  const prevTranslateX = useMemo(() => Animated.add(translateX, prevOffset), [translateX, prevOffset]);
-  const nextTranslateX = useMemo(() => Animated.add(translateX, nextOffset), [translateX, nextOffset]);
-
-  // Fabric requires onGestureEvent to be a plain function, not an AnimatedEvent object
-  const onGestureEvent = useCallback(
-    (event: any) => {
-      translateX.setValue(event.nativeEvent.translationX);
+  // User swipes -> Redux: commit the page the pager settled on (idempotent).
+  const commitScrollEnd = useCallback(
+    (x: number) => {
+      if (pageSize.width <= 0 || allPhrases.length === 0) return;
+      const page = Math.min(Math.max(Math.round(x / pageSize.width), 0), allPhrases.length - 1);
+      if (page !== expectedIndexRef.current) {
+        expectedIndexRef.current = page;
+        dispatch(setIndexCount(page));
+      }
     },
-    [translateX]
+    [pageSize.width, allPhrases.length, dispatch]
   );
 
-  const onHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.oldState !== State.ACTIVE) return;
-    const dx = event.nativeEvent.translationX;
-    if (Math.abs(dx) > SWIPE_THRESHOLD) {
-      if (dx < 0 && !canGoBack) {
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: false }).start();
-        return;
-      }
-      if (dx > 0 && !canGoForward) {
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: false }).start();
-        return;
-      }
-      Animated.timing(translateX, {
-        toValue: dx > 0 ? screenWidth : -screenWidth,
-        duration: SWIPE_ANIMATION_DURATION,
-        useNativeDriver: false,
-      }).start(() => {
-        translateX.setValue(0);
-        dispatch(dx > 0 ? incrementIndex() : decrementIndex());
-      });
-    } else {
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: false }).start();
+  // Redux index -> pager: animate the pager to the requested phrase. Covers
+  // reset, counter-complete advance, audio auto-advance and saved-index restore.
+  // Also re-aligns the pager when the phrase-area width changes (rotation/resize).
+  useEffect(() => {
+    if (pageSize.width <= 0) return;
+    const desiredOffset = index * pageSize.width;
+    expectedIndexRef.current = index;
+    if (Math.abs(latestOffsetRef.current - desiredOffset) < 1) {
+      return; // pager already shows the requested phrase
     }
-  };
+    const animated = !isFirstSync.current;
+    isFirstSync.current = false;
+    pagerRef.current?.scrollToOffset({ offset: desiredOffset, animated });
+  }, [index, pageSize.width]);
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const x = event.nativeEvent.contentOffset.x;
+      latestOffsetRef.current = x;
+      if (isDraggingRef.current) return;
+      if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = setTimeout(() => commitScrollEnd(x), SWIPE_SETTLE_MS);
+    },
+    [commitScrollEnd]
+  );
+
+  const handleScrollBeginDrag = useCallback(() => {
+    isDraggingRef.current = true;
+    if (settleTimerRef.current) {
+      clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+  }, []);
+
+  const handleScrollEndDrag = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+
+  const handleMomentumScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (settleTimerRef.current) {
+        clearTimeout(settleTimerRef.current);
+        settleTimerRef.current = null;
+      }
+      latestOffsetRef.current = event.nativeEvent.contentOffset.x;
+      commitScrollEnd(event.nativeEvent.contentOffset.x);
+    },
+    [commitScrollEnd]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+    };
+  }, []);
+
+  const handlePagerLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setPageSize({ width, height });
+  }, []);
+
+  const getItemLayout = useCallback(
+    (_data: ArrayLike<AzkarPhrase> | null | undefined, itemIndex: number) => ({
+      length: pageSize.width,
+      offset: pageSize.width * itemIndex,
+      index: itemIndex,
+    }),
+    [pageSize.width]
+  );
 
   const guardedCounterPress = useTimeGuardedCallback(onPhraseClick, config.interaction.counterGuardMs);
 
-  const startLongPress = () => {
+  const startLongPress = useCallback(() => {
     longPressTimerRef.current = setTimeout(() => {
       setLongPressTriggered(true);
       Clipboard.setStringAsync(phrase.text);
     }, config.interaction.longPressMs);
-  };
+  }, [phrase.text]);
 
-  const cancelLongPress = () => {
+  const cancelLongPress = useCallback(() => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const handleContentPress = () => {
+  const handleContentPress = useCallback(() => {
     if (longPressTriggered) {
       setLongPressTriggered(false);
       return;
     }
     guardedCounterPress();
-  };
+  }, [longPressTriggered, guardedCounterPress]);
+
+  const renderPhrasePage = useCallback(
+    (info: ListRenderItemInfo<AzkarPhrase>) => {
+      const { item, index: itemIndex } = info;
+      const isActive = itemIndex === index;
+      const content = (
+        <ScrollView
+          style={styles.pageScroll}
+          contentContainerStyle={styles.phraseScrollContent}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
+        >
+          <Text
+            style={[
+              styles.phraseText,
+              { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+            ]}
+          >
+            {item.text}
+          </Text>
+        </ScrollView>
+      );
+      return (
+        <View
+          style={{
+            width: pageSize.width,
+            height: pageSize.height,
+            transform: [{ scaleX: RTL_MIRROR_SCALE }],
+          }}
+        >
+          {isActive ? (
+            <Pressable
+              onPress={handleContentPress}
+              onLongPress={startLongPress}
+              onPressOut={cancelLongPress}
+              style={styles.phraseAreaInner}
+            >
+              {content}
+            </Pressable>
+          ) : (
+            content
+          )}
+        </View>
+      );
+    },
+    [
+      pageSize.width,
+      pageSize.height,
+      index,
+      colors.textColor,
+      fontScale,
+      handleContentPress,
+      startLongPress,
+      cancelLongPress,
+    ]
+  );
 
   return (
     <View style={[styles.outerContainer, { backgroundColor: colors.bgColor }]}>
@@ -181,77 +296,29 @@ export function PhraseCard({
           </View>
         </View>
 
-        {/* Carousel: prev/current/next phrases slide together during the gesture */}
-        <PanGestureHandler
-          onGestureEvent={onGestureEvent}
-          onHandlerStateChange={onHandlerStateChange}
-          activeOffsetX={[-5, 5]}
-          failOffsetY={[-20, 20]}
-        >
-          <View style={styles.phraseArea}>
-            {/* Previous phrase — sits to the right in RTL, slides in on left-swipe */}
-            <Animated.View style={[styles.absoluteCard, { transform: [{ translateX: prevTranslateX }] }]}>
-              {prevPhrase && (
-                <ScrollView
-                  contentContainerStyle={styles.phraseScrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <Text
-                    style={[
-                      styles.phraseText,
-                      { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
-                    ]}
-                  >
-                    {prevPhrase.text}
-                  </Text>
-                </ScrollView>
-              )}
-            </Animated.View>
-
-            {/* Current phrase — center */}
-            <Animated.View style={[styles.absoluteCard, { transform: [{ translateX }] }]}>
-              <Pressable
-                onPress={handleContentPress}
-                onLongPress={startLongPress}
-                onPressOut={cancelLongPress}
-                style={styles.phraseAreaInner}
-              >
-                <ScrollView
-                  contentContainerStyle={styles.phraseScrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <Text
-                    style={[
-                      styles.phraseText,
-                      { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
-                    ]}
-                  >
-                    {phrase.text}
-                  </Text>
-                </ScrollView>
-              </Pressable>
-            </Animated.View>
-
-            {/* Next phrase — sits to the left in RTL, slides in on right-swipe */}
-            <Animated.View style={[styles.absoluteCard, { transform: [{ translateX: nextTranslateX }] }]}>
-              {nextPhrase && (
-                <ScrollView
-                  contentContainerStyle={styles.phraseScrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <Text
-                    style={[
-                      styles.phraseText,
-                      { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
-                    ]}
-                  >
-                    {nextPhrase.text}
-                  </Text>
-                </ScrollView>
-              )}
-            </Animated.View>
-          </View>
-        </PanGestureHandler>
+        {/* Pager: one page per phrase, snaps to page width; pages scroll vertically when text overflows */}
+        <FlatList
+          ref={pagerRef}
+          style={[styles.phraseArea, { transform: [{ scaleX: RTL_MIRROR_SCALE }] }]}
+          horizontal
+          pagingEnabled
+          data={allPhrases}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderPhrasePage}
+          getItemLayout={getItemLayout}
+          initialScrollIndex={0}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={7}
+          removeClippedSubviews={false}
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onLayout={handlePagerLayout}
+          onScroll={handleScroll}
+          onScrollBeginDrag={handleScrollBeginDrag}
+          onScrollEndDrag={handleScrollEndDrag}
+          onMomentumScrollEnd={handleMomentumScrollEnd}
+        />
 
         <AudioPlayerBar
           status={audioStatus}
@@ -273,21 +340,6 @@ export function PhraseCard({
         ) : null}
       </View>
       <View style={styles.footer}>
-        {/* 
-          <Pressable
-            style={[
-              styles.iconBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              !canGoForward && styles.invisible,
-            ]}
-            onPress={() => dispatch(incrementIndex())}
-            disabled={!canGoForward}
-            accessibilityLabel={t('nextDhikr')}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.textColor} />
-          </Pressable>
-        */}
-
         <Pressable
           style={[
             styles.counterBtn,
@@ -301,21 +353,6 @@ export function PhraseCard({
             {formatNumber(remainingCount)}
           </Text>
         </Pressable>
-
-        {/* 
-          <Pressable
-            style={[
-              styles.iconBtn,
-              { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
-              !canGoBack && styles.invisible,
-            ]}
-            onPress={() => dispatch(decrementIndex())}
-            disabled={!canGoBack}
-            accessibilityLabel={t('previousDhikr')}
-          >
-            <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
-          </Pressable>
-        */}
       </View>
     </View>
   );
@@ -357,14 +394,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
     textShadowOffset: { width: 0, height: 0 },
   },
-  iconBtn: {
-    width: 37,
-    height: 37,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   headerIconBtn: {
     width: 37,
     height: 37,
@@ -373,7 +402,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   phraseArea: { flex: 1, overflow: 'hidden' },
-  absoluteCard: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  pageScroll: { flex: 1 },
   phraseAreaInner: { flex: 1 },
   phraseScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
   phraseText: {
@@ -385,7 +414,6 @@ const styles = StyleSheet.create({
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
   subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
   footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  invisible: { opacity: 0 },
   counterBtn: {
     width: 88,
     height: 88,

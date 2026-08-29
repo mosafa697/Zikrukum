@@ -50,7 +50,7 @@ Zikrukum/
     ├── audio/                  # Audio source resolution + local bundled assets
     │   └── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
     ├── components/             # Shared UI components
-    │   ├── PhraseCard.tsx      # Azkar phrase card (carousel item)
+    │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── config/
@@ -66,7 +66,7 @@ Zikrukum/
     │   └── RootNavigator.tsx   # Native stack navigator + RootStackParamList type
     ├── screens/
     │   ├── CategoriesScreen.tsx  # Home: category list, search, favourites sort, verse banner
-    │   ├── CategoryScreen.tsx    # Zikr reader: phrase carousel, counters, shuffle, reset
+    │   ├── CategoryScreen.tsx    # Zikr reader: phrase pager, counters, shuffle, reset
     │   ├── FreeTasbihScreen.tsx  # Free-form tasbih counter
     │   └── SettingsScreen.tsx    # Theme, font scale, subtext, audio toggles
     ├── store/
@@ -152,10 +152,17 @@ src/dataset/azkar-sample.json
 src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon per category id)
         │
         ▼  azkar.find(cat.id === categoryId)
-CategoryScreen: dispatch(setPhases(...)) → phases slice → carousel renders PhraseCard per phrase
+CategoryScreen: dispatch(setPhases(...)) → phases slice → PhraseCard renders one FlatList page per phrase
 ```
 
 Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New categories need a mapping entry (fallback: `albums-outline`).
+
+#### Phrase pager (PhraseCard)
+
+`PhraseCard` renders all category phrases in a horizontal `FlatList` (`pagingEnabled`, `getItemLayout`) — one page per phrase, each page a vertical `ScrollView` for long text. Pages are sized to the measured phrase area (`onLayout`), i.e. the card content width, not the full screen.
+
+- **Index sync**: bidirectional and loop-free via `expectedIndexRef`. User swipes commit `setIndexCount(round(x/pageWidth))` on `onMomentumScrollEnd` (plus a ~120 ms settle-timer fallback in `onScroll` for web, which has no momentum events). External index changes (reset, counter-complete, audio auto-advance, saved-index restore) call `scrollToOffset` from a `useEffect` on `[index, pageWidth]`; the first sync (restore) is instant, later ones animated.
+- **RTL**: native builds force RTL app-wide (`I18nManager.forceRTL` in `index.ts`), so the list pages right-to-left natively. On web `forceRTL` is a no-op, so the list is mirrored with `scaleX: -1` (and each page counter-mirrored) via `RTL_MIRROR_SCALE`. Result: swipe right = next phrase on every platform.
 
 ### Audio
 
