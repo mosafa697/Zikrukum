@@ -91,16 +91,30 @@ export function PhraseCard({
   const remainingCount = Math.max(phrase.count - counter, 0);
 
   // User swipes -> Redux: commit the page the pager settled on (idempotent).
+  const toFlowX = useCallback(
+    (rawX: number) => {
+      if (pageSize.width <= 0 || allPhrases.length === 0) return rawX;
+      // RN's horizontal RTL virtualized list passes the raw native offset
+      // through to onScroll/onMomentumScrollEnd, but getItemLayout/scrollToOffset
+      // use flow-relative (LTR) offsets. Convert raw -> flow to match RN's own
+      // _offsetFromScrollEvent so the page parsed here always matches the pager.
+      return I18nManager.isRTL
+        ? pageSize.width * allPhrases.length - pageSize.width - rawX
+        : rawX;
+    },
+    [pageSize.width, allPhrases.length]
+  );
+
   const commitScrollEnd = useCallback(
     (x: number) => {
       if (pageSize.width <= 0 || allPhrases.length === 0) return;
-      const page = Math.min(Math.max(Math.round(x / pageSize.width), 0), allPhrases.length - 1);
+      const page = Math.min(Math.max(Math.round(toFlowX(x) / pageSize.width), 0), allPhrases.length - 1);
       if (page !== expectedIndexRef.current) {
         expectedIndexRef.current = page;
         dispatch(setIndexCount(page));
       }
     },
-    [pageSize.width, allPhrases.length, dispatch]
+    [pageSize.width, allPhrases.length, toFlowX, dispatch]
   );
 
   // Redux index -> pager: animate the pager to the requested phrase. Covers
@@ -121,12 +135,12 @@ export function PhraseCard({
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const x = event.nativeEvent.contentOffset.x;
-      latestOffsetRef.current = x;
+      latestOffsetRef.current = toFlowX(x);
       if (isDraggingRef.current) return;
       if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
       settleTimerRef.current = setTimeout(() => commitScrollEnd(x), SWIPE_SETTLE_MS);
     },
-    [commitScrollEnd]
+    [commitScrollEnd, toFlowX]
   );
 
   const handleScrollBeginDrag = useCallback(() => {
@@ -147,10 +161,10 @@ export function PhraseCard({
         clearTimeout(settleTimerRef.current);
         settleTimerRef.current = null;
       }
-      latestOffsetRef.current = event.nativeEvent.contentOffset.x;
+      latestOffsetRef.current = toFlowX(event.nativeEvent.contentOffset.x);
       commitScrollEnd(event.nativeEvent.contentOffset.x);
     },
-    [commitScrollEnd]
+    [commitScrollEnd, toFlowX]
   );
 
   useEffect(() => {
