@@ -259,7 +259,7 @@ export function PhraseCard({
         <View style={styles.header}>
           <View style={[styles.headerSide, styles.headerRight]}>
             <Pressable style={styles.headerIconBtn} onPress={onBack} accessibilityLabel={t('back')}>
-              <Ionicons name="chevron-forward" size={22} color={colors.textColor} />
+              <Ionicons name="chevron-back" size={22} color={colors.textColor} />
             </Pressable>
             <Pressable style={styles.headerIconBtn} onPress={onReset} accessibilityLabel={t('reset')}>
               <Ionicons name="refresh-outline" size={20} color={colors.textColor} />
