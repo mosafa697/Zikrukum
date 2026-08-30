@@ -345,11 +345,23 @@ export function PhraseCard({
         {showSubText && phrase.subtext ? (
           <>
             <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
-            <Text
-              style={[styles.subtext, { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 }]}
-            >
-              {phrase.subtext}
-            </Text>
+            <View style={styles.subtextContainer}>
+              <ScrollView
+                style={styles.subtextScroll}
+                contentContainerStyle={styles.subtextScrollContent}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
+              >
+                <Text
+                  style={[
+                    styles.subtext,
+                    { color: colors.secondaryTextColor, fontSize: (fontScale - 0.4) * 16 },
+                  ]}
+                >
+                  {phrase.subtext}
+                </Text>
+              </ScrollView>
+            </View>
           </>
         ) : null}
       </View>
@@ -361,6 +373,7 @@ export function PhraseCard({
             isAnimating && styles.counterBtnActive,
           ]}
           onPress={guardedCounterPress}
+          hitSlop={14}
           accessibilityLabel={`${t('remainingCount')}${formatNumber(remainingCount)}`}
         >
           <Text style={[styles.counterText, { color: colors.iconColor }]}>
@@ -426,8 +439,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
-  subtext: { textAlign: 'center', lineHeight: 26, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
-  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  subtextContainer: {
+    height: 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    paddingHorizontal: 4,
+  },
+  subtextScroll: { maxHeight: 72, flexGrow: 0 },
+  subtextScrollContent: { paddingVertical: 2 },
+  subtext: { textAlign: 'center', lineHeight: 24, fontFamily: AZKAR_PRIMARY_FONT, writingDirection: 'rtl' },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
   counterBtn: {
     width: 88,
     height: 88,
