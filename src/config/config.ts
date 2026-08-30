@@ -4,8 +4,8 @@ export const config = {
     assetDir: 'assets/audio',
   },
   font: {
-    minScale: 0.6,
-    maxScale: 2.0,
+    minScale: 0.8,
+    maxScale: 1.6,
     defaultScale: 1.2,
     scaleIncrement: 0.1,
   },
