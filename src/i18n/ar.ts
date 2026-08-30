@@ -68,5 +68,5 @@ export const ar = {
 
   // SettingsScreen
   audioEnabledLabel: 'تفعيل تشغيل الصوت',
-  audioLabel: 'تشغيل الصوت تلقائياً',
+  audioLabel: 'تشغيل صوت الذكر التالي تلقائيا',
 } as const;

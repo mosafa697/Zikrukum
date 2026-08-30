@@ -1,5 +1,5 @@
 import { Asset } from 'expo-asset';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import type { AzkarPhrase, AzkarCategory } from '../mappers/azkarMapper';
 
 export type AudioSource = { kind: 'local'; filename: string } | { kind: 'missing' };
@@ -10,8 +10,37 @@ export type AudioSource = { kind: 'local'; filename: string } | { kind: 'missing
  * Keys are the stripped filenames from the dataset (no `/audio/` prefix, no `.mp3` extension).
  */
 const AUDIO_ASSETS: Record<string, number> = {
-  // for example:
-  // '1-1': require('../../assets/audio/1-1.mp3'),
+  '1': require('../../assets/audio/1.mp3'),
+  '2': require('../../assets/audio/2.mp3'),
+  '3': require('../../assets/audio/3.mp3'),
+  '4': require('../../assets/audio/4.mp3'),
+  '5': require('../../assets/audio/5.mp3'),
+  '6': require('../../assets/audio/6.mp3'),
+  '7': require('../../assets/audio/7.mp3'),
+  '8': require('../../assets/audio/8.mp3'),
+  '9': require('../../assets/audio/9.mp3'),
+  '10': require('../../assets/audio/10.mp3'),
+  '11': require('../../assets/audio/11.mp3'),
+  '12': require('../../assets/audio/12.mp3'),
+  '13': require('../../assets/audio/13.mp3'),
+  '14': require('../../assets/audio/14.mp3'),
+  '15': require('../../assets/audio/15.mp3'),
+  '16': require('../../assets/audio/16.mp3'),
+  '17': require('../../assets/audio/17.mp3'),
+  '18': require('../../assets/audio/18.mp3'),
+  '19': require('../../assets/audio/19.mp3'),
+  '20': require('../../assets/audio/20.mp3'),
+  '21': require('../../assets/audio/21.mp3'),
+  '22': require('../../assets/audio/22.mp3'),
+  '23': require('../../assets/audio/23.mp3'),
+  '24': require('../../assets/audio/24.mp3'),
+  '25': require('../../assets/audio/25.mp3'),
+  '26': require('../../assets/audio/26.mp3'),
+  '27': require('../../assets/audio/27.mp3'),
+  '28': require('../../assets/audio/28.mp3'),
+  '29': require('../../assets/audio/29.mp3'),
+  '30': require('../../assets/audio/30.mp3'),
+  '31': require('../../assets/audio/31.mp3'),
 };
 
 function stripAudioPath(value: string): string {
@@ -53,8 +82,8 @@ export async function resolveLocalAudioUri(filename: string): Promise<string | n
     }
 
     try {
-      const fileInfo = await FileSystem.getInfoAsync(localUri);
-      if (!fileInfo.exists) {
+      const file = new File(localUri);
+      if (!file.exists) {
         // Some platforms (e.g. web) may report the file as missing even when
         // the resolved URI is playable. Return the URI and let the player decide.
         return localUri;

@@ -199,7 +199,7 @@ export function SettingsScreen() {
               ]}
             >
               <Ionicons
-                name={autoPlayNext ? 'volume-high' : 'volume-mute-outline'}
+                name={autoPlayNext ? 'play-circle' : 'play-circle-outline'}
                 size={18}
                 color={
                   !audioEnabled
