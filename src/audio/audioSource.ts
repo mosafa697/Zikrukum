@@ -26,6 +26,7 @@ const AUDIO_ASSETS: Record<string, number> = {
   '14': require('../../assets/audio/14.mp3'),
   '15': require('../../assets/audio/15.mp3'),
   '16': require('../../assets/audio/16.mp3'),
+  '15-16': require('../../assets/audio/15-16.mp3'),
   '17': require('../../assets/audio/17.mp3'),
   '18': require('../../assets/audio/18.mp3'),
   '19': require('../../assets/audio/19.mp3'),
