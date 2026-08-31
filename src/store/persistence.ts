@@ -6,6 +6,7 @@ import { decrementFontScale, incrementFontScale, setFontScale } from './slices/f
 import { toggleAppearance } from './slices/subTextSlice';
 import { setFavouriteCategories, toggleFavouriteCategory } from './slices/favouriteCategoriesSlice';
 import { toggleAutoPlayNext, toggleAudioEnabled } from './slices/audioSlice';
+import { toggleVolumeNav } from './slices/volumeNavSlice';
 import { getStoredValue, setStoredValue } from '../utils/storage';
 import { config } from '../config/config';
 import type { AzkarThemeName } from '../theme/azkarTheme';
@@ -68,18 +69,36 @@ listenerMiddleware.startListening({
   },
 });
 
+listenerMiddleware.startListening({
+  actionCreator: toggleVolumeNav,
+  effect: async (_, api) => {
+    const { volumeNav } = api.getState() as { volumeNav: { enabled: boolean } };
+    await setStoredValue('volumeNavEnabled', volumeNav.enabled);
+  },
+});
+
 export async function loadPersistedState() {
-  const [theme, totalCount, shuffle, fontScale, subText, favouriteCategories, autoPlayNext, audioEnabled] =
-    await Promise.all([
-      getStoredValue<AzkarThemeName>('theme', 'solarized'),
-      getStoredValue<number>('totalCount', 0),
-      getStoredValue<boolean>('shufflePhases', false),
-      getStoredValue<number>('fontScale', config.font.defaultScale),
-      getStoredValue<boolean>('subText', true),
-      getStoredValue<number[]>('favouriteCategories', []),
-      getStoredValue<boolean>('autoPlayNext', true),
-      getStoredValue<boolean>('audioEnabled', true),
-    ]);
+  const [
+    theme,
+    totalCount,
+    shuffle,
+    fontScale,
+    subText,
+    favouriteCategories,
+    autoPlayNext,
+    audioEnabled,
+    volumeNavEnabled,
+  ] = await Promise.all([
+    getStoredValue<AzkarThemeName>('theme', 'solarized'),
+    getStoredValue<number>('totalCount', 0),
+    getStoredValue<boolean>('shufflePhases', false),
+    getStoredValue<number>('fontScale', config.font.defaultScale),
+    getStoredValue<boolean>('subText', true),
+    getStoredValue<number[]>('favouriteCategories', []),
+    getStoredValue<boolean>('autoPlayNext', true),
+    getStoredValue<boolean>('audioEnabled', true),
+    getStoredValue<boolean>('volumeNavEnabled', true),
+  ]);
 
   return {
     theme: { value: theme, list: ['light', 'solarized', 'dark'] as AzkarThemeName[] },
@@ -90,5 +109,6 @@ export async function loadPersistedState() {
     favouriteCategories: { ids: favouriteCategories },
     audio: { autoPlayNext, audioEnabled },
     playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
+    volumeNav: { enabled: volumeNavEnabled },
   };
 }

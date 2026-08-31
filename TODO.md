@@ -70,3 +70,29 @@
 
 - [ ] center the category of "مسبحة حرة" at the categories page
  as the text is little bit to right as it has not contained the favorite icon
+
+- [x] **Conditional RTL for Hadith & Quran Quotes on Categories Screen** — Force RTL text direction for the hadith and Quran quote text blocks on `CategoriesScreen` when the device language is Arabic or English, independent of the app's overall RTL setting.
+	- Context: native builds force RTL app-wide in `index.ts`; on web `forceRTL` is a no-op and the app uses `scaleX: -1` mirroring, so the verse/hadith banner text can render left-aligned there. This task ensures the Arabic banner text always flows right-to-left for `ar` / `en` locales.
+	- Detect the device locale via `expo-localization` (add dependency if not present): `getLocales()[0].languageCode`, check if it's `ar` or `en`.
+	- When the locale is Arabic/English and the block is Arabic text, apply `writingDirection: 'rtl'` + `textAlign: 'right'` to the verse/hadith `Text` styles on `CategoriesScreen`, so the content renders correctly regardless of phone language.
+	- Update the AGENTS.md i18n section if a locale helper is introduced (e.g. `src/utils/locale.ts`).
+
+- [x] **Make Phrase (Zikr) Content Scrollable & User-Friendly on CategoryScreen** — Ensure the zikr phrase text is easy to scroll and comfortable to read for long phrases.
+	- Location: `src/components/PhraseCard.tsx` — the per-page vertical `ScrollView` inside each pager page.
+	- Ensure `showsVerticalScrollIndicator` gives visual feedback and momentum/bounce scrolling is smooth (`bounces={true}` on iOS).
+	- Add comfortable `contentContainerStyle` padding so text never touches the card edges.
+	- Add a subtle overflow gradient at the bottom of the visible area when content exceeds the page, so users know there is more text.
+	- Consider a "scroll to top" on header tap and/or a small "scroll to end" affordance for very long phrases.
+	- Verify tall/extra-long phrase text remains fully reachable on all supported screen sizes.
+
+- [x] **Keep Screen Awake While on Phrase (Category) Screen** — Prevent the device screen from dimming/locking while the user is reading zikr on `CategoryScreen`.
+	- Add `expo-keep-awake` via `npx expo install expo-keep-awake`.
+	- In `CategoryScreen.tsx`, call `KeepAwake.activateKeepAwakeAsync()` in a `useEffect` on mount and `KeepAwake.deactivateKeepAwake()` on unmount / when navigating away, so the screen stays on only while the user is actively reading.
+	- Clean up the keep-awake activation in the effect's return path to avoid leaving the screen awake after leaving the screen.
+
+- [x] **Volume Buttons Navigate Between Zikr Phrases** — Press the hardware volume up/down buttons to move to the next/previous phrase (zikr) while on `CategoryScreen`. A Settings toggle (`volumeNav.enabled`, persisted) lets the user enable/disable the feature; when enabled the native volume UI is hidden and the volume is snapped back so the buttons only navigate, without changing the volume.
+	- React Native exposes no volume-button events out of the box; a native library is required: `react-native-key-event` (Android raw key events `KEYCODE_VOLUME_UP` = 24, `KEYCODE_VOLUME_DOWN` = 25) or `react-native-volume-manager` (can intercept volume keys and suppress the system HUD).
+	- Register a listener in `CategoryScreen.tsx` in a `useEffect` on mount: volume-up → `setIndexCount(currentIndex + 1)`, volume-down → `setIndexCount(currentIndex - 1)`, respecting phrase boundaries.
+	- Guard rapid consecutive presses (held key) with `useTimeGuardedCallback` / `config.interaction` timing to prevent flickering through phrases.
+	- Clean up the listener on unmount.
+	- Note: intercepting volume buttons on iOS generally requires a custom native module and is usually not feasible; this feature is expected to be Android-only unless a cross-platform solution is found.

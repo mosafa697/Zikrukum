@@ -15,6 +15,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { setIndexCount } from '../store/slices/indexCountSlice';
 import { decrementFontScale, incrementFontScale } from '../store/slices/fontScaleSlice';
 import { RootState } from '../store';
@@ -75,6 +76,8 @@ export function PhraseCard({
 
   const [longPressTriggered, setLongPressTriggered] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [phraseOverflow, setPhraseOverflow] = useState(false);
+  const phraseOverflowRef = useRef(false);
 
   const [pageSize, setPageSize] = useState<{ width: number; height: number }>({
     width: 0,
@@ -98,9 +101,7 @@ export function PhraseCard({
       // through to onScroll/onMomentumScrollEnd, but getItemLayout/scrollToOffset
       // use flow-relative (LTR) offsets. Convert raw -> flow to match RN's own
       // _offsetFromScrollEvent so the page parsed here always matches the pager.
-      return I18nManager.isRTL
-        ? pageSize.width * allPhrases.length - pageSize.width - rawX
-        : rawX;
+      return I18nManager.isRTL ? pageSize.width * allPhrases.length - pageSize.width - rawX : rawX;
     },
     [pageSize.width, allPhrases.length]
   );
@@ -173,6 +174,12 @@ export function PhraseCard({
     };
   }, []);
 
+  // Reset the per-phrase overflow indicator whenever the active phrase changes.
+  useEffect(() => {
+    phraseOverflowRef.current = false;
+    setPhraseOverflow(false);
+  }, [index]);
+
   const handlePagerLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     setPageSize({ width, height });
@@ -218,9 +225,20 @@ export function PhraseCard({
       const content = (
         <ScrollView
           style={styles.pageScroll}
-          contentContainerStyle={styles.phraseScrollContent}
-          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.phraseScrollContent, phraseOverflow && styles.phraseScrollNoCenter]}
+          showsVerticalScrollIndicator
+          persistentScrollbar
           nestedScrollEnabled
+          onContentSizeChange={(contentW, contentH) => {
+            if (
+              itemIndex === index &&
+              contentH >= 1 &&
+              phraseOverflowRef.current !== contentH > pageSize.height
+            ) {
+              phraseOverflowRef.current = contentH > pageSize.height;
+              setPhraseOverflow(phraseOverflowRef.current);
+            }
+          }}
         >
           <Text
             style={[
@@ -248,6 +266,13 @@ export function PhraseCard({
               style={styles.phraseAreaInner}
             >
               {content}
+              {phraseOverflow ? (
+                <LinearGradient
+                  colors={['transparent', colors.cardBgColor]}
+                  pointerEvents="none"
+                  style={styles.overflowFade}
+                />
+              ) : null}
             </Pressable>
           ) : (
             content
@@ -260,7 +285,9 @@ export function PhraseCard({
       pageSize.height,
       index,
       colors.textColor,
+      colors.cardBgColor,
       fontScale,
+      phraseOverflow,
       handleContentPress,
       startLongPress,
       cancelLongPress,
@@ -431,7 +458,15 @@ const styles = StyleSheet.create({
   phraseArea: { flex: 1, overflow: 'hidden' },
   pageScroll: { flex: 1 },
   phraseAreaInner: { flex: 1 },
+  overflowFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 34,
+  },
   phraseScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
+  phraseScrollNoCenter: { justifyContent: 'flex-start' },
   phraseText: {
     textAlign: 'center',
     writingDirection: 'rtl',

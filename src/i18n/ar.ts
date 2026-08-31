@@ -13,7 +13,7 @@ export const ar = {
   quranRef: 'سورة الرعد — آية ٢٨',
   hadithIntro: 'وقال رسول الله ﷺ: ',
   hadithText: 'يقولُ اللَّه تعالى: أنا عِنْدَ ظَنِّ عَبْدِي بي، وأنا معهُ إذا ذَكَرَنِي',
-  hadithRef: '.صحيح البخاري 7405',
+  hadithRef: 'صحيح البخاري 7405',
   searchPlaceholder: 'ابحث عن فئة...',
   search: 'بحث',
   closeSearch: 'إغلاق البحث',
@@ -36,7 +36,7 @@ export const ar = {
   confirm: 'تأكيد',
   systemTheme: 'سمة النظام',
   fontSize: 'حجم الخط',
-  randomOrder: 'ترتيب عشوائي',
+  randomOrder: 'ترتيب عشوائي للأذكار',
   showDhikrVirtue: 'إظهار فضل الذكر',
   totalDhikrs: 'إجمالي الأذكار',
   close: 'إغلاق',
@@ -69,4 +69,5 @@ export const ar = {
   // SettingsScreen
   audioEnabledLabel: 'تفعيل تشغيل الصوت',
   audioLabel: 'تشغيل صوت الذكر التالي تلقائيا',
+  volumeNavLabel: 'التنقل بين الأذكار بأزرار الصوت',
 } as const;

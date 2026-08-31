@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
+import * as KeepAwake from 'expo-keep-awake';
+import { VolumeManager } from 'react-native-volume-manager';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +23,7 @@ import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/storage';
 import { t } from '../i18n';
 import { useZikrAudio } from '../audio/useZikrAudio';
+import { config } from '../config/config';
 
 export function CategoryScreen() {
   const dispatch = useDispatch();
@@ -38,9 +41,19 @@ export function CategoryScreen() {
   const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
   const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
   const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
+  const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
   const shouldAutoPlayRef = useRef(false);
 
   const currentPhrase = categoryPhrases[index];
+
+  // Refs so the volume-button listener (registered once with empty deps) always
+  // reads the latest index and phrase count without stale-closure issues.
+  const indexRef = useRef(index);
+  const maxIndexRef = useRef(categoryPhrases.length - 1);
+  indexRef.current = index;
+  maxIndexRef.current = categoryPhrases.length - 1;
+  const lastVolumeRef = useRef<number | null>(null);
+  const volumeNavGuardRef = useRef(0);
 
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
@@ -65,6 +78,20 @@ export function CategoryScreen() {
     shouldAutoPlayRef.current = false;
     void toggleAudio();
   }, [audioEnabled, currentPhrase, toggleAudio]);
+
+  // Keep the screen awake while the user is reading zikr on this screen.
+  useEffect(() => {
+    let active = true;
+    void KeepAwake.activateKeepAwakeAsync().then(() => {
+      if (!active) {
+        void KeepAwake.deactivateKeepAwake();
+      }
+    });
+    return () => {
+      active = false;
+      void KeepAwake.deactivateKeepAwake();
+    };
+  }, []);
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [clicks, setClicks] = useState<number[]>([]);
@@ -115,6 +142,54 @@ export function CategoryScreen() {
       );
     }
   }, [categoryPhrases.length]);
+
+  // Hardware volume buttons navigate between zikr phrases. The native volume UI
+  // is hidden and the volume is snapped back to its previous value so the
+  // buttons act as next/previous controls without actually changing the volume.
+  // Only active while the user has enabled the feature in Settings.
+  useEffect(() => {
+    if (!volumeNavEnabled) return;
+    let listener: { remove: () => void } | null = null;
+
+    const init = async () => {
+      try {
+        const { volume } = await VolumeManager.getVolume();
+        lastVolumeRef.current = volume;
+        await VolumeManager.showNativeVolumeUI({ enabled: false });
+        listener = VolumeManager.addVolumeListener(({ volume }) => {
+          const last = lastVolumeRef.current;
+          if (last === null || last === undefined) {
+            lastVolumeRef.current = volume;
+            return;
+          }
+          const now = Date.now();
+          if (now - volumeNavGuardRef.current < config.interaction.counterGuardMs) {
+            return;
+          }
+          const maxIndex = maxIndexRef.current;
+          if (volume > last && indexRef.current < maxIndex) {
+            volumeNavGuardRef.current = now;
+            dispatch(setIndexCount(indexRef.current + 1));
+          } else if (volume < last && indexRef.current > 0) {
+            volumeNavGuardRef.current = now;
+            dispatch(setIndexCount(indexRef.current - 1));
+          }
+          lastVolumeRef.current = last;
+          void VolumeManager.setVolume(last, { playSound: false, showUI: false });
+        });
+      } catch {
+        // Volume manager unavailable (e.g. Expo Go); ignore silently.
+      }
+    };
+
+    void init();
+
+    return () => {
+      listener?.remove();
+      void VolumeManager.showNativeVolumeUI({ enabled: true });
+      lastVolumeRef.current = null;
+    };
+  }, [dispatch, volumeNavEnabled]);
 
   // Reset store on unmount to cover the native back gesture path
   useEffect(() => {

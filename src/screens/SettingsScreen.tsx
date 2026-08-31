@@ -9,6 +9,7 @@ import { incrementFontScale, decrementFontScale } from '../store/slices/fontScal
 import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { toggleAudioEnabled, toggleAutoPlayNext } from '../store/slices/audioSlice';
+import { toggleVolumeNav } from '../store/slices/volumeNavSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { formatNumber } from '../utils/numberFormatting';
@@ -32,6 +33,7 @@ export function SettingsScreen() {
   const totalCount = useSelector((state: RootState) => state.totalCount.value);
   const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
   const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
+  const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
   const colors = getAzkarTheme(theme);
 
   const [contactOpen, setContactOpen] = useState(false);
@@ -208,6 +210,24 @@ export function SettingsScreen() {
                       ? colors.iconColorActive
                       : colors.textColor
                 }
+              />
+            </View>
+          </Pressable>
+          <Pressable onPress={() => dispatch(toggleVolumeNav())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('volumeNavLabel')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: volumeNavEnabled ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: volumeNavEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={volumeNavEnabled ? 'play-skip-forward' : 'play-skip-forward-outline'}
+                size={18}
+                color={volumeNavEnabled ? colors.iconColorActive : colors.textColor}
               />
             </View>
           </Pressable>

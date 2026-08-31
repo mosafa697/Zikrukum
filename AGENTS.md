@@ -21,7 +21,10 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
 | Audio | `expo-audio`, `expo-file-system` (remote fetch + local cache) |
+| Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
+| Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
 | Fonts | `expo-font` (ScheherazadeNew, Tajawal Bold/Regular, Amiri Regular/Bold) |
+| Localization | `expo-localization` (`src/utils/locale.ts` reads device language; `shouldForceArabicRtl()` forces RTL for Arabic quotes when locale is `ar`/`en`) |
 | Lint/Format | ESLint (flat config, `eslint-config-expo`) + Prettier |
 
 ## Commands
@@ -114,6 +117,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `subText` | `{ value: boolean }` | yes | Show/hide phrase subtext |
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
+| `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
 | `playback` | `{ currentPhraseId, status, errorKey }` | no | Current audio playback state |
 
 ### Persistence Pattern
