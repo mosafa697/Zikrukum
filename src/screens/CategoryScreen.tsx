@@ -44,6 +44,9 @@ export function CategoryScreen() {
   const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
   const shouldAutoPlayRef = useRef(false);
 
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [clicks, setClicks] = useState<number[]>([]);
+
   const currentPhrase = categoryPhrases[index];
 
   // Refs so the volume-button listener (registered once with empty deps) always
@@ -52,6 +55,10 @@ export function CategoryScreen() {
   const maxIndexRef = useRef(categoryPhrases.length - 1);
   indexRef.current = index;
   maxIndexRef.current = categoryPhrases.length - 1;
+  const phraseClicksRef = useRef(clicks[index] ?? 0);
+  const phraseCountRef = useRef(currentPhrase?.count ?? 1);
+  phraseClicksRef.current = clicks[index] ?? 0;
+  phraseCountRef.current = currentPhrase?.count ?? 1;
   const lastVolumeRef = useRef<number | null>(null);
   const volumeNavGuardRef = useRef(0);
 
@@ -92,9 +99,6 @@ export function CategoryScreen() {
       void KeepAwake.deactivateKeepAwake();
     };
   }, []);
-
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [clicks, setClicks] = useState<number[]>([]);
 
   // Load phrases and reset per-phrase click counters when category changes
   useEffect(() => {
@@ -167,12 +171,33 @@ export function CategoryScreen() {
             return;
           }
           const maxIndex = maxIndexRef.current;
-          if (volume > last && indexRef.current < maxIndex) {
-            volumeNavGuardRef.current = now;
-            dispatch(setIndexCount(indexRef.current + 1));
-          } else if (volume < last && indexRef.current > 0) {
+          if (volume > last && indexRef.current > 0) {
+            // Volume up -> go back to the previous zikr without touching the counter.
             volumeNavGuardRef.current = now;
             dispatch(setIndexCount(indexRef.current - 1));
+          } else if (volume < last) {
+            // Volume down -> decrement the current zikr's counter first; once it
+            // reaches the phrase's required count, switch to the next zikr.
+            volumeNavGuardRef.current = now;
+            const idx = indexRef.current;
+            const phraseCount = phraseCountRef.current;
+            const currentCount = phraseClicksRef.current;
+            if (currentCount < phraseCount) {
+              const newCount = currentCount + 1;
+              setClicks((prev) => {
+                const next = [...prev];
+                next[idx] = newCount;
+                return next;
+              });
+              dispatch(incrementTotalCount());
+              setIsAnimating(true);
+              if (newCount >= phraseCount) {
+                setTimeout(() => dispatch(incrementIndex()), 300);
+              }
+              setTimeout(() => setIsAnimating(false), 300);
+            } else if (idx < maxIndex) {
+              dispatch(incrementIndex());
+            }
           }
           lastVolumeRef.current = last;
           void VolumeManager.setVolume(last, { playSound: false, showUI: false });
@@ -189,7 +214,7 @@ export function CategoryScreen() {
       void VolumeManager.showNativeVolumeUI({ enabled: true });
       lastVolumeRef.current = null;
     };
-  }, [dispatch, volumeNavEnabled]);
+  }, [dispatch, volumeNavEnabled, setClicks, setIsAnimating]);
 
   // Reset store on unmount to cover the native back gesture path
   useEffect(() => {

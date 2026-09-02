@@ -97,7 +97,7 @@ export async function loadPersistedState() {
     getStoredValue<number[]>('favouriteCategories', []),
     getStoredValue<boolean>('autoPlayNext', true),
     getStoredValue<boolean>('audioEnabled', true),
-    getStoredValue<boolean>('volumeNavEnabled', true),
+    getStoredValue<boolean>('volumeNavEnabled', false),
   ]);
 
   return {

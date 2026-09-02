@@ -13,7 +13,6 @@ import { t } from '../i18n';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { toggleFavouriteCategory } from '../store/slices/favouriteCategoriesSlice';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { shouldForceArabicRtl } from '../utils/locale';
 
 export function CategoriesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -21,7 +20,6 @@ export function CategoriesScreen() {
   const themeName = useSelector((state: RootState) => state.theme.value);
   const favouriteCategoryIds = useSelector((state: RootState) => state.favouriteCategories.ids);
   const theme = getAzkarTheme(themeName);
-  const forceRtl = useMemo(shouldForceArabicRtl, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchAnim = useMemo(() => new Animated.Value(0), []);
@@ -111,25 +109,25 @@ export function CategoriesScreen() {
       />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
-          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }, forceRtl && styles.quoteRtl]}>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>
             {t('quranIntro')}
           </Text>
-          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }, forceRtl && styles.quoteRtl]}>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>
             {t('quranVerse')}
           </Text>
-          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }, forceRtl && styles.quoteRtl]}>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>
             {t('quranRef')}
           </Text>
         </LinearGradient>
 
         <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
-          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }, forceRtl && styles.quoteRtl]}>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>
             {t('hadithIntro')}
           </Text>
-          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }, forceRtl && styles.quoteRtl]}>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>
             {t('hadithText')}
           </Text>
-          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }, forceRtl && styles.quoteRtl]}>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>
             {t('hadithRef')}
           </Text>
         </LinearGradient>
@@ -142,9 +140,7 @@ export function CategoriesScreen() {
           onPress={() => navigation.navigate('FreeTasbih')}
         >
           <View style={styles.categoryMeta}>
-            <Pressable hitSlop={10} style={styles.favoriteButton}>
-              <Ionicons name={'pin'} size={18} color={theme.secondaryTextColor} />
-            </Pressable>
+            <Ionicons name={'star-outline'} size={18} color={'transparent'} />
           </View>
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
           <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
@@ -229,29 +225,26 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 4,
     justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   quoteIntro: {
-    fontSize: 12,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    fontSize: 10,
+    textAlign: 'center',
+    // writingDirection: 'rtl',
     fontFamily: AZKAR_PRIMARY_FONT,
     marginBottom: 6,
   },
   quoteArabic: {
-    fontSize: 22,
-    lineHeight: 44,
+    fontSize: 18,
+    lineHeight: 40,
     fontFamily: AZKAR_TITLE_FONT,
-    textAlign: 'right',
+    textAlign: 'center',
     marginBottom: 10,
   },
   quoteRef: {
-    fontSize: 11,
-    textAlign: 'right',
+    fontSize: 9,
+    textAlign: 'center',
     fontFamily: AZKAR_PRIMARY_FONT,
-  },
-  quoteRtl: {
-    writingDirection: 'rtl',
   },
   searchWrap: {
     paddingHorizontal: 16,

@@ -5,7 +5,7 @@ type VolumeNavState = {
 };
 
 const initialState: VolumeNavState = {
-  enabled: true,
+  enabled: false,
 };
 
 const volumeNavSlice = createSlice({

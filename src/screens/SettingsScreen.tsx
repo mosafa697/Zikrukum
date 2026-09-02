@@ -289,7 +289,7 @@ export function SettingsScreen() {
           )}
         </View>
 
-        <View
+        {/* <View
           style={[
             styles.card,
             { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
@@ -351,7 +351,7 @@ export function SettingsScreen() {
               </Pressable>
             </View>
           )}
-        </View>
+        </View> */}
       </ScrollView>
     </View>
   );

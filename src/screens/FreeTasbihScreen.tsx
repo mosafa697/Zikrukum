@@ -1,7 +1,8 @@
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { VolumeManager } from 'react-native-volume-manager';
 import { useDispatch, useSelector } from 'react-redux';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { TasbihButton } from '../components/TasbihButton';
@@ -18,7 +19,11 @@ export function FreeTasbihScreen() {
   const totalCount = useSelector((state: RootState) => state.totalCount.value);
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
+  const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
   const [count, setCount] = useState(0);
+
+  const lastVolumeRef = useRef<number | null>(null);
+  const volumeNavGuardRef = useRef(0);
 
   const tap = useCallback(() => {
     setCount((c) => c + 1);
@@ -27,9 +32,56 @@ export function FreeTasbihScreen() {
 
   const handleTap = useTimeGuardedCallback(tap, config.interaction.freeTasbihTapGuardMs);
 
+  // Hardware volume buttons control the free tasbih counter: volume up decrements
+  // (never below 0, without affecting the global total), volume down increments.
+  // Only active while the user has enabled volume nav in Settings.
+  useEffect(() => {
+    if (!volumeNavEnabled) return;
+    let listener: { remove: () => void } | null = null;
+
+    const init = async () => {
+      try {
+        const { volume } = await VolumeManager.getVolume();
+        lastVolumeRef.current = volume;
+        await VolumeManager.showNativeVolumeUI({ enabled: false });
+        listener = VolumeManager.addVolumeListener(({ volume }) => {
+          const last = lastVolumeRef.current;
+          if (last === null || last === undefined) {
+            lastVolumeRef.current = volume;
+            return;
+          }
+          const now = Date.now();
+          if (now - volumeNavGuardRef.current < config.interaction.counterGuardMs) {
+            return;
+          }
+          volumeNavGuardRef.current = now;
+          if (volume < last) {
+            setCount((c) => c + 1);
+            dispatch(incrementTotalCount());
+          } else if (volume > last) {
+            setCount((c) => Math.max(0, c - 1));
+          }
+          lastVolumeRef.current = last;
+          void VolumeManager.setVolume(last, { playSound: false, showUI: false });
+        });
+      } catch {
+        // Volume manager unavailable (e.g. Expo Go); ignore silently.
+      }
+    };
+
+    void init();
+
+    return () => {
+      listener?.remove();
+      void VolumeManager.showNativeVolumeUI({ enabled: true });
+      lastVolumeRef.current = null;
+    };
+  }, [dispatch, volumeNavEnabled]);
+
   return (
-    <LinearGradient colors={theme.bgGradient} style={styles.gradient}>
-      <View style={styles.card}>
+    <Pressable style={styles.gradient} onPress={handleTap}>
+      <LinearGradient colors={theme.bgGradient} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <View style={styles.card} pointerEvents="box-none">
         <ScreenHeader
           title={t('freeTasbih')}
           showBack
@@ -46,7 +98,7 @@ export function FreeTasbihScreen() {
           }
         />
 
-        <View style={styles.counterArea}>
+        <View style={styles.counterArea} pointerEvents="none">
           <TasbihButton
             onPress={handleTap}
             count={count}
@@ -59,6 +111,7 @@ export function FreeTasbihScreen() {
             styles.totalChip,
             { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
           ]}
+          pointerEvents="none"
         >
           <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>
             {t('totalCounter')}
@@ -66,7 +119,7 @@ export function FreeTasbihScreen() {
           </Text>
         </View>
       </View>
-    </LinearGradient>
+    </Pressable>
   );
 }
 

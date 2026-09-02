@@ -68,7 +68,7 @@
 
 - [x] fix refreshment zikr when sliding right or left on mobile — the flicker (previous zikr reloading for a few milliseconds) came from the old carousel swapping phrases underneath the animated transform; the `FlatList` pager transitions natively with no content swap, so it is flicker-free.  
 
-- [ ] center the category of "مسبحة حرة" at the categories page
+- [x] center the category of "مسبحة حرة" at the categories page
  as the text is little bit to right as it has not contained the favorite icon
 
 - [x] **Conditional RTL for Hadith & Quran Quotes on Categories Screen** — Force RTL text direction for the hadith and Quran quote text blocks on `CategoriesScreen` when the device language is Arabic or English, independent of the app's overall RTL setting.
@@ -96,3 +96,17 @@
 	- Guard rapid consecutive presses (held key) with `useTimeGuardedCallback` / `config.interaction` timing to prevent flickering through phrases.
 	- Clean up the listener on unmount.
 	- Note: intercepting volume buttons on iOS generally requires a custom native module and is usually not feasible; this feature is expected to be Android-only unless a cross-platform solution is found.
+
+- [x] **Volume Nav Disabled by Default** — The volume-button navigate feature should be disabled by default for new installs and fresh data. Change the default in `volumeNavSlice` (`initialState.enabled`) and the `loadPersistedState()` fallback (`volumeNavEnabled`) from `true` to `false`. Existing users who already enabled it keep their persisted preference.
+	- Files: `src/store/slices/volumeNavSlice.ts`, `src/store/persistence.ts`.
+
+- [x] **Volume Buttons Decrement Counter Before Switching Zikr** — Change the volume-down button behavior on `CategoryScreen` so it decrements the current phrase's tasbih counter first, and only switches to the next phrase once the counter reaches the phrase's required `count`. Volume-up should switch to the previous zikr without touching the counter. This makes the volume buttons usable as a hands-free tasbih counter.
+	- In `CategoryScreen.tsx`, maintain refs for the current phrase's `clicks[index]` and `count` so the volume listener (empty deps) always reads fresh values.
+	- Volume-down logic: if `clicks[ currentIndex] < phrase.count` → decrement counter (dispatch + total count increment + animation) and restore volume; if counter is already at the required count → dispatch `incrementIndex()` (switch to next phrase).
+	- Volume-up logic: if `currentIndex > 0` → dispatch `setIndexCount(currentIndex - 1)` (go back without touching counter).
+	- Keep the existing `volumeNavGuardRef` debounce so rapid holds do not cause race conditions.
+
+- [x] **Volume Button Counter Control on FreeTasbihScreen** — Extend the volume-button feature to the Free Tasbih screen so the user can count hands-free without tapping the screen. Volume-down increments the free tasbih counter (+1 and global total count); volume-up decrements the free tasbih counter (−1, not below 0, does not affect global total count). Respect the same `volumeNav.enabled` Settings toggle.
+	- Add a `VolumeManager` listener effect in `FreeTasbihScreen.tsx` mirroring the CategoryScreen pattern.
+	- Guard rapid presses and clean up the listener on unmount.
+	- Snap volume back and hide the native volume UI while active.
