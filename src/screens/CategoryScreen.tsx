@@ -61,6 +61,7 @@ export function CategoryScreen() {
   phraseCountRef.current = currentPhrase?.count ?? 1;
   const lastVolumeRef = useRef<number | null>(null);
   const volumeNavGuardRef = useRef(0);
+  const volumeRestoringRef = useRef(false);
 
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
@@ -161,6 +162,8 @@ export function CategoryScreen() {
         lastVolumeRef.current = volume;
         await VolumeManager.showNativeVolumeUI({ enabled: false });
         listener = VolumeManager.addVolumeListener(({ volume }) => {
+          if (volumeRestoringRef.current) return;
+
           const last = lastVolumeRef.current;
           if (last === null || last === undefined) {
             lastVolumeRef.current = volume;
@@ -200,7 +203,22 @@ export function CategoryScreen() {
             }
           }
           lastVolumeRef.current = last;
-          void VolumeManager.setVolume(last, { playSound: false, showUI: false });
+          volumeRestoringRef.current = true;
+          void VolumeManager.setVolume(last, { playSound: false, showUI: false })
+            .then(async () => {
+              try {
+                const { volume: actual } = await VolumeManager.getVolume();
+                lastVolumeRef.current = actual;
+              } catch {
+                lastVolumeRef.current = last;
+              }
+            })
+            .catch(() => {
+              lastVolumeRef.current = last;
+            })
+            .finally(() => {
+              volumeRestoringRef.current = false;
+            });
         });
       } catch {
         // Volume manager unavailable (e.g. Expo Go); ignore silently.
@@ -213,6 +231,7 @@ export function CategoryScreen() {
       listener?.remove();
       void VolumeManager.showNativeVolumeUI({ enabled: true });
       lastVolumeRef.current = null;
+      volumeRestoringRef.current = false;
     };
   }, [dispatch, volumeNavEnabled, setClicks, setIsAnimating]);
 

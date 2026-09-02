@@ -109,27 +109,15 @@ export function CategoriesScreen() {
       />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
-          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>
-            {t('quranIntro')}
-          </Text>
-          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>
-            {t('quranVerse')}
-          </Text>
-          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>
-            {t('quranRef')}
-          </Text>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('quranIntro')}</Text>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('quranVerse')}</Text>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('quranRef')}</Text>
         </LinearGradient>
 
         <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
-          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>
-            {t('hadithIntro')}
-          </Text>
-          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>
-            {t('hadithText')}
-          </Text>
-          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>
-            {t('hadithRef')}
-          </Text>
+          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('hadithIntro')}</Text>
+          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('hadithText')}</Text>
+          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('hadithRef')}</Text>
         </LinearGradient>
 
         <Pressable
@@ -140,7 +128,9 @@ export function CategoriesScreen() {
           onPress={() => navigation.navigate('FreeTasbih')}
         >
           <View style={styles.categoryMeta}>
-            <Ionicons name={'star-outline'} size={18} color={'transparent'} />
+            <Pressable hitSlop={10} style={styles.favoriteButton}>
+              <Ionicons name={'pin'} size={18} color={theme.secondaryTextColor} />
+            </Pressable>
           </View>
           <Text style={[styles.categoryText, { color: theme.textColor }]}>{t('freeTasbih')}</Text>
           <LinearGradient colors={theme.accentGradient} style={styles.categoryIcon}>
@@ -230,7 +220,6 @@ const styles = StyleSheet.create({
   quoteIntro: {
     fontSize: 10,
     textAlign: 'center',
-    // writingDirection: 'rtl',
     fontFamily: AZKAR_PRIMARY_FONT,
     marginBottom: 6,
   },

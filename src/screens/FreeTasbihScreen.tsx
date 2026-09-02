@@ -24,6 +24,7 @@ export function FreeTasbihScreen() {
 
   const lastVolumeRef = useRef<number | null>(null);
   const volumeNavGuardRef = useRef(0);
+  const volumeRestoringRef = useRef(false);
 
   const tap = useCallback(() => {
     setCount((c) => c + 1);
@@ -45,6 +46,8 @@ export function FreeTasbihScreen() {
         lastVolumeRef.current = volume;
         await VolumeManager.showNativeVolumeUI({ enabled: false });
         listener = VolumeManager.addVolumeListener(({ volume }) => {
+          if (volumeRestoringRef.current) return;
+
           const last = lastVolumeRef.current;
           if (last === null || last === undefined) {
             lastVolumeRef.current = volume;
@@ -62,7 +65,22 @@ export function FreeTasbihScreen() {
             setCount((c) => Math.max(0, c - 1));
           }
           lastVolumeRef.current = last;
-          void VolumeManager.setVolume(last, { playSound: false, showUI: false });
+          volumeRestoringRef.current = true;
+          void VolumeManager.setVolume(last, { playSound: false, showUI: false })
+            .then(async () => {
+              try {
+                const { volume: actual } = await VolumeManager.getVolume();
+                lastVolumeRef.current = actual;
+              } catch {
+                lastVolumeRef.current = last;
+              }
+            })
+            .catch(() => {
+              lastVolumeRef.current = last;
+            })
+            .finally(() => {
+              volumeRestoringRef.current = false;
+            });
         });
       } catch {
         // Volume manager unavailable (e.g. Expo Go); ignore silently.
@@ -75,6 +93,7 @@ export function FreeTasbihScreen() {
       listener?.remove();
       void VolumeManager.showNativeVolumeUI({ enabled: true });
       lastVolumeRef.current = null;
+      volumeRestoringRef.current = false;
     };
   }, [dispatch, volumeNavEnabled]);
 
