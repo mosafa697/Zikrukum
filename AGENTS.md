@@ -4,7 +4,7 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 
 ## Project Overview
 
-**Zikrukum** is a React Native (Expo) mobile app for reading daily Azkar (Islamic remembrances/supplications). It is a migration of an existing Azkar app. All data is bundled locally (JSON + fonts) — the app works fully offline.
+**Zikrukum** is a React Native (Expo) mobile app for reading daily Azkar (Islamic remembrances/supplications). It is a migration of an existing Azkar app. All data is bundled locally (JSON + fonts + audio) — the app works fully offline.
 
 - **Name**: Zikrukum
 - **Platforms**: iOS, Android, Web (Expo SDK ~54)
@@ -20,11 +20,11 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | State | Redux Toolkit 2.x (`@reduxjs/toolkit` + `react-redux`) |
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
-| Audio | `expo-audio`, `expo-file-system` (remote fetch + local cache) |
+| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) |
 | Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
-| Fonts | `expo-font` (ScheherazadeNew, Tajawal Bold/Regular, Amiri Regular/Bold) |
-| Localization | `expo-localization` (`src/utils/locale.ts` reads device language; `shouldForceArabicRtl()` forces RTL for Arabic quotes when locale is `ar`/`en`) |
+| Fonts | `expo-font` (loaded in `App.tsx`: `ScheherazadeNew`, `TajawalBold` → `Tajawal-ExtraBold.ttf`, `TajawalRegular`, `Amiri`, `AmiriBold`; note unused `assets/fonts/Tajawal-Bold.ttf` on disk) |
+| Localization | `expo-localization` (installed + Expo plugin wired, but currently not imported anywhere in `src/` — no locale helper exists yet; quote blocks use static styles, see Theming/RTL notes) |
 | Lint/Format | ESLint (flat config, `eslint-config-expo`) + Prettier |
 
 ## Commands
@@ -47,12 +47,13 @@ Zikrukum/
 ├── App.tsx                     # Entry: loads fonts + persisted store, renders providers
 ├── index.ts                    # Expo entry point
 ├── app.json                    # Expo config (name, scheme, plugins)
-├── adhkar-redesign.html        # UI redesign reference (design source of truth)
 ├── assets/                     # Fonts, icons
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
-    │   └── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
+    │   ├── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
+    │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next)
     ├── components/             # Shared UI components
+    │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
     │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
@@ -79,8 +80,8 @@ Zikrukum/
     ├── theme/
     │   └── azkarTheme.ts       # AzkarTheme type, 3 themes (light/solarized/dark), font constants
     ├── types/                  # .d.ts module declarations
-    └── utils/
-        ├── numberFormatting.ts # Arabic-Indic digit formatting
+    ├── utils/
+        ├── numberFormatting.ts # formatNumber() (Western digits; Hindi conversion disabled) + formatAudioTime()
         ├── storage.ts          # AsyncStorage get/set/remove wrappers (JSON, typed fallback)
         └── useTimeGuardedCallback.ts # Debounce/guard hook for taps
 ```
@@ -113,12 +114,12 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `indexCount` | `{ value, phasesLength, isLastPhrase }` | per-category (`azkar-index-{id}`) | Current phrase index within a category |
 | `totalCount` | `{ value: number }` | yes | Lifetime tasbih tap count |
 | `theme` | `{ value: AzkarThemeName, list }` | yes | light / solarized / dark |
-| `fontScale` | `{ value: number }` | yes | Font size multiplier (0.6–2.0, step 0.1) |
+| `fontScale` | `{ value: number }` | yes | Font size multiplier (0.8–1.6, default 1.2, step 0.1 per `config.font`) |
 | `subText` | `{ value: boolean }` | yes | Show/hide phrase subtext |
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
 | `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
-| `playback` | `{ currentPhraseId, status, errorKey }` | no | Current audio playback state |
+| `playback` | `{ currentPhraseId, status, currentTime, duration, errorKey? }` | no | Current audio playback state |
 
 ### Persistence Pattern
 
@@ -145,7 +146,7 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
   - `dark`: matte black-blue surfaces, blue primary accents, comfortable low-saturation text.
 - Theme tokens include gradient pairs for page background (`bgGradient`), verse/hadith banners (`verseGradient`), icon chips (`accentGradient`), and the Free Tasbih button (`tasbihGradient`), plus matching text/glow/shadow colors. Screens should use these tokens instead of hardcoded redesign colors so all three themes adapt consistently.
 - Fonts: `AZKAR_PRIMARY_FONT`/`AZKAR_TITLE_FONT` use `ScheherazadeNew` (Regular-only face). Use `AZKAR_COUNTER_FONT` (`TajawalBold` = `Tajawal-ExtraBold.ttf`) for numeric counters, since `fontWeight` has no bold face to resolve against on the regular-only Scheherazade font.
-- The redesign reference (`adhkar-redesign.html`) is the visual source of truth for ongoing UI work.
+- The former redesign reference (`adhkar-redesign.html`) was removed from the repo; the built screens + `AZKAR_THEME_MAP` palettes are now the visual source of truth.
 
 ### Data Flow (Azkar Content)
 
@@ -159,7 +160,7 @@ src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon 
 CategoryScreen: dispatch(setPhases(...)) → phases slice → PhraseCard renders one FlatList page per phrase
 ```
 
-Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New categories need a mapping entry (fallback: `albums-outline`).
+Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New categories need a mapping entry (fallback: `albums-outline`). Note: the map contains an orphan entry for id `22` (no such category in the dataset — Friday is id `21`, `سنن يوم الجمعة`); all dataset ids (`1`–`21`, `122`) are mapped, so the fallback is never hit today.
 
 #### Phrase pager (PhraseCard)
 
@@ -176,6 +177,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 - Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file.
 - There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
+- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); the dataset wires 46 of 132 phrases (categories `3` + `4` fully; all other categories have no audio yet).
 
 ### Internationalization
 
@@ -196,5 +198,11 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 ## Workflow Notes
 
 - `TODO.md` tracks pending/completed feature work — check it before starting a feature and update it when finishing one.
-- The app must remain fully offline-capable: no new network dependencies for core content (remote audio is the only allowed exception, with local caching).
+- Agent skills in `.agents/skills/` encode recurring workflows — load the relevant skill before starting work:
+  - `zikrukum-conventions` — any task (arch, navigation, style rules).
+  - `redux-persisted-setting` — persisted settings (3-place wiring rule).
+  - `zikrukum-theming` — themes, fonts, RTL, Arabic strings.
+  - `zikrukum-audio-data` — dataset, category icons, bundled MP3 audio.
+  - `expo-verify` — lint, typecheck, and manual checks before done.
+- The app must remain fully offline-capable: no new network dependencies for core content (audio is bundled locally under `assets/audio/`, not streamed).
 - When modifying structure, conventions, or workflows described here, update this AGENTS.md.

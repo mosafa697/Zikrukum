@@ -14,7 +14,7 @@
 
 - [x] **Relocate Settings Button & Add Reset Progress** — Move the Settings gear icon from the zikr (CategoryScreen) header to the home (CategoriesScreen) header as a fixed button. Remove it from the zikr header and replace it with a "Reset" button (e.g. `refresh-outline` / `restart` icon) that resets the current zikr's progress back to zero.
 
-- [x] **UI Redesign (all screens)** — Restyle all screens to match the reference design in [`adhkar-redesign.html`](adhkar-redesign.html): warm sand background (`#F4EEE0`), deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`), card surfaces (`#FBF7ED`), rounded category cards with icon chip + count pill, gradient verse banner on home, gold ring counter on the zikr screen, large circular tasbih button with breathing animation, and grouped settings cards. All 3 themes (light / solarized / dark) share the same visual structure with adapted colour palettes.
+- [x] **UI Redesign (all screens)** — Restyle all screens to the former reference design (`adhkar-redesign.html`, since removed from the repo): warm sand background (`#F4EEE0`), deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`), card surfaces (`#FBF7ED`), rounded category cards with icon chip + count pill, gradient verse banner on home, gold ring counter on the zikr screen, large circular tasbih button with breathing animation, and grouped settings cards. All 3 themes (light / solarized / dark) share the same visual structure with adapted colour palettes.
 
 - [x] **Favourite Categories** — Add a favourite (star/heart) toggle button to each category card; persist favourited category IDs in the store, and sort the home screen list so favourited categories appear first in order, and replace it with count of zikr category number
 
@@ -30,22 +30,22 @@
 	- [x] Show separate themed feedback for missing audio (`noAudio`) and playback errors (`audioError`), with retry support.
 	- [x] Refactor `src/audio/audioSource.ts` to resolve audio to `{ kind: 'local'; filename: string } | { kind: 'missing' }` instead of remote URLs.
 	- [x] ~~Refactor `src/audio/audioCache.ts` into a legacy-cache cleanup helper; remove remote download / `expo-file-system` cache logic.~~ Removed: legacy cache cleanup no longer needed.
-	- [x] Create `src/audio/audioAssets.ts` with a static `Record<filename, require(...)>` resolver for bundled MP3 URIs via `expo-asset`.
+	- [x] Create the static `AUDIO_ASSETS` map (inline in `src/audio/audioSource.ts`) with a `Record<filename, require(...)>` resolver for bundled MP3 URIs via `expo-asset`.
 	- [x] Update `src/audio/useZikrAudio.ts` to load the local asset URI directly into `createAudioPlayer`, dropping network fetch paths.
 	- [x] Update `src/config/config.ts` to remove the placeholder CDN `baseUrl` / `cacheDir` and document the local asset path convention.
 	- [x] Redesign the zikr reader audio player to match the reference image: play/pause/finished/loading/missing states, progress bar with current/total time, and placement between the zikr text and source info.
 	- [x] Track playback `currentTime` / `duration` in the `playback` slice and poll while playing for a live progress bar.
 	- [x] Hide the audio player entirely when audio is disabled in Settings or the current phrase has no audio file (`missing`).
 	- [x] ~~Add a one-time cache/migration helper to clear any legacy remote-download audio cache from `expo-file-system` so old cached MP3s do not conflict with local assets.~~ Removed along with `src/audio/audioCache.ts`.
-	- [x] Clear old audio/filename data from `src/dataset/azkar-sample.json` so the app reports missing audio until new clips are available.
-	- [ ] When new audio data is available: collect the MP3 clips, place them under `assets/audio/`, populate `src/audio/audioAssets.ts`, and fill the `audio` / `filename` fields in `src/dataset/azkar-sample.json`.
+	- [x] ~~Clear old audio/filename data from `src/dataset/azkar-sample.json` so the app reports missing audio until new clips are available.~~ Superseded: audio data was cleared at the time, then repopulated — 46 of 132 phrases are now wired (categories `3` + `4` fully; all other categories still report missing audio).
+	- [x] Collect the MP3 clips, place them under `assets/audio/`, populate the `AUDIO_ASSETS` map in `src/audio/audioSource.ts`, and fill the `audio` / `filename` fields in `src/dataset/azkar-sample.json` — done for categories `3` + `4` (29 clips: `1`–`14`, `15-16`, `17`–`22`, `24`–`31`; removed obsolete `15.mp3`/`16.mp3`/`23.mp3`).
 	- [ ] Decide whether playback must continue while the app is backgrounded or the screen is locked. If required, configure the Expo Audio session, background playback, Android media notifications, and iOS background audio mode.
 	- [ ] Test Android, iOS, and Web: first play, pause/resume, replay, phrase navigation, auto-play-next, final phrase, and missing audio.
-	- [ ] Future data task: add or intentionally approve missing audio entries in the dataset, including categories `1`, `21`, and `122` and any phrases with empty audio fields.
+	- [ ] Future data task: add or intentionally approve missing audio entries in the dataset — 86 of 132 phrases across all categories except `3` and `4` (including categories `1`, `21`, and `122`) currently have empty audio fields.
 
-- [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` and include its data in the dataset so it appears alongside the other zikr categories.
+- [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` (dataset id `21`) and include its data in the dataset so it appears alongside the other zikr categories.
 
-- [ ] **Notifications** — Add a notification feature that reminds the user twice every day, once in the morning and once in the evening, and also sends a weekly Friday reminder for the `اذكار يوم الجمعة` category. Add the notification customization options to the settings page so the user can enable, disable, and adjust the reminder behavior.
+- [ ] **Notifications** — Add a notification feature that reminds the user twice every day, once in the morning and once in the evening, and also sends a weekly Friday reminder for the `سنن يوم الجمعة` category. Add the notification customization options to the settings page so the user can enable, disable, and adjust the reminder behavior.
 
 - [ ] **First-Launch Onboarding** — Show a one-time walkthrough or intro screen on first app open to guide new users through the app's features and how to use them.
 
@@ -71,9 +71,10 @@
 - [x] center the category of "مسبحة حرة" at the categories page
  as the text is little bit to right as it has not contained the favorite icon
 
-- [x] **Conditional RTL for Hadith & Quran Quotes on Categories Screen** — Force RTL text direction for the hadith and Quran quote text blocks on `CategoriesScreen` when the device language is Arabic or English, independent of the app's overall RTL setting.
+- [ ] **Conditional RTL for Hadith & Quran Quotes on Categories Screen** — Force RTL text direction for the hadith and Quran quote text blocks on `CategoriesScreen` when the device language is Arabic or English, independent of the app's overall RTL setting.
 	- Context: native builds force RTL app-wide in `index.ts`; on web `forceRTL` is a no-op and the app uses `scaleX: -1` mirroring, so the verse/hadith banner text can render left-aligned there. This task ensures the Arabic banner text always flows right-to-left for `ar` / `en` locales.
-	- Detect the device locale via `expo-localization` (add dependency if not present): `getLocales()[0].languageCode`, check if it's `ar` or `en`.
+	- Status: not yet implemented — `expo-localization` is installed (+ Expo plugin wired) but never imported in `src/`; no locale helper (e.g. `src/utils/locale.ts`) exists and the quote styles are still static centered text with no `writingDirection`.
+	- Detect the device locale via `expo-localization`: `getLocales()[0].languageCode`, check if it's `ar` or `en`.
 	- When the locale is Arabic/English and the block is Arabic text, apply `writingDirection: 'rtl'` + `textAlign: 'right'` to the verse/hadith `Text` styles on `CategoriesScreen`, so the content renders correctly regardless of phone language.
 	- Update the AGENTS.md i18n section if a locale helper is introduced (e.g. `src/utils/locale.ts`).
 
