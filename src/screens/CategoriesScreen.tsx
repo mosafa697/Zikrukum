@@ -108,17 +108,21 @@ export function CategoriesScreen() {
         }
       />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
-          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('quranIntro')}</Text>
-          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('quranVerse')}</Text>
-          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('quranRef')}</Text>
-        </LinearGradient>
+        {!isSearchOpen && (
+          <>
+            <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
+              <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('quranIntro')}</Text>
+              <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('quranVerse')}</Text>
+              <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('quranRef')}</Text>
+            </LinearGradient>
 
-        <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
-          <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('hadithIntro')}</Text>
-          <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('hadithText')}</Text>
-          <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('hadithRef')}</Text>
-        </LinearGradient>
+            <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
+              <Text style={[styles.quoteIntro, { color: theme.verseSubTextColor }]}>{t('hadithIntro')}</Text>
+              <Text style={[styles.quoteArabic, { color: theme.verseTextColor }]}>{t('hadithText')}</Text>
+              <Text style={[styles.quoteRef, { color: theme.verseSubTextColor }]}>{t('hadithRef')}</Text>
+            </LinearGradient>
+          </>
+        )}
 
         <Pressable
           style={[

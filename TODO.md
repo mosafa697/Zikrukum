@@ -1,6 +1,10 @@
-# TODO
+# CHANGELOG
 
-## Pending Tasks
+> GitHub issues are the source of truth for tasks (`todo` / `in-progress` / `review` / `done`).
+> This file is a completed-work log only — do not add new checkboxes here.
+> Open backlog (2026-09-05): issues #3–#7 (notifications, onboarding, background-audio decision, audio matrix, missing audio data).
+
+## Completed
 
 - [x] **Offline Support** — All data is bundled locally (JSON + fonts), no network calls exist; the app works fully in airplane mode.
 
@@ -39,15 +43,15 @@
 	- [x] ~~Add a one-time cache/migration helper to clear any legacy remote-download audio cache from `expo-file-system` so old cached MP3s do not conflict with local assets.~~ Removed along with `src/audio/audioCache.ts`.
 	- [x] ~~Clear old audio/filename data from `src/dataset/azkar-sample.json` so the app reports missing audio until new clips are available.~~ Superseded: audio data was cleared at the time, then repopulated — 46 of 132 phrases are now wired (categories `3` + `4` fully; all other categories still report missing audio).
 	- [x] Collect the MP3 clips, place them under `assets/audio/`, populate the `AUDIO_ASSETS` map in `src/audio/audioSource.ts`, and fill the `audio` / `filename` fields in `src/dataset/azkar-sample.json` — done for categories `3` + `4` (29 clips: `1`–`14`, `15-16`, `17`–`22`, `24`–`31`; removed obsolete `15.mp3`/`16.mp3`/`23.mp3`).
-	- [ ] Decide whether playback must continue while the app is backgrounded or the screen is locked. If required, configure the Expo Audio session, background playback, Android media notifications, and iOS background audio mode.
-	- [ ] Test Android, iOS, and Web: first play, pause/resume, replay, phrase navigation, auto-play-next, final phrase, and missing audio.
-	- [ ] Future data task: add or intentionally approve missing audio entries in the dataset — 86 of 132 phrases across all categories except `3` and `4` (including categories `1`, `21`, and `122`) currently have empty audio fields.
+ 	- [ ] Moved to issue #5: Decide whether playback must continue while the app is backgrounded or the screen is locked. If required, configure the Expo Audio session, background playback, Android media notifications, and iOS background audio mode.
+ 	- [ ] Moved to issue #6: Test Android, iOS, and Web: first play, pause/resume, replay, phrase navigation, auto-play-next, final phrase, and missing audio.
+ 	- [ ] Moved to issue #7: Future data task: add or intentionally approve missing audio entries in the dataset — 86 of 132 phrases across all categories except `3` and `4` (including categories `1`, `21`, and `122`) currently have empty audio fields.
 
 - [x] **New Category: سنن يوم الجمعة** — Add a new category named `سنن يوم الجمعة` (dataset id `21`) and include its data in the dataset so it appears alongside the other zikr categories.
 
-- [ ] **Notifications** — Add a notification feature that reminds the user twice every day, once in the morning and once in the evening, and also sends a weekly Friday reminder for the `سنن يوم الجمعة` category. Add the notification customization options to the settings page so the user can enable, disable, and adjust the reminder behavior.
+- [ ] Moved to issue #3: **Notifications** — Add a notification feature that reminds the user twice every day, once in the morning and once in the evening, and also sends a weekly Friday reminder for the `سنن يوم الجمعة` category. Add the notification customization options to the settings page so the user can enable, disable, and adjust the reminder behavior.
 
-- [ ] **First-Launch Onboarding** — Show a one-time walkthrough or intro screen on first app open to guide new users through the app's features and how to use them.
+- [ ] Moved to issue #4: **First-Launch Onboarding** — Show a one-time walkthrough or intro screen on first app open to guide new users through the app's features and how to use them.
 
 - [x] **Back Button Consistency Across Screens** — Add a back button to all applicable screens and align the header layout so the screen title stays visually centered alongside the back button.
 
@@ -70,13 +74,6 @@
 
 - [x] center the category of "مسبحة حرة" at the categories page
  as the text is little bit to right as it has not contained the favorite icon
-
-- [ ] **Conditional RTL for Hadith & Quran Quotes on Categories Screen** — Force RTL text direction for the hadith and Quran quote text blocks on `CategoriesScreen` when the device language is Arabic or English, independent of the app's overall RTL setting.
-	- Context: native builds force RTL app-wide in `index.ts`; on web `forceRTL` is a no-op and the app uses `scaleX: -1` mirroring, so the verse/hadith banner text can render left-aligned there. This task ensures the Arabic banner text always flows right-to-left for `ar` / `en` locales.
-	- Status: not yet implemented — `expo-localization` is installed (+ Expo plugin wired) but never imported in `src/`; no locale helper (e.g. `src/utils/locale.ts`) exists and the quote styles are still static centered text with no `writingDirection`.
-	- Detect the device locale via `expo-localization`: `getLocales()[0].languageCode`, check if it's `ar` or `en`.
-	- When the locale is Arabic/English and the block is Arabic text, apply `writingDirection: 'rtl'` + `textAlign: 'right'` to the verse/hadith `Text` styles on `CategoriesScreen`, so the content renders correctly regardless of phone language.
-	- Update the AGENTS.md i18n section if a locale helper is introduced (e.g. `src/utils/locale.ts`).
 
 - [x] **Make Phrase (Zikr) Content Scrollable & User-Friendly on CategoryScreen** — Ensure the zikr phrase text is easy to scroll and comfortable to read for long phrases.
 	- Location: `src/components/PhraseCard.tsx` — the per-page vertical `ScrollView` inside each pager page.
@@ -111,3 +108,5 @@
 	- Add a `VolumeManager` listener effect in `FreeTasbihScreen.tsx` mirroring the CategoryScreen pattern.
 	- Guard rapid presses and clean up the listener on unmount.
 	- Snap volume back and hide the native volume UI while active.
+
+- [x] **Hide Quote Cards While Search Is Open (#8)** — The Quran quote + hadith cards pushed category results behind the open keyboard. Both cards are now conditionally rendered only when search is closed (`!isSearchOpen` in `CategoriesScreen.tsx`); opening search hides them, closing restores them.
