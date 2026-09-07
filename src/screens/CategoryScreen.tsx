@@ -76,6 +76,9 @@ export function CategoryScreen() {
   const volumeRestoringRef = useRef(false);
   // Passes presses through to the OS while audio plays (#10).
   const isAudioPlayingRef = useRef(false);
+  // Playback intent survives Redux-status gaps (status events not delivered
+  // on a device): set on play press, cleared on pause/finish/error.
+  const playIntentRef = useRef(false);
 
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
@@ -98,18 +101,42 @@ export function CategoryScreen() {
   useEffect(() => {
     if (!shouldAutoPlayRef.current || !audioEnabled || !currentPhrase) return;
     shouldAutoPlayRef.current = false;
+    playIntentRef.current = true;
     void toggleAudio();
   }, [audioEnabled, currentPhrase, toggleAudio]);
 
   const isAudioPlaying = audioStatus === 'playing';
   isAudioPlayingRef.current = isAudioPlaying;
+  const audioStatusRef = useRef(audioStatus);
+  audioStatusRef.current = audioStatus;
+  // Intent covers the windows Redux status misses (loading before the first
+  // event, or events lost on device): after a play press, keys mean volume
+  // until pause, finish, error, or missing audio.
+  const audioActive = isAudioPlaying || playIntentRef.current;
 
-  // While audio plays the native volume UI stays visible and presses pass
-  // through; on stop, nav mode re-engages and the baseline re-syncs.
+  const handleToggleAudio = useCallback(() => {
+    playIntentRef.current = audioStatus !== 'playing';
+    void toggleAudio();
+  }, [audioStatus, toggleAudio]);
+
+  useEffect(() => {
+    if (
+      audioStatus === 'paused' ||
+      audioStatus === 'finished' ||
+      audioStatus === 'error' ||
+      audioStatus === 'missing'
+    ) {
+      playIntentRef.current = false;
+    }
+  }, [audioStatus]);
+
+  // While audio is active the native volume UI stays visible and presses pass
+  // through; otherwise nav mode re-engages and the baseline re-syncs.
   useEffect(() => {
     if (!volumeNavEnabled) return;
-    void VolumeManager.showNativeVolumeUI({ enabled: isAudioPlaying });
-    if (!isAudioPlaying) {
+    logVolumeNav('audio active changed', { audioActive, audioStatus });
+    void VolumeManager.showNativeVolumeUI({ enabled: audioActive });
+    if (!audioActive) {
       void VolumeManager.getVolume()
         .then(({ volume }) => {
           lastVolumeRef.current = volume;
@@ -118,7 +145,7 @@ export function CategoryScreen() {
           // Keep the previous baseline; listener re-baselines on next event.
         });
     }
-  }, [volumeNavEnabled, isAudioPlaying]);
+  }, [volumeNavEnabled, audioActive, audioStatus]);
 
   // Keep the screen awake while the user is reading zikr on this screen.
   useEffect(() => {
@@ -185,7 +212,7 @@ export function CategoryScreen() {
   // is hidden and the volume is snapped back to its previous value so the
   // buttons act as next/previous controls without actually changing the volume.
   // Only active while the user has enabled the feature in Settings.
-  // Exception (#10): while audio plays, presses control the system volume.
+  // Exception (#10): while audio is active, presses control system volume.
   useEffect(() => {
     if (!volumeNavEnabled) return;
     let listener: { remove: () => void } | null = null;
@@ -208,10 +235,11 @@ export function CategoryScreen() {
         logVolumeNav('listener attached', { baseline });
         await VolumeManager.showNativeVolumeUI({ enabled: false });
         listener = VolumeManager.addVolumeListener(({ volume }) => {
-          if (isAudioPlayingRef.current) {
-            // Audio playing: keys belong to the OS; track volume for resume.
+          const playbackStatus = audioStatusRef.current;
+          if (isAudioPlayingRef.current || playIntentRef.current) {
+            // Audio active: keys belong to the OS; track volume for resume.
             lastVolumeRef.current = volume;
-            logVolumeNav('audio playing — passing through', { volume });
+            logVolumeNav('audio active — passing through', { volume, playbackStatus });
             return;
           }
           if (volumeRestoringRef.current) {
@@ -255,6 +283,7 @@ export function CategoryScreen() {
             logVolumeNav('dropped by guard', { volume, last });
             return;
           }
+          logVolumeNav('volume nav', { volume, last, playbackStatus });
           const maxIndex = maxIndexRef.current;
           if (volume > last && indexRef.current > 0) {
             // Volume up -> go back to the previous zikr without touching the counter.
@@ -382,7 +411,7 @@ export function CategoryScreen() {
       audioEnabled={audioEnabled}
       audioAvailable={audioAvailable}
       audioStatus={audioStatus}
-      onToggleAudio={toggleAudio}
+      onToggleAudio={handleToggleAudio}
     />
   );
 }
