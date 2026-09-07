@@ -110,3 +110,6 @@
 	- Snap volume back and hide the native volume UI while active.
 
 - [x] **Hide Quote Cards While Search Is Open (#8)** — The Quran quote + hadith cards pushed category results behind the open keyboard. Both cards are now conditionally rendered only when search is closed (`!isSearchOpen` in `CategoriesScreen.tsx`); opening search hides them, closing restores them.
+
+- [x] **Volume-Key Reliability Fix (#11, in review)** — Fixed volume-down intermittently doing nothing on `CategoryScreen`/`FreeTasbihScreen`: the system volume is re-centered to mid-range when parked at a min/max rail (where Android fires no event), every swallowed press (restore/guard) re-baselines the direction detector, and `__DEV__`-only `[VolumeNav:*]` logs make failures observable (`adb logcat | grep VolumeNav`). Expo Go confirmed unsupported for this feature — requires a custom dev build.
+- [x] **Volume Keys Yield to Audio While Playing (#10, in review)** — On `CategoryScreen`, hardware keys control the system volume normally (native UI shown, no snap-back) while `audioStatus === 'playing'`; nav mode re-engages with a re-synced baseline on pause/finish. `FreeTasbihScreen` verified as no-op (no audio path).

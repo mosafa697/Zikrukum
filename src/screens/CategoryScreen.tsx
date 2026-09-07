@@ -25,6 +25,18 @@ import { t } from '../i18n';
 import { useZikrAudio } from '../audio/useZikrAudio';
 import { config } from '../config/config';
 
+// Volume nav pins the system volume mid-range so both keys always produce a
+// detectable delta (at the min/max rails Android fires no event).
+const VOLUME_NAV_BASELINE = 0.5;
+const VOLUME_NAV_RAIL_EPS = 0.02;
+
+function logVolumeNav(...args: unknown[]) {
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log('[VolumeNav:Category]', ...args);
+  }
+}
+
 export function CategoryScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -62,6 +74,8 @@ export function CategoryScreen() {
   const lastVolumeRef = useRef<number | null>(null);
   const volumeNavGuardRef = useRef(0);
   const volumeRestoringRef = useRef(false);
+  // Passes presses through to the OS while audio plays (#10).
+  const isAudioPlayingRef = useRef(false);
 
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
@@ -86,6 +100,25 @@ export function CategoryScreen() {
     shouldAutoPlayRef.current = false;
     void toggleAudio();
   }, [audioEnabled, currentPhrase, toggleAudio]);
+
+  const isAudioPlaying = audioStatus === 'playing';
+  isAudioPlayingRef.current = isAudioPlaying;
+
+  // While audio plays the native volume UI stays visible and presses pass
+  // through; on stop, nav mode re-engages and the baseline re-syncs.
+  useEffect(() => {
+    if (!volumeNavEnabled) return;
+    void VolumeManager.showNativeVolumeUI({ enabled: isAudioPlaying });
+    if (!isAudioPlaying) {
+      void VolumeManager.getVolume()
+        .then(({ volume }) => {
+          lastVolumeRef.current = volume;
+        })
+        .catch(() => {
+          // Keep the previous baseline; listener re-baselines on next event.
+        });
+    }
+  }, [volumeNavEnabled, isAudioPlaying]);
 
   // Keep the screen awake while the user is reading zikr on this screen.
   useEffect(() => {
@@ -152,6 +185,7 @@ export function CategoryScreen() {
   // is hidden and the volume is snapped back to its previous value so the
   // buttons act as next/previous controls without actually changing the volume.
   // Only active while the user has enabled the feature in Settings.
+  // Exception (#10): while audio plays, presses control the system volume.
   useEffect(() => {
     if (!volumeNavEnabled) return;
     let listener: { remove: () => void } | null = null;
@@ -159,18 +193,66 @@ export function CategoryScreen() {
     const init = async () => {
       try {
         const { volume } = await VolumeManager.getVolume();
-        lastVolumeRef.current = volume;
+        let baseline = volume;
+        if (baseline <= VOLUME_NAV_RAIL_EPS || baseline >= 1 - VOLUME_NAV_RAIL_EPS) {
+          // At a rail no event fires — re-center so both keys work.
+          logVolumeNav('volume at rail, re-centering', { volume });
+          await VolumeManager.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false });
+          try {
+            baseline = (await VolumeManager.getVolume()).volume;
+          } catch {
+            baseline = VOLUME_NAV_BASELINE;
+          }
+        }
+        lastVolumeRef.current = baseline;
+        logVolumeNav('listener attached', { baseline });
         await VolumeManager.showNativeVolumeUI({ enabled: false });
         listener = VolumeManager.addVolumeListener(({ volume }) => {
-          if (volumeRestoringRef.current) return;
+          if (isAudioPlayingRef.current) {
+            // Audio playing: keys belong to the OS; track volume for resume.
+            lastVolumeRef.current = volume;
+            logVolumeNav('audio playing — passing through', { volume });
+            return;
+          }
+          if (volumeRestoringRef.current) {
+            // The swallowed press still moved the real volume — re-baseline.
+            lastVolumeRef.current = volume;
+            logVolumeNav('dropped during restore', { volume });
+            return;
+          }
 
           const last = lastVolumeRef.current;
           if (last === null || last === undefined) {
             lastVolumeRef.current = volume;
             return;
           }
+          if (volume === last) {
+            // No delta means a system rail — re-center.
+            logVolumeNav('no delta (rail?), re-centering', { volume });
+            lastVolumeRef.current = volume;
+            volumeRestoringRef.current = true;
+            void VolumeManager.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false })
+              .then(async () => {
+                try {
+                  const { volume: actual } = await VolumeManager.getVolume();
+                  lastVolumeRef.current = actual;
+                } catch {
+                  lastVolumeRef.current = VOLUME_NAV_BASELINE;
+                }
+              })
+              .catch(() => {
+                lastVolumeRef.current = VOLUME_NAV_BASELINE;
+              })
+              .finally(() => {
+                volumeRestoringRef.current = false;
+              });
+            return;
+          }
           const now = Date.now();
           if (now - volumeNavGuardRef.current < config.interaction.counterGuardMs) {
+            // Debounced, but the press still moved the volume — re-baseline.
+            lastVolumeRef.current = volume;
+            logVolumeNav('dropped by guard', { volume, last });
             return;
           }
           const maxIndex = maxIndexRef.current;
@@ -221,7 +303,8 @@ export function CategoryScreen() {
             });
         });
       } catch {
-        // Volume manager unavailable (e.g. Expo Go); ignore silently.
+        // Unavailable in Expo Go — test volume keys on a custom dev build.
+        logVolumeNav('VolumeManager unavailable (Expo Go?)');
       }
     };
 
@@ -229,6 +312,7 @@ export function CategoryScreen() {
 
     return () => {
       listener?.remove();
+      logVolumeNav('listener detached');
       void VolumeManager.showNativeVolumeUI({ enabled: true });
       lastVolumeRef.current = null;
       volumeRestoringRef.current = false;
