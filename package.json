@@ -10,17 +10,25 @@
     "web": "expo start --web",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\" --fix && prettier --write \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "eas-build-post-install": "patch-package"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": ["react-native-track-player", "@notifee/react-native"]
+      }
+    }
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
     "@notifee/react-native": "^9.1.8",
     "@react-native-async-storage/async-storage": "^2.1.1",
-    "@react-native-community/datetimepicker": "^8.4.1",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/native-stack": "^6.0.6",
     "@reduxjs/toolkit": "^2.0.0",
-    "expo": "^57.0.0",
+    "expo": "~57.0.21",
     "expo-asset": "~57.0.16",
     "expo-audio": "~57.0.4",
     "expo-build-properties": "~57.0.17",
