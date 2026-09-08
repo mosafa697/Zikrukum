@@ -241,3 +241,41 @@ export async function scheduleReminders(reminders: RemindersState): Promise<void
 export async function rescheduleReminders(reminders: RemindersState): Promise<void> {
   await scheduleReminders(reminders);
 }
+
+// --- Cleanup helpers (Task 6 / #18) ---
+
+export async function cancelAllReminders(): Promise<void> {
+  await cancelReminders();
+}
+
+export async function cancelMediaNotification(): Promise<void> {
+  const nf = getNotifee();
+  if (!nf) return;
+  try {
+    // TrackPlayer owns the media notification; cancel any leftover displayed notifee notifications
+    // with reminder ids to avoid stale notifications persisting after stop.
+    await nf.cancelDisplayedNotifications();
+  } catch {
+    // no-op, idempotent
+  }
+}
+
+export async function pruneStaleDisplayedNotifications(
+  maxAgeMs: number = 24 * 60 * 60 * 1000
+): Promise<void> {
+  const nf = getNotifee();
+  if (!nf) return;
+  try {
+    const displayed = await nf.getDisplayedNotifications();
+    const now = Date.now();
+    for (const n of displayed) {
+      // Notifee displayed notifications may not expose timestamp; best-effort prune by id age if available
+      const ts = (n as { date?: number }).date ?? now;
+      if (now - ts > maxAgeMs) {
+        await nf.cancelDisplayedNotification(String(n.id));
+      }
+    }
+  } catch {
+    // no-op
+  }
+}

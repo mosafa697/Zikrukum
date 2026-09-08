@@ -148,15 +148,17 @@ export async function togglePlayPause(): Promise<void> {
   }
 }
 
-export async function stopPlayback(): Promise<void> {
+export async function stopPlayback(_reason: 'user' | 'ended' | 'error' = 'user'): Promise<void> {
   const TP = getTrackPlayer();
   if (!TP) return;
   try {
     await TP.stop();
     await TP.reset();
   } catch {
-    // no-op
+    // idempotent — safe when nothing playing
   }
+  // TrackPlayer stop+reset clears the foreground service + media notification.
+  // No extra notifee cancel needed (media notification is owned by TrackPlayer).
 }
 
 export async function skipNext(): Promise<void> {

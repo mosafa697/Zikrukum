@@ -28,7 +28,7 @@ export default async function playbackService() {
       await TrackPlayer!.stop();
       await TrackPlayer!.reset();
     } catch {
-      // no-op
+      // idempotent — safe when already stopped
     }
   });
 
@@ -55,7 +55,7 @@ export default async function playbackService() {
       await TrackPlayer!.stop();
       await TrackPlayer!.reset();
     } catch {
-      // no-op
+      // idempotent — auto cleanup on natural finish
     }
   });
 }
