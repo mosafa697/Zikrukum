@@ -21,7 +21,14 @@ import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { toggleAudioEnabled, toggleAutoPlayNext } from '../store/slices/audioSlice';
 import { toggleVolumeNav } from '../store/slices/volumeNavSlice';
-import { setEveningTime, setMorningTime, toggleEvening, toggleMorning } from '../store/slices/reminderSlice';
+import {
+  setEveningTime,
+  setFridayTime,
+  setMorningTime,
+  toggleEvening,
+  toggleFriday,
+  toggleMorning,
+} from '../store/slices/reminderSlice';
 import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { formatNumber } from '../utils/numberFormatting';
@@ -64,7 +71,7 @@ export function SettingsScreen() {
     openSettings: openNotifSettings,
   } = useNotificationPermissions();
   const notifDenied = notifStatus === 'denied';
-  const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | null>(null);
+  const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | 'friday' | null>(null);
 
   const handleSendContact = () => {
     if (!contactName.trim() || !contactMsg.trim()) {
@@ -93,6 +100,10 @@ export function SettingsScreen() {
     () => dispatch(toggleEvening()),
     config.interaction.navButtonGuardMs
   );
+  const guardedToggleFriday = useTimeGuardedCallback(
+    () => dispatch(toggleFriday()),
+    config.interaction.navButtonGuardMs
+  );
 
   const handleTimeChange = (_event: unknown, selectedDate?: Date) => {
     const target = pickerTarget;
@@ -104,13 +115,19 @@ export function SettingsScreen() {
     const hour = selectedDate.getHours();
     const minute = selectedDate.getMinutes();
     if (target === 'morning') dispatch(setMorningTime({ hour, minute }));
-    else dispatch(setEveningTime({ hour, minute }));
+    else if (target === 'evening') dispatch(setEveningTime({ hour, minute }));
+    else dispatch(setFridayTime({ hour, minute }));
     if (Platform.OS === 'ios') setPickerTarget(null);
   };
 
   const pickerDate = (() => {
     if (!pickerTarget) return new Date();
-    const time = pickerTarget === 'morning' ? reminders.morning.time : reminders.evening.time;
+    const time =
+      pickerTarget === 'morning'
+        ? reminders.morning.time
+        : pickerTarget === 'evening'
+          ? reminders.evening.time
+          : reminders.friday.time;
     const d = new Date();
     d.setHours(time.hour, time.minute, 0, 0);
     return d;
@@ -402,6 +419,54 @@ export function SettingsScreen() {
               </Pressable>
             </View>
           </View>
+          <View style={[styles.divider, { backgroundColor: colors.buttonBorderColor }]} />
+          <View style={styles.reminderRow}>
+            <View style={styles.reminderLabelCol}>
+              <Text style={[styles.toggleText, { color: colors.textColor }]}>
+                {t('fridayAdhkarReminder')}
+              </Text>
+              <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
+                {reminders.friday.enabled ? t('reminderEnabled') : t('reminderDisabled')}
+              </Text>
+            </View>
+            <View style={styles.reminderActions}>
+              <Pressable
+                onPress={() => setPickerTarget('friday')}
+                style={[
+                  styles.timePill,
+                  {
+                    backgroundColor: colors.secondaryBgColor,
+                    borderColor: colors.buttonBorderColor,
+                  },
+                ]}
+                accessibilityLabel={t('pickTime')}
+              >
+                <Ionicons name="time-outline" size={16} color={colors.textColor} />
+                <Text style={[styles.timePillText, { color: colors.textColor }]}>
+                  {formatTime(reminders.friday.time.hour, reminders.friday.time.minute)}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={guardedToggleFriday}
+                style={[
+                  styles.toggleBtn,
+                  {
+                    backgroundColor: reminders.friday.enabled ? colors.sliderBgActive : colors.buttonBgColor,
+                    borderColor: reminders.friday.enabled ? colors.sliderBgActive : colors.buttonBorderColor,
+                    opacity: notifDenied ? 0.5 : 1,
+                  },
+                ]}
+                disabled={notifDenied}
+                accessibilityLabel={t('fridayAdhkarReminder')}
+              >
+                <Ionicons
+                  name={reminders.friday.enabled ? 'notifications' : 'notifications-off-outline'}
+                  size={18}
+                  color={reminders.friday.enabled ? colors.iconColorActive : colors.textColor}
+                />
+              </Pressable>
+            </View>
+          </View>
           <Text style={[styles.rationaleText, { color: colors.secondaryTextColor }]}>
             {t('exactAlarmRationale')}
           </Text>
@@ -419,8 +484,16 @@ export function SettingsScreen() {
               <Text style={[styles.webTimeText, { color: colors.secondaryTextColor }]}>
                 {t('pickTime')}:{' '}
                 {formatTime(
-                  pickerTarget === 'morning' ? reminders.morning.time.hour : reminders.evening.time.hour,
-                  pickerTarget === 'morning' ? reminders.morning.time.minute : reminders.evening.time.minute
+                  pickerTarget === 'morning'
+                    ? reminders.morning.time.hour
+                    : pickerTarget === 'evening'
+                      ? reminders.evening.time.hour
+                      : reminders.friday.time.hour,
+                  pickerTarget === 'morning'
+                    ? reminders.morning.time.minute
+                    : pickerTarget === 'evening'
+                      ? reminders.evening.time.minute
+                      : reminders.friday.time.minute
                 )}
               </Text>
               <Pressable

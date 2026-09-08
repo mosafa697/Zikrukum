@@ -10,10 +10,13 @@ import { toggleVolumeNav } from './slices/volumeNavSlice';
 import {
   setEveningEnabled,
   setEveningTime,
+  setFridayEnabled,
+  setFridayTime,
   setMorningEnabled,
   setMorningTime,
   setReminders,
   toggleEvening,
+  toggleFriday,
   toggleMorning,
   REMINDER_DEFAULTS,
 } from './slices/reminderSlice';
@@ -91,10 +94,13 @@ listenerMiddleware.startListening({
   matcher: isAnyOf(
     toggleMorning,
     toggleEvening,
+    toggleFriday,
     setMorningEnabled,
     setEveningEnabled,
+    setFridayEnabled,
     setMorningTime,
     setEveningTime,
+    setFridayTime,
     setReminders
   ),
   effect: async (_, api) => {
@@ -128,6 +134,13 @@ export async function loadPersistedState() {
     getStoredValue<typeof REMINDER_DEFAULTS>('adhkarReminders', REMINDER_DEFAULTS),
   ]);
 
+  // Migrate stored reminders without friday field
+  const mergedReminders: typeof REMINDER_DEFAULTS = {
+    morning: adhkarReminders.morning ?? REMINDER_DEFAULTS.morning,
+    evening: adhkarReminders.evening ?? REMINDER_DEFAULTS.evening,
+    friday: (adhkarReminders as typeof REMINDER_DEFAULTS).friday ?? REMINDER_DEFAULTS.friday,
+  };
+
   return {
     theme: { value: theme, list: ['light', 'solarized', 'dark'] as AzkarThemeName[] },
     totalCount: { value: totalCount },
@@ -138,6 +151,6 @@ export async function loadPersistedState() {
     audio: { autoPlayNext, audioEnabled },
     playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
     volumeNav: { enabled: volumeNavEnabled },
-    reminders: adhkarReminders,
+    reminders: mergedReminders,
   };
 }

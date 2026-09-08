@@ -11,7 +11,7 @@ async function handlePlay(categoryId: string): Promise<void> {
   lastPlayAt = now;
 
   // Explicit user intent — ignore audioEnabled setting, respect autoPlayNext inside playCategory.
-  const safeId = categoryId === '3' || categoryId === '4' ? categoryId : '3';
+  const safeId = categoryId === '3' || categoryId === '4' || categoryId === '21' ? categoryId : '3';
   try {
     const ok = await playCategory(safeId, { startAtCurrentPhrase: true });
     if (!ok) {
@@ -44,7 +44,8 @@ export async function handleNotifeeEvent(type: number, detail: unknown): Promise
     // Fallback if data missing — try to infer from notification id
     const notif = d?.notification as { id?: string } | undefined;
     const notifId = notif?.id;
-    if (notifId?.includes('evening')) await handlePlay('4');
+    if (notifId?.includes('friday')) await handlePlay('21');
+    else if (notifId?.includes('evening')) await handlePlay('4');
     else await handlePlay('3');
   }
 }

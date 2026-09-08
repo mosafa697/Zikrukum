@@ -6,6 +6,7 @@ export const config = {
   reminders: {
     morningDefault: { hour: 6, minute: 0 },
     eveningDefault: { hour: 17, minute: 0 },
+    fridayDefault: { hour: 9, minute: 0 },
   },
   font: {
     minScale: 0.8,

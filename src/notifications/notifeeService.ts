@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { ADHKAR_CHANNEL, ADHKAR_CHANNEL_ID } from './channels';
-import { getNextTriggerTimestamp } from './scheduler';
+import { getNextFridayTriggerTimestamp, getNextTriggerTimestamp } from './scheduler';
 import type { RemindersState } from '../store/slices/reminderSlice';
 
 // Guarded notifee import — web returns the .web mock, native returns the native module.
@@ -140,9 +140,48 @@ export async function getPowerManagerInfoSafe(): Promise<
 export const REMINDER_NOTIFICATION_IDS = {
   morning: 'morning-adhkar',
   evening: 'evening-adhkar',
+  friday: 'friday-adhkar',
 } as const;
 
 export const REMINDER_PLAY_ACTION_ID = 'play';
+
+async function createWeeklyTrigger(
+  nf: NonNullable<ReturnType<typeof getNotifee>>,
+  id: string,
+  title: string,
+  body: string,
+  categoryId: string,
+  time: { hour: number; minute: number }
+) {
+  const timestamp = getNextFridayTriggerTimestamp(time);
+  const type = 'friday';
+  await nf.createTriggerNotification(
+    {
+      id,
+      title,
+      body,
+      data: { categoryId, type },
+      android: {
+        channelId: ADHKAR_CHANNEL_ID,
+        smallIcon: 'ic_launcher',
+        pressAction: { id: 'default' },
+        actions: [
+          {
+            title: 'تشغيل',
+            pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
+          },
+        ],
+      },
+      ios: { categoryId: 'adhkar-reminder' },
+    },
+    {
+      type: 0,
+      timestamp,
+      repeatFrequency: 2, // RepeatFrequency.WEEKLY
+      alarmManager: { type: 3 },
+    } as unknown as import('@notifee/react-native').TimestampTrigger
+  );
+}
 
 async function createDailyTrigger(
   nf: NonNullable<ReturnType<typeof getNotifee>>,
@@ -231,6 +270,20 @@ export async function scheduleReminders(reminders: RemindersState): Promise<void
         ar.eveningReminderBody,
         '4',
         reminders.evening.time
+      );
+    } catch {
+      // no-op
+    }
+  }
+  if (reminders.friday?.enabled) {
+    try {
+      await createWeeklyTrigger(
+        nf,
+        REMINDER_NOTIFICATION_IDS.friday,
+        ar.fridayReminderTitle,
+        ar.fridayReminderBody,
+        '21',
+        reminders.friday.time
       );
     } catch {
       // no-op

@@ -17,3 +17,29 @@ export function getNextTriggerDate(time: ReminderTime, now: Date = new Date()): 
 export function getNextTriggerTimestamp(time: ReminderTime, now: Date = new Date()): number {
   return getNextTriggerDate(time, now).getTime();
 }
+
+/**
+ * Next Friday occurrence for weekly reminder. Friday = 5 in JS getDay().
+ * If today is Friday and time not yet passed → today, else next Friday.
+ */
+export function getNextFridayTriggerDate(time: ReminderTime, now: Date = new Date()): Date {
+  const next = new Date(now);
+  next.setHours(time.hour, time.minute, 0, 0);
+  const day = now.getDay(); // 0 Sun .. 5 Fri .. 6 Sat
+  let daysUntilFriday = (5 - day + 7) % 7;
+  if (daysUntilFriday === 0 && next.getTime() <= now.getTime()) {
+    daysUntilFriday = 7;
+  }
+  if (daysUntilFriday > 0) {
+    // next currently is today at target time; move to Friday then keep time
+    const target = new Date(now);
+    target.setDate(now.getDate() + daysUntilFriday);
+    target.setHours(time.hour, time.minute, 0, 0);
+    return target;
+  }
+  return next;
+}
+
+export function getNextFridayTriggerTimestamp(time: ReminderTime, now: Date = new Date()): number {
+  return getNextFridayTriggerDate(time, now).getTime();
+}

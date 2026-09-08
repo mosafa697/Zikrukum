@@ -131,7 +131,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
 | `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
-| `reminders` | `{ morning: {enabled, time}, evening: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00 defaults, `@react-native-community/datetimepicker`) |
+| `reminders` | `{ morning: {enabled, time}, evening: {enabled, time}, friday: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00/Friday 09:00 defaults, `@react-native-community/datetimepicker`) |
 | `playback` | `{ currentPhraseId, status, currentTime, duration, errorKey? }` | no | Current audio playback state |
 
 ### Persistence Pattern

@@ -10,6 +10,7 @@ import { loadPersistedState } from './src/store/persistence';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ensureAdhkarChannel, scheduleReminders } from './src/notifications/notifeeService';
 import { setupPlayer } from './src/audio/trackPlayerService';
+import type { RemindersState } from './src/store/slices/reminderSlice';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -31,22 +32,12 @@ export default function App() {
     if (!appStore) return;
     void ensureAdhkarChannel();
     void setupPlayer();
-    const state = appStore.getState() as {
-      reminders?: {
-        morning: { enabled: boolean; time: { hour: number; minute: number } };
-        evening: { enabled: boolean; time: { hour: number; minute: number } };
-      };
-    };
+    const state = appStore.getState() as { reminders?: RemindersState };
     if (state.reminders) void scheduleReminders(state.reminders);
 
     let prevRemindersJson = JSON.stringify((appStore.getState() as { reminders?: unknown }).reminders);
     const unsubscribe = appStore.subscribe(() => {
-      const next = appStore.getState() as {
-        reminders?: {
-          morning: { enabled: boolean; time: { hour: number; minute: number } };
-          evening: { enabled: boolean; time: { hour: number; minute: number } };
-        };
-      };
+      const next = appStore.getState() as { reminders?: RemindersState };
       if (!next.reminders) return;
       const nextJson = JSON.stringify(next.reminders);
       if (nextJson === prevRemindersJson) return;
@@ -56,12 +47,7 @@ export default function App() {
 
     const appStateSub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
-        const cur = appStore.getState() as {
-          reminders?: {
-            morning: { enabled: boolean; time: { hour: number; minute: number } };
-            evening: { enabled: boolean; time: { hour: number; minute: number } };
-          };
-        };
+        const cur = appStore.getState() as { reminders?: RemindersState };
         if (cur.reminders) void scheduleReminders(cur.reminders);
       }
     });

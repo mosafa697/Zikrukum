@@ -13,6 +13,7 @@ export type ReminderEntry = {
 export type RemindersState = {
   morning: ReminderEntry;
   evening: ReminderEntry;
+  friday: ReminderEntry;
 };
 
 function clampTime(time: ReminderTime): ReminderTime {
@@ -25,6 +26,7 @@ function clampTime(time: ReminderTime): ReminderTime {
 export const REMINDER_DEFAULTS: RemindersState = {
   morning: { enabled: true, time: { hour: 6, minute: 0 } },
   evening: { enabled: true, time: { hour: 17, minute: 0 } },
+  friday: { enabled: true, time: { hour: 9, minute: 0 } },
 };
 
 const initialState: RemindersState = REMINDER_DEFAULTS;
@@ -51,6 +53,15 @@ const reminderSlice = createSlice({
     setEveningTime(state, action: PayloadAction<ReminderTime>) {
       state.evening.time = clampTime(action.payload);
     },
+    setFridayEnabled(state, action: PayloadAction<boolean>) {
+      state.friday.enabled = action.payload;
+    },
+    toggleFriday(state) {
+      state.friday.enabled = !state.friday.enabled;
+    },
+    setFridayTime(state, action: PayloadAction<ReminderTime>) {
+      state.friday.time = clampTime(action.payload);
+    },
     setReminders(state, action: PayloadAction<RemindersState>) {
       state.morning = {
         enabled: Boolean(action.payload.morning.enabled),
@@ -59,6 +70,11 @@ const reminderSlice = createSlice({
       state.evening = {
         enabled: Boolean(action.payload.evening.enabled),
         time: clampTime(action.payload.evening.time),
+      };
+      const fridaySrc = (action.payload as RemindersState).friday ?? REMINDER_DEFAULTS.friday;
+      state.friday = {
+        enabled: Boolean(fridaySrc.enabled),
+        time: clampTime(fridaySrc.time),
       };
     },
   },
@@ -71,6 +87,9 @@ export const {
   toggleEvening,
   setMorningTime,
   setEveningTime,
+  setFridayEnabled,
+  toggleFriday,
+  setFridayTime,
   setReminders,
 } = reminderSlice.actions;
 

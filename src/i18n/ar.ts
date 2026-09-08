@@ -91,7 +91,10 @@ export const ar = {
   // Reminder notifications
   morningReminderTitle: 'أذكار الصباح',
   eveningReminderTitle: 'أذكار المساء',
+  fridayReminderTitle: 'سنن يوم الجمعة',
   morningReminderBody: 'حان وقت أذكار الصباح — اذكر الله تطمئن القلوب',
   eveningReminderBody: 'حان وقت أذكار المساء — اذكر الله في المساء',
+  fridayReminderBody: 'حان وقت سنن يوم الجمعة — اغتنم الفضل',
+  fridayAdhkarReminder: 'تذكير سنن يوم الجمعة',
   reminderNotificationChannel: 'تذكير الأذكار',
 } as const;
