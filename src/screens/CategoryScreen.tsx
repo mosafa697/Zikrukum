@@ -60,6 +60,7 @@ export function CategoryScreen() {
   const [clicks, setClicks] = useState<number[]>([]);
 
   const currentPhrase = categoryPhrases[index];
+  const remainingCount = Math.max(0, (currentPhrase?.count ?? 1) - (clicks[index] ?? 0));
 
   // Refs so the volume-button listener (registered once with empty deps) always
   // reads the latest index and phrase count without stale-closure issues.
@@ -80,12 +81,30 @@ export function CategoryScreen() {
   // on a device): set on play press, cleared on pause/finish/error.
   const playIntentRef = useRef(false);
 
+  const handleAudioLoop = useCallback(() => {
+    const idx = indexRef.current;
+    const phraseCount = phraseCountRef.current;
+    const currentCount = phraseClicksRef.current;
+    if (currentCount >= phraseCount) return;
+    const newCount = currentCount + 1;
+    setClicks((prev) => {
+      const next = [...prev];
+      next[idx] = newCount;
+      return next;
+    });
+    dispatch(incrementTotalCount());
+    setIsAnimating(true);
+    if (newCount >= phraseCount) {
+      setTimeout(() => dispatch(incrementIndex()), 300);
+    }
+    setTimeout(() => setIsAnimating(false), 300);
+  }, [dispatch]);
+
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
     if (isLastPhrase) return;
     shouldAutoPlayRef.current = true;
-    dispatch(incrementIndex());
-  }, [audioEnabled, autoPlayNext, isLastPhrase, dispatch]);
+  }, [audioEnabled, autoPlayNext, isLastPhrase]);
 
   const {
     status: audioStatus,
@@ -94,7 +113,8 @@ export function CategoryScreen() {
   } = useZikrAudio({
     phrase: currentPhrase,
     category: categoryData,
-    repeatCount: currentPhrase?.count ?? 1,
+    repeatCount: remainingCount > 0 ? remainingCount : 1,
+    onLoop: handleAudioLoop,
     onEnded: handleAudioEnded,
   });
 

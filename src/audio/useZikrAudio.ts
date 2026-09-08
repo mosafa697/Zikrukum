@@ -18,6 +18,7 @@ type UseZikrAudioOptions = {
   category: AzkarCategory | undefined;
   repeatCount?: number;
   onEnded?: () => void;
+  onLoop?: () => void;
 };
 
 type UseZikrAudioResult = {
@@ -44,6 +45,7 @@ export function useZikrAudio({
   category,
   repeatCount: rawRepeatCount = 1,
   onEnded,
+  onLoop,
 }: UseZikrAudioOptions): UseZikrAudioResult {
   const repeatCount = Math.max(1, rawRepeatCount);
   const dispatch = useDispatch();
@@ -51,6 +53,9 @@ export function useZikrAudio({
   const audioEnabled = useSelector((s: RootState) => s.audio.audioEnabled);
 
   const phraseId = phrase?.id ?? -1;
+  const onLoopRef = useRef(onLoop);
+  const onEndedRef = useRef(onEnded);
+  const lastLoopAtRef = useRef(0);
 
   const source = useMemo<AudioSource>(() => {
     if (!phrase || !category) return { kind: 'missing' };
@@ -65,8 +70,14 @@ export function useZikrAudio({
   const remainingRepeatsRef = useRef(repeatCount);
 
   useEffect(() => {
+    onLoopRef.current = onLoop;
+    onEndedRef.current = onEnded;
+  }, [onLoop, onEnded]);
+
+  useEffect(() => {
     currentPhraseIdRef.current = phraseId;
     remainingRepeatsRef.current = repeatCount;
+    lastLoopAtRef.current = 0;
   }, [phraseId, repeatCount]);
 
   useEffect(() => {
@@ -109,9 +120,9 @@ export function useZikrAudio({
         return null;
       }
 
-      subscriptionRef.current = (player as unknown as { addListener: (ev: string, cb: (s: never) => void) => { remove: () => void } }).addListener(
-        'playbackStatusUpdate',
-        (playbackStatus: import('expo-audio').AudioStatus) => {
+      subscriptionRef.current = (
+        player as unknown as { addListener: (ev: string, cb: (s: never) => void) => { remove: () => void } }
+      ).addListener('playbackStatusUpdate', (playbackStatus: import('expo-audio').AudioStatus) => {
         if (!playbackStatus.isLoaded) {
           return;
         }
@@ -120,15 +131,42 @@ export function useZikrAudio({
           return;
         }
         if (playbackStatus.didJustFinish && !playbackStatus.loop) {
+          // Guard against duplicate didJustFinish events firing in quick succession.
+          const now = Date.now();
+          if (now - lastLoopAtRef.current < 250) {
+            return;
+          }
+          lastLoopAtRef.current = now;
           remainingRepeatsRef.current -= 1;
+          // Notify per-loop so the counter can decrement in sync.
+          try {
+            onLoopRef.current?.();
+          } catch {
+            // ignore
+          }
           if (remainingRepeatsRef.current > 0) {
             dispatch(setPlaybackTime({ currentTime: 0, duration: player.duration }));
-            void player.seekTo(0).then(() => player.play());
+            void player
+              .seekTo(0)
+              .then(() => {
+                try {
+                  player.play();
+                } catch {
+                  dispatch(setPlaybackError('playbackError'));
+                }
+              })
+              .catch(() => {
+                dispatch(setPlaybackError('playbackError'));
+              });
             return;
           }
           dispatch(setPlaybackStatus('finished'));
           dispatch(setPlaybackTime({ currentTime: player.duration, duration: player.duration }));
-          onEnded?.();
+          try {
+            onEndedRef.current?.();
+          } catch {
+            // ignore
+          }
         } else if (playbackStatus.playing) {
           dispatch(setPlaybackStatus('playing'));
           dispatch(setPlaybackTime({ currentTime: player.currentTime, duration: player.duration }));
@@ -148,7 +186,7 @@ export function useZikrAudio({
       isLoadingRef.current = false;
       return null;
     }
-  }, [source, phraseId, dispatch, onEnded]);
+  }, [source, phraseId, dispatch]);
 
   const toggle = useCallback(async () => {
     if (!audioEnabled || source.kind === 'missing') return;
