@@ -109,7 +109,9 @@ export function useZikrAudio({
         return null;
       }
 
-      subscriptionRef.current = player.addListener('playbackStatusUpdate', (playbackStatus) => {
+      subscriptionRef.current = (player as unknown as { addListener: (ev: string, cb: (s: never) => void) => { remove: () => void } }).addListener(
+        'playbackStatusUpdate',
+        (playbackStatus: import('expo-audio').AudioStatus) => {
         if (!playbackStatus.isLoaded) {
           return;
         }

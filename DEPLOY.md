@@ -55,7 +55,7 @@ Must be satisfied before the app can be approved/reviewed in the Play Console. S
 ### Technical / build policies
 - [ ] **App signing** — Ship AAB signed with an app-signing key; back up the keystore securely (losing it = cannot update the app).
 - [ ] **Permissions justification** — Every requested permission must be justified. Audit the EAS build log to confirm no unnecessary/unexpected Android permissions are pulled in (rejection risk).
-- [ ] **Target API level** — Must meet Google's current requirement (2026 target is roughly **API 35+**). Expo SDK 54 typically meets this; verify in the Play Console before release.
+- [ ] **Target API level** — Must meet Google's current requirement (2026 target is roughly **API 35+**). Expo SDK 57 typically meets this; verify in the Play Console before release.
 - [ ] **Play Integrity / API keys** — Ensure no exposed API keys or secrets in the bundle (none expected; app is offline).
 
 ### Platform-wide policies (account-level risk)

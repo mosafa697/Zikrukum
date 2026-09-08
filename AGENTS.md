@@ -7,16 +7,16 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 **Zikrukum** is a React Native (Expo) mobile app for reading daily Azkar (Islamic remembrances/supplications). It is a migration of an existing Azkar app. All data is bundled locally (JSON + fonts + audio) — the app works fully offline.
 
 - **Name**: Zikrukum
-- **Platforms**: iOS, Android, Web (Expo SDK ~54)
-- **Language**: TypeScript (strict mode)
+- **Platforms**: iOS, Android, Web (Expo SDK ~57)
+- **Language**: TypeScript (strict mode, ~6.0)
 - **Primary UI language**: Arabic (RTL content, strings in `src/i18n/ar.ts`)
 
 ## Tech Stack
 
 | Area | Choice |
 |---|---|
-| Framework | React Native 0.81 + Expo ~54 |
-| Language | TypeScript ~5.9 (strict) |
+| Framework | React Native 0.86 + Expo ~57 |
+| Language | TypeScript ~6.0 (strict) |
 | State | Redux Toolkit 2.x (`@reduxjs/toolkit` + `react-redux`) |
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |

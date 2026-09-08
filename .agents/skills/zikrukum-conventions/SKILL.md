@@ -11,7 +11,7 @@ description: Zikrukum Expo app overview, architecture, and coding conventions. U
 Use when starting any Zikrukum task, reviewing a diff, or when unsure where code belongs.
 
 ## Project facts
-- Stack: React Native 0.81 + Expo ~54, TypeScript strict, Redux Toolkit 2.x, React Navigation native-stack, AsyncStorage, expo-audio + expo-file-system + expo-asset, expo-keep-awake, react-native-volume-manager, expo-font, expo-localization.
+- Stack: React Native 0.86 + Expo ~57, TypeScript ~6.0 strict, Redux Toolkit 2.x, React Navigation native-stack, AsyncStorage, expo-audio + expo-file-system + expo-asset, expo-keep-awake, react-native-volume-manager, expo-font, expo-localization, expo-splash-screen.
 - Offline-first: all content bundled locally (`src/dataset/azkar-sample.json` + fonts + `assets/audio/` clips). No new network dependencies for core content.
 - Entry: `App.tsx` loads fonts via `useFonts`, calls `loadPersistedState()`, creates store once via `createAppStore(preloadedState)`, renders `GestureHandlerRootView > Provider > SafeAreaProvider > RootNavigator`. Do not create additional stores.
 - Navigation: single native stack in `src/navigation/RootNavigator.tsx` (`Categories`, `Category { categoryId }`, `Settings`, `FreeTasbih`), `headerShown: false`. Non-home screens use shared `ScreenHeader`; `PhraseCard` keeps its own header with progress pill. Top safe-area strip is themed in `RootNavigator`, not `App.tsx`.
