@@ -9,6 +9,7 @@ import { createAppStore, type AppStore } from './src/store';
 import { loadPersistedState } from './src/store/persistence';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ensureAdhkarChannel, scheduleReminders } from './src/notifications/notifeeService';
+import { setupPlayer } from './src/audio/trackPlayerService';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -25,10 +26,11 @@ export default function App() {
     loadPersistedState().then((state) => setAppStore(createAppStore(state)));
   }, []);
 
-  // Create notifee channel + schedule daily reminders once store is ready; reschedule on time/toggle and on AppState active (timezone / reboot).
+  // Create notifee channel + schedule daily reminders + setup TrackPlayer once store is ready; reschedule on time/toggle and on AppState active (timezone / reboot).
   useEffect(() => {
     if (!appStore) return;
     void ensureAdhkarChannel();
+    void setupPlayer();
     const state = appStore.getState() as {
       reminders?: {
         morning: { enabled: boolean; time: { hour: number; minute: number } };

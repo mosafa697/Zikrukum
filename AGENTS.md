@@ -20,7 +20,7 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | State | Redux Toolkit 2.x (`@reduxjs/toolkit` + `react-redux`) |
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
-| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) |
+| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) + `react-native-track-player` (background playback, `src/audio/trackPlayerService` + `playbackService`, requires prebuild, guarded for web) |
 | Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go) |
 | Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
@@ -53,6 +53,8 @@ Zikrukum/
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
     │   ├── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
+    │   ├── playbackService.ts  # TrackPlayer headless service (RemotePlay/Pause/Stop/Next/Prev)
+    │   ├── trackPlayerService.ts # TrackPlayer setup + playCategory queue (offline file:// URIs, guarded)
     │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next)
     ├── components/             # Shared UI components
     │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
