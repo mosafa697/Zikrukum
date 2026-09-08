@@ -26,6 +26,7 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
 | Fonts | `expo-font` (loaded in `App.tsx`: `ScheherazadeNew`, `TajawalBold` → `Tajawal-ExtraBold.ttf`, `TajawalRegular`, `Amiri`, `AmiriBold`; note unused `assets/fonts/Tajawal-Bold.ttf` on disk) |
 | Localization | `expo-localization` (installed + Expo plugin wired, but currently not imported anywhere in `src/` — no locale helper exists yet; quote blocks use static styles, see Theming/RTL notes) |
+| Time picker | `@react-native-community/datetimepicker` (reminder times in `SettingsScreen`, is24Hour, web fallback) |
 | Lint/Format | ESLint (flat config, `eslint-config-expo`) + Prettier |
 
 ## Commands
@@ -125,6 +126,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
 | `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
+| `reminders` | `{ morning: {enabled, time}, evening: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00 defaults, `@react-native-community/datetimepicker`) |
 | `playback` | `{ currentPhraseId, status, currentTime, duration, errorKey? }` | no | Current audio playback state |
 
 ### Persistence Pattern

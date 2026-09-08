@@ -78,4 +78,13 @@ export const ar = {
   notifPermissionRequest: 'تفعيل التنبيهات',
   exactAlarmRationale: 'قد يتأخر التذكير حوالي 15 دقيقة في وضع توفير الطاقة إذا لم يُمنح إذن المنبّه الدقيق.',
   notifChannelName: 'تذكير الأذكار',
+
+  // Reminder times
+  reminderTitle: 'تذكير الأذكار',
+  morningAdhkarReminder: 'تذكير أذكار الصباح',
+  eveningAdhkarReminder: 'تذكير أذكار المساء',
+  reminderEnabled: 'مفعّل',
+  reminderDisabled: 'متوقف',
+  pickTime: 'اختيار الوقت',
+  reminderTime: 'الوقت',
 } as const;

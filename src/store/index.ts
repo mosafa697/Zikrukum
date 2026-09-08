@@ -9,6 +9,7 @@ import favouriteCategoriesReducer from './slices/favouriteCategoriesSlice';
 import audioReducer from './slices/audioSlice';
 import playbackReducer from './slices/playbackSlice';
 import volumeNavReducer from './slices/volumeNavSlice';
+import reminderReducer from './slices/reminderSlice';
 import { listenerMiddleware } from './persistence';
 
 const rootReducer = combineReducers({
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   audio: audioReducer,
   playback: playbackReducer,
   volumeNav: volumeNavReducer,
+  reminders: reminderReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

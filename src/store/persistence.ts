@@ -7,6 +7,16 @@ import { toggleAppearance } from './slices/subTextSlice';
 import { setFavouriteCategories, toggleFavouriteCategory } from './slices/favouriteCategoriesSlice';
 import { toggleAutoPlayNext, toggleAudioEnabled } from './slices/audioSlice';
 import { toggleVolumeNav } from './slices/volumeNavSlice';
+import {
+  setEveningEnabled,
+  setEveningTime,
+  setMorningEnabled,
+  setMorningTime,
+  setReminders,
+  toggleEvening,
+  toggleMorning,
+  REMINDER_DEFAULTS,
+} from './slices/reminderSlice';
 import { getStoredValue, setStoredValue } from '../utils/storage';
 import { config } from '../config/config';
 import type { AzkarThemeName } from '../theme/azkarTheme';
@@ -77,6 +87,22 @@ listenerMiddleware.startListening({
   },
 });
 
+listenerMiddleware.startListening({
+  matcher: isAnyOf(
+    toggleMorning,
+    toggleEvening,
+    setMorningEnabled,
+    setEveningEnabled,
+    setMorningTime,
+    setEveningTime,
+    setReminders
+  ),
+  effect: async (_, api) => {
+    const { reminders } = api.getState() as { reminders: typeof REMINDER_DEFAULTS };
+    await setStoredValue('adhkarReminders', reminders);
+  },
+});
+
 export async function loadPersistedState() {
   const [
     theme,
@@ -88,6 +114,7 @@ export async function loadPersistedState() {
     autoPlayNext,
     audioEnabled,
     volumeNavEnabled,
+    adhkarReminders,
   ] = await Promise.all([
     getStoredValue<AzkarThemeName>('theme', 'solarized'),
     getStoredValue<number>('totalCount', 0),
@@ -98,6 +125,7 @@ export async function loadPersistedState() {
     getStoredValue<boolean>('autoPlayNext', true),
     getStoredValue<boolean>('audioEnabled', true),
     getStoredValue<boolean>('volumeNavEnabled', false),
+    getStoredValue<typeof REMINDER_DEFAULTS>('adhkarReminders', REMINDER_DEFAULTS),
   ]);
 
   return {
@@ -110,5 +138,6 @@ export async function loadPersistedState() {
     audio: { autoPlayNext, audioEnabled },
     playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
     volumeNav: { enabled: volumeNavEnabled },
+    reminders: adhkarReminders,
   };
 }

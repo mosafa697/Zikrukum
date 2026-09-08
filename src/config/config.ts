@@ -3,6 +3,10 @@ export const config = {
     /** Local bundled asset directory (relative to project root). Clips are resolved via `expo-asset`. */
     assetDir: 'assets/audio',
   },
+  reminders: {
+    morningDefault: { hour: 6, minute: 0 },
+    eveningDefault: { hour: 17, minute: 0 },
+  },
   font: {
     minScale: 0.8,
     maxScale: 1.6,
