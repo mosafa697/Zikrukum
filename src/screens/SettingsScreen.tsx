@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -29,7 +30,13 @@ import {
   toggleFriday,
   toggleMorning,
 } from '../store/slices/reminderSlice';
-import { AZKAR_PRIMARY_FONT, AZKAR_THEME_MAP, getAzkarTheme, type AzkarThemeName } from '../theme/azkarTheme';
+import {
+  AZKAR_COUNTER_FONT,
+  AZKAR_PRIMARY_FONT,
+  AZKAR_THEME_MAP,
+  getAzkarTheme,
+  type AzkarThemeName,
+} from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { formatNumber } from '../utils/numberFormatting';
 import { removeStoredValue } from '../utils/storage';
@@ -309,167 +316,179 @@ export function SettingsScreen() {
           </Pressable>
         </View>
 
+        {notifDenied ? (
+          <PermissionBlockedBanner
+            onOpenSettings={() => void openNotifSettings(ADHKAR_CHANNEL_ID)}
+            onRequest={() => void requestNotif()}
+          />
+        ) : null}
+
+        <Text style={[styles.sectionHeader, { color: colors.secondaryTextColor }]}>
+          {t('reminderSchedule')}
+        </Text>
+
         <View
           style={[
-            styles.card,
+            styles.reminderGroupCard,
             { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
           ]}
         >
-          <Text style={[styles.label, { color: colors.textColor }]}>{t('reminderTitle')}</Text>
-          {notifDenied ? (
-            <View style={{ marginHorizontal: -16, marginBottom: 12 }}>
-              <PermissionBlockedBanner
-                onOpenSettings={() => void openNotifSettings(ADHKAR_CHANNEL_ID)}
-                onRequest={() => void requestNotif()}
-              />
-            </View>
-          ) : null}
-          <View style={styles.reminderRow}>
-            <View style={styles.reminderLabelCol}>
-              <Text style={[styles.toggleText, { color: colors.textColor }]}>
+          {/* Morning */}
+          <View style={styles.reminderItemRow}>
+            <View style={styles.reminderItemTextCol}>
+              <Text style={[styles.reminderItemTitle, { color: colors.textColor }]}>
                 {t('morningAdhkarReminder')}
               </Text>
-              <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
-                {reminders.morning.enabled ? t('reminderEnabled') : t('reminderDisabled')}
-              </Text>
+              <View style={styles.reminderDotRow}>
+                <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
+                  {reminders.morning.enabled ? t('reminderEnabled') : t('reminderDisabled')}
+                </Text>
+                <View
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: reminders.morning.enabled
+                        ? colors.sliderBgActive
+                        : colors.secondaryTextColor,
+                    },
+                  ]}
+                />
+              </View>
             </View>
-            <View style={styles.reminderActions}>
+            <View style={styles.reminderItemActions}>
               <Pressable
                 onPress={() => setPickerTarget('morning')}
                 style={[
-                  styles.timePill,
+                  styles.timePillNew,
                   {
                     backgroundColor: colors.secondaryBgColor,
-                    borderColor: colors.buttonBorderColor,
+                    opacity: reminders.morning.enabled ? 1 : 0.55,
                   },
                 ]}
                 accessibilityLabel={t('pickTime')}
               >
-                <Ionicons name="time-outline" size={16} color={colors.textColor} />
-                <Text style={[styles.timePillText, { color: colors.textColor }]}>
+                <Text style={[styles.timePillTextNew, { color: colors.textColor }]}>
                   {formatTime(reminders.morning.time.hour, reminders.morning.time.minute)}
                 </Text>
               </Pressable>
-              <Pressable
-                onPress={guardedToggleMorning}
-                style={[
-                  styles.toggleBtn,
-                  {
-                    backgroundColor: reminders.morning.enabled ? colors.sliderBgActive : colors.buttonBgColor,
-                    borderColor: reminders.morning.enabled ? colors.sliderBgActive : colors.buttonBorderColor,
-                    opacity: notifDenied ? 0.5 : 1,
-                  },
-                ]}
+              <Switch
+                value={reminders.morning.enabled}
+                onValueChange={() => {
+                  guardedToggleMorning();
+                }}
                 disabled={notifDenied}
-                accessibilityLabel={t('morningAdhkarReminder')}
-              >
-                <Ionicons
-                  name={reminders.morning.enabled ? 'notifications' : 'notifications-off-outline'}
-                  size={18}
-                  color={reminders.morning.enabled ? colors.iconColorActive : colors.textColor}
-                />
-              </Pressable>
+                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={colors.sliderBg}
+                style={notifDenied ? { opacity: 0.5 } : undefined}
+              />
             </View>
           </View>
           <View style={[styles.divider, { backgroundColor: colors.buttonBorderColor }]} />
-          <View style={styles.reminderRow}>
-            <View style={styles.reminderLabelCol}>
-              <Text style={[styles.toggleText, { color: colors.textColor }]}>
+          {/* Evening */}
+          <View style={styles.reminderItemRow}>
+            <View style={styles.reminderItemTextCol}>
+              <Text style={[styles.reminderItemTitle, { color: colors.textColor }]}>
                 {t('eveningAdhkarReminder')}
               </Text>
-              <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
-                {reminders.evening.enabled ? t('reminderEnabled') : t('reminderDisabled')}
-              </Text>
+              <View style={styles.reminderDotRow}>
+                <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
+                  {reminders.evening.enabled ? t('reminderEnabled') : t('reminderDisabled')}
+                </Text>
+                <View
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: reminders.evening.enabled
+                        ? colors.sliderBgActive
+                        : colors.secondaryTextColor,
+                    },
+                  ]}
+                />
+              </View>
             </View>
-            <View style={styles.reminderActions}>
+            <View style={styles.reminderItemActions}>
               <Pressable
                 onPress={() => setPickerTarget('evening')}
                 style={[
-                  styles.timePill,
+                  styles.timePillNew,
                   {
                     backgroundColor: colors.secondaryBgColor,
-                    borderColor: colors.buttonBorderColor,
+                    opacity: reminders.evening.enabled ? 1 : 0.55,
                   },
                 ]}
                 accessibilityLabel={t('pickTime')}
               >
-                <Ionicons name="time-outline" size={16} color={colors.textColor} />
-                <Text style={[styles.timePillText, { color: colors.textColor }]}>
+                <Text style={[styles.timePillTextNew, { color: colors.textColor }]}>
                   {formatTime(reminders.evening.time.hour, reminders.evening.time.minute)}
                 </Text>
               </Pressable>
-              <Pressable
-                onPress={guardedToggleEvening}
-                style={[
-                  styles.toggleBtn,
-                  {
-                    backgroundColor: reminders.evening.enabled ? colors.sliderBgActive : colors.buttonBgColor,
-                    borderColor: reminders.evening.enabled ? colors.sliderBgActive : colors.buttonBorderColor,
-                    opacity: notifDenied ? 0.5 : 1,
-                  },
-                ]}
+              <Switch
+                value={reminders.evening.enabled}
+                onValueChange={() => {
+                  guardedToggleEvening();
+                }}
                 disabled={notifDenied}
-                accessibilityLabel={t('eveningAdhkarReminder')}
-              >
-                <Ionicons
-                  name={reminders.evening.enabled ? 'notifications' : 'notifications-off-outline'}
-                  size={18}
-                  color={reminders.evening.enabled ? colors.iconColorActive : colors.textColor}
-                />
-              </Pressable>
+                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={colors.sliderBg}
+                style={notifDenied ? { opacity: 0.5 } : undefined}
+              />
             </View>
           </View>
           <View style={[styles.divider, { backgroundColor: colors.buttonBorderColor }]} />
-          <View style={styles.reminderRow}>
-            <View style={styles.reminderLabelCol}>
-              <Text style={[styles.toggleText, { color: colors.textColor }]}>
+          {/* Friday */}
+          <View style={styles.reminderItemRow}>
+            <View style={styles.reminderItemTextCol}>
+              <Text style={[styles.reminderItemTitle, { color: colors.textColor }]}>
                 {t('fridayAdhkarReminder')}
               </Text>
-              <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
-                {reminders.friday.enabled ? t('reminderEnabled') : t('reminderDisabled')}
-              </Text>
+              <View style={styles.reminderDotRow}>
+                <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
+                  {reminders.friday.enabled ? t('reminderEnabled') : t('reminderDisabled')}
+                </Text>
+                <View
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: reminders.friday.enabled
+                        ? colors.sliderBgActive
+                        : colors.secondaryTextColor,
+                    },
+                  ]}
+                />
+              </View>
             </View>
-            <View style={styles.reminderActions}>
+            <View style={styles.reminderItemActions}>
               <Pressable
                 onPress={() => setPickerTarget('friday')}
                 style={[
-                  styles.timePill,
+                  styles.timePillNew,
                   {
                     backgroundColor: colors.secondaryBgColor,
-                    borderColor: colors.buttonBorderColor,
+                    opacity: reminders.friday.enabled ? 1 : 0.55,
                   },
                 ]}
                 accessibilityLabel={t('pickTime')}
               >
-                <Ionicons name="time-outline" size={16} color={colors.textColor} />
-                <Text style={[styles.timePillText, { color: colors.textColor }]}>
+                <Text style={[styles.timePillTextNew, { color: colors.textColor }]}>
                   {formatTime(reminders.friday.time.hour, reminders.friday.time.minute)}
                 </Text>
               </Pressable>
-              <Pressable
-                onPress={guardedToggleFriday}
-                style={[
-                  styles.toggleBtn,
-                  {
-                    backgroundColor: reminders.friday.enabled ? colors.sliderBgActive : colors.buttonBgColor,
-                    borderColor: reminders.friday.enabled ? colors.sliderBgActive : colors.buttonBorderColor,
-                    opacity: notifDenied ? 0.5 : 1,
-                  },
-                ]}
+              <Switch
+                value={reminders.friday.enabled}
+                onValueChange={() => {
+                  guardedToggleFriday();
+                }}
                 disabled={notifDenied}
-                accessibilityLabel={t('fridayAdhkarReminder')}
-              >
-                <Ionicons
-                  name={reminders.friday.enabled ? 'notifications' : 'notifications-off-outline'}
-                  size={18}
-                  color={reminders.friday.enabled ? colors.iconColorActive : colors.textColor}
-                />
-              </Pressable>
+                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={colors.sliderBg}
+                style={notifDenied ? { opacity: 0.5 } : undefined}
+              />
             </View>
           </View>
-          <Text style={[styles.rationaleText, { color: colors.secondaryTextColor }]}>
-            {t('exactAlarmRationale')}
-          </Text>
+
           {pickerTarget && Platform.OS !== 'web' ? (
             <DateTimePicker
               value={pickerDate}
@@ -504,6 +523,13 @@ export function SettingsScreen() {
               </Pressable>
             </View>
           ) : null}
+        </View>
+
+        <View style={styles.infoRow}>
+          <Ionicons name="information-circle-outline" size={14} color={colors.secondaryTextColor} />
+          <Text style={[styles.rationaleText, { color: colors.secondaryTextColor }]}>
+            {t('exactAlarmRationale')}
+          </Text>
         </View>
 
         <View
@@ -727,16 +753,78 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   timePillText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT },
-  divider: { height: 1, marginVertical: 8 },
+  divider: { height: StyleSheet.hairlineWidth, marginVertical: 0 },
   rationaleText: {
     fontSize: 11,
     fontFamily: AZKAR_PRIMARY_FONT,
     textAlign: 'right',
     lineHeight: 16,
-    marginTop: 8,
+    flex: 1,
+    writingDirection: 'rtl',
   },
-  webTimeFallback: { marginTop: 12, gap: 8, alignItems: 'flex-end' },
+  webTimeFallback: {
+    marginTop: 12,
+    gap: 8,
+    alignItems: 'flex-end',
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+  },
   webTimeText: { fontSize: 13, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
+  sectionHeader: {
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    marginTop: 4,
+    marginBottom: -4,
+    paddingHorizontal: 4,
+  },
+  reminderGroupCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  reminderItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  reminderItemTextCol: { flex: 1, gap: 4, alignItems: 'flex-end' },
+  reminderItemTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  reminderDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  reminderItemActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  timePillNew: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 10,
+    minWidth: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timePillTextNew: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: AZKAR_COUNTER_FONT,
+    textAlign: 'center',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginTop: 2,
+    paddingHorizontal: 4,
+  },
   contactBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   contactBtnText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
   contactForm: { marginTop: 12, gap: 10 },

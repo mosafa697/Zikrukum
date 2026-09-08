@@ -72,19 +72,20 @@ export const ar = {
   volumeNavLabel: 'التنقل بين الأذكار بأزرار الصوت',
 
   // Notifications — permission & channel
-  notifPermissionTitle: 'التنبيهات غير مفعّلة',
-  notifPermissionBody: 'فعّل التنبيهات لتصلك تذكيرات الأذكار في موعدها.',
+  notifPermissionTitle: 'التنبيهات غير مفعلة',
+  notifPermissionBody: 'فعّل التنبيهات لتصلك تذكيرات الأذكار في موعدها المحدد.',
   notifPermissionOpenSettings: 'فتح الإعدادات',
   notifPermissionRequest: 'تفعيل التنبيهات',
-  exactAlarmRationale: 'قد يتأخر التذكير حوالي 15 دقيقة في وضع توفير الطاقة إذا لم يُمنح إذن المنبّه الدقيق.',
+  exactAlarmRationale: 'قد يتأخر التذكير حوالي 15 دقيقة في وضع توفير الطاقة، إلا إذا سمح النظام بإذن الدقة.',
   notifChannelName: 'تذكير الأذكار',
 
   // Reminder times
   reminderTitle: 'تذكير الأذكار',
-  morningAdhkarReminder: 'تذكير أذكار الصباح',
-  eveningAdhkarReminder: 'تذكير أذكار المساء',
-  reminderEnabled: 'مفعّل',
-  reminderDisabled: 'متوقف',
+  reminderSchedule: 'مواعيد التذكير',
+  morningAdhkarReminder: 'أذكار الصباح',
+  eveningAdhkarReminder: 'أذكار المساء',
+  reminderEnabled: 'مفعل',
+  reminderDisabled: 'موقوف',
   pickTime: 'اختيار الوقت',
   reminderTime: 'الوقت',
 

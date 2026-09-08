@@ -25,30 +25,24 @@ export function PermissionBlockedBanner({ onOpenSettings, onRequest, showRequest
     () =>
       StyleSheet.create({
         container: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 12,
           backgroundColor: theme.cardBgColor,
           borderColor: theme.buttonBorderColor,
           borderWidth: 1,
-          borderRadius: 14,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
-          marginHorizontal: 16,
-          marginTop: 8,
+          borderRadius: 16,
+          paddingHorizontal: 16,
+          paddingVertical: 16,
+          gap: 12,
         },
-        iconWrap: {
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: theme.secondaryBgColor,
+        topRow: {
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
         },
-        textCol: { flex: 1, gap: 4 },
+        textCol: { flex: 1, gap: 6, alignItems: 'flex-end' },
         title: {
           fontFamily: AZKAR_PRIMARY_FONT,
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: '700',
           color: theme.textColor,
           textAlign: 'right',
@@ -62,31 +56,51 @@ export function PermissionBlockedBanner({ onOpenSettings, onRequest, showRequest
           writingDirection: 'rtl',
           lineHeight: 18,
         },
-        actions: { flexDirection: 'row', gap: 8, marginTop: 6, justifyContent: 'flex-end' },
+        iconWrap: {
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.secondaryBgColor,
+        },
+        actions: {
+          flexDirection: 'row',
+          gap: 10,
+          marginTop: 4,
+          justifyContent: 'flex-start',
+          flexWrap: 'wrap',
+        },
         primaryBtn: {
           backgroundColor: theme.sliderBgActive,
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-          borderRadius: 10,
+          paddingHorizontal: 18,
+          paddingVertical: 9,
+          borderRadius: 22,
+          minWidth: 118,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         primaryText: {
           fontFamily: AZKAR_PRIMARY_FONT,
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: '700',
           color: '#FFFFFF',
           textAlign: 'center',
         },
         secondaryBtn: {
           backgroundColor: theme.buttonBgColor,
-          borderColor: theme.buttonBorderColor,
+          borderColor: theme.textColor,
           borderWidth: 1,
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-          borderRadius: 10,
+          paddingHorizontal: 18,
+          paddingVertical: 9,
+          borderRadius: 22,
+          minWidth: 118,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         secondaryText: {
           fontFamily: AZKAR_PRIMARY_FONT,
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: '700',
           color: theme.textColor,
           textAlign: 'center',
@@ -97,30 +111,32 @@ export function PermissionBlockedBanner({ onOpenSettings, onRequest, showRequest
 
   return (
     <View style={styles.container} accessibilityRole="alert">
-      <View style={styles.iconWrap}>
-        <Ionicons name="notifications-off-outline" size={18} color={theme.textColor} />
-      </View>
-      <View style={styles.textCol}>
-        <Text style={styles.title}>{t('notifPermissionTitle')}</Text>
-        <Text style={styles.body}>{t('notifPermissionBody')}</Text>
-        <View style={styles.actions}>
-          <Pressable
-            onPress={guardedOpen}
-            style={styles.primaryBtn}
-            accessibilityLabel={t('notifPermissionOpenSettings')}
-          >
-            <Text style={styles.primaryText}>{t('notifPermissionOpenSettings')}</Text>
-          </Pressable>
-          {showRequest && onRequest ? (
-            <Pressable
-              onPress={guardedRequest}
-              style={styles.secondaryBtn}
-              accessibilityLabel={t('notifPermissionRequest')}
-            >
-              <Text style={styles.secondaryText}>{t('notifPermissionRequest')}</Text>
-            </Pressable>
-          ) : null}
+      <View style={styles.topRow}>
+        <View style={styles.textCol}>
+          <Text style={styles.title}>{t('notifPermissionTitle')}</Text>
+          <Text style={styles.body}>{t('notifPermissionBody')}</Text>
         </View>
+        <View style={styles.iconWrap}>
+          <Ionicons name="notifications-off-outline" size={18} color={theme.textColor} />
+        </View>
+      </View>
+      <View style={styles.actions}>
+        {showRequest && onRequest ? (
+          <Pressable
+            onPress={guardedRequest}
+            style={styles.primaryBtn}
+            accessibilityLabel={t('notifPermissionRequest')}
+          >
+            <Text style={styles.primaryText}>{t('notifPermissionRequest')}</Text>
+          </Pressable>
+        ) : null}
+        <Pressable
+          onPress={guardedOpen}
+          style={styles.secondaryBtn}
+          accessibilityLabel={t('notifPermissionOpenSettings')}
+        >
+          <Text style={styles.secondaryText}>{t('notifPermissionOpenSettings')}</Text>
+        </Pressable>
       </View>
     </View>
   );
