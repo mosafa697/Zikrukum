@@ -64,6 +64,7 @@ Zikrukum/
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── notifications/          # Notifee channel + permission + service (adhkar-reminders)
     │   ├── channels.ts         # Single Android channel definition
+    │   ├── eventHandler.ts     # notifee Play action → TrackPlayer handoff (foreground/background)
     │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings, scheduling (guarded)
     │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers

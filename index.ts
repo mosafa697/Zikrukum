@@ -16,4 +16,18 @@ if (Platform.OS !== 'web') {
   }
 }
 
+// Register notifee background event (killed state) -> TrackPlayer handoff; must be top-level outside React.
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const notifee = require('@notifee/react-native').default;
+    notifee.onBackgroundEvent(async ({ type, detail }: { type: number; detail: unknown }) => {
+      const { handleNotifeeEvent } = require('./src/notifications/eventHandler');
+      await handleNotifeeEvent(type, detail);
+    });
+  } catch {
+    // no-op: notifee not available
+  }
+}
+
 registerRootComponent(App);

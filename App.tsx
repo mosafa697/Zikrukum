@@ -26,7 +26,7 @@ export default function App() {
     loadPersistedState().then((state) => setAppStore(createAppStore(state)));
   }, []);
 
-  // Create notifee channel + schedule daily reminders + setup TrackPlayer once store is ready; reschedule on time/toggle and on AppState active (timezone / reboot).
+  // Create notifee channel + schedule daily reminders + setup TrackPlayer + foreground event once store is ready; reschedule on time/toggle and on AppState active (timezone / reboot).
   useEffect(() => {
     if (!appStore) return;
     void ensureAdhkarChannel();
@@ -66,9 +66,25 @@ export default function App() {
       }
     });
 
+    // Foreground notification action handler (Play تشغيل) -> TrackPlayer
+    let removeForegroundListener: (() => void) | null = null;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const notifee = require('@notifee/react-native').default;
+      removeForegroundListener = notifee.onForegroundEvent(
+        async ({ type, detail }: { type: number; detail: unknown }) => {
+          const { handleNotifeeEvent } = await import('./src/notifications/eventHandler');
+          await handleNotifeeEvent(type, detail);
+        }
+      );
+    } catch {
+      // no-op on web / Expo Go
+    }
+
     return () => {
       unsubscribe();
       appStateSub.remove();
+      removeForegroundListener?.();
     };
   }, [appStore]);
 

@@ -142,6 +142,8 @@ export const REMINDER_NOTIFICATION_IDS = {
   evening: 'evening-adhkar',
 } as const;
 
+export const REMINDER_PLAY_ACTION_ID = 'play';
+
 async function createDailyTrigger(
   nf: NonNullable<ReturnType<typeof getNotifee>>,
   id: string,
@@ -151,18 +153,24 @@ async function createDailyTrigger(
   time: { hour: number; minute: number }
 ) {
   const timestamps = getNextTriggerTimestamp(time);
+  const type = id.startsWith('morning') ? 'morning' : 'evening';
   // Use AlarmManager exact if permission granted; fallback to WorkManager automatically.
   await nf.createTriggerNotification(
     {
       id,
       title,
       body,
-      data: { categoryId, type: id.startsWith('morning') ? 'morning' : 'evening' },
+      data: { categoryId, type },
       android: {
         channelId: ADHKAR_CHANNEL_ID,
         smallIcon: 'ic_launcher',
         pressAction: { id: 'default' },
-        // Play action wired in #16
+        actions: [
+          {
+            title: 'تشغيل',
+            pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
+          },
+        ],
       },
       ios: {
         categoryId: 'adhkar-reminder',
