@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\" --fix && prettier --write \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\""
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\" --fix && prettier --write \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -50,6 +51,8 @@
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
     "eslint-config-prettier": "^10.1.8",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "prettier": "^3.9.6",
     "typescript": "~6.0.3"
   }
