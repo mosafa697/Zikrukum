@@ -62,8 +62,9 @@ Zikrukum/
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── notifications/          # Notifee channel + permission + service (adhkar-reminders)
     │   ├── channels.ts         # Single Android channel definition
-    │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings (guarded)
-    │   └── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
+    │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings, scheduling (guarded)
+    │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
+    │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers
     ├── config/
     │   └── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
     ├── dataset/
@@ -100,6 +101,7 @@ Zikrukum/
 1. Load fonts via `useFonts`.
 2. `loadPersistedState()` reads AsyncStorage → `createAppStore(preloadedState)`.
 3. Renders `GestureHandlerRootView > Redux Provider > SafeAreaProvider > RootNavigator`.
+4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)`; store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`).
 
 The store is created **once** at startup with preloaded persisted state; do not create additional stores.
 

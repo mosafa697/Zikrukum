@@ -87,4 +87,11 @@ export const ar = {
   reminderDisabled: 'متوقف',
   pickTime: 'اختيار الوقت',
   reminderTime: 'الوقت',
+
+  // Reminder notifications
+  morningReminderTitle: 'أذكار الصباح',
+  eveningReminderTitle: 'أذكار المساء',
+  morningReminderBody: 'حان وقت أذكار الصباح — اذكر الله تطمئن القلوب',
+  eveningReminderBody: 'حان وقت أذكار المساء — اذكر الله في المساء',
+  reminderNotificationChannel: 'تذكير الأذكار',
 } as const;

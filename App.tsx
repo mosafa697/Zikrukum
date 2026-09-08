@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, AppState, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,7 +8,7 @@ import { Provider } from 'react-redux';
 import { createAppStore, type AppStore } from './src/store';
 import { loadPersistedState } from './src/store/persistence';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { ensureAdhkarChannel } from './src/notifications/notifeeService';
+import { ensureAdhkarChannel, scheduleReminders } from './src/notifications/notifeeService';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -25,10 +25,49 @@ export default function App() {
     loadPersistedState().then((state) => setAppStore(createAppStore(state)));
   }, []);
 
-  // Create notifee channel once store is ready (no scheduling yet — see #15)
+  // Create notifee channel + schedule daily reminders once store is ready; reschedule on time/toggle and on AppState active (timezone / reboot).
   useEffect(() => {
     if (!appStore) return;
     void ensureAdhkarChannel();
+    const state = appStore.getState() as {
+      reminders?: {
+        morning: { enabled: boolean; time: { hour: number; minute: number } };
+        evening: { enabled: boolean; time: { hour: number; minute: number } };
+      };
+    };
+    if (state.reminders) void scheduleReminders(state.reminders);
+
+    let prevRemindersJson = JSON.stringify((appStore.getState() as { reminders?: unknown }).reminders);
+    const unsubscribe = appStore.subscribe(() => {
+      const next = appStore.getState() as {
+        reminders?: {
+          morning: { enabled: boolean; time: { hour: number; minute: number } };
+          evening: { enabled: boolean; time: { hour: number; minute: number } };
+        };
+      };
+      if (!next.reminders) return;
+      const nextJson = JSON.stringify(next.reminders);
+      if (nextJson === prevRemindersJson) return;
+      prevRemindersJson = nextJson;
+      void scheduleReminders(next.reminders);
+    });
+
+    const appStateSub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        const cur = appStore.getState() as {
+          reminders?: {
+            morning: { enabled: boolean; time: { hour: number; minute: number } };
+            evening: { enabled: boolean; time: { hour: number; minute: number } };
+          };
+        };
+        if (cur.reminders) void scheduleReminders(cur.reminders);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      appStateSub.remove();
+    };
   }, [appStore]);
 
   if (!fontsLoaded || !appStore) {

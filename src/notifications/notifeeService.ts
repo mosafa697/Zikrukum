@@ -1,5 +1,7 @@
 import { Platform } from 'react-native';
 import { ADHKAR_CHANNEL, ADHKAR_CHANNEL_ID } from './channels';
+import { getNextTriggerTimestamp } from './scheduler';
+import type { RemindersState } from '../store/slices/reminderSlice';
 
 // Guarded notifee import — web returns the .web mock, native returns the native module.
 // If import fails (e.g. Expo Go without native link), callers degrade to no-ops.
@@ -131,4 +133,103 @@ export async function getPowerManagerInfoSafe(): Promise<
   } catch {
     return null;
   }
+}
+
+// --- Scheduling (Task 3 / #15) ---
+
+export const REMINDER_NOTIFICATION_IDS = {
+  morning: 'morning-adhkar',
+  evening: 'evening-adhkar',
+} as const;
+
+async function createDailyTrigger(
+  nf: NonNullable<ReturnType<typeof getNotifee>>,
+  id: string,
+  title: string,
+  body: string,
+  categoryId: string,
+  time: { hour: number; minute: number }
+) {
+  const timestamps = getNextTriggerTimestamp(time);
+  // Use AlarmManager exact if permission granted; fallback to WorkManager automatically.
+  await nf.createTriggerNotification(
+    {
+      id,
+      title,
+      body,
+      data: { categoryId, type: id.startsWith('morning') ? 'morning' : 'evening' },
+      android: {
+        channelId: ADHKAR_CHANNEL_ID,
+        smallIcon: 'ic_launcher',
+        pressAction: { id: 'default' },
+        // Play action wired in #16
+      },
+      ios: {
+        categoryId: 'adhkar-reminder',
+      },
+    },
+    {
+      type: 0, // TriggerType.TIMESTAMP
+      timestamp: timestamps,
+      repeatFrequency: 1, // RepeatFrequency.DAILY
+      alarmManager: { type: 3 }, // AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE
+    } as unknown as import('@notifee/react-native').TimestampTrigger
+  );
+}
+
+export async function cancelReminders(): Promise<void> {
+  const nf = getNotifee();
+  if (!nf) return;
+  try {
+    await nf.cancelTriggerNotifications(Object.values(REMINDER_NOTIFICATION_IDS));
+  } catch {
+    // no-op
+  }
+}
+
+export async function scheduleReminders(reminders: RemindersState): Promise<void> {
+  const nf = getNotifee();
+  if (!nf) return;
+  // Permission gate — no-op if denied (UI already shows banner)
+  const status = await getNotificationPermissionStatus();
+  if (status === 'denied') return;
+
+  await cancelReminders();
+  await ensureAdhkarChannel();
+
+  // Lazy import ar to avoid circular deps at top-level
+  const { ar } = await import('../i18n/ar');
+
+  if (reminders.morning.enabled) {
+    try {
+      await createDailyTrigger(
+        nf,
+        REMINDER_NOTIFICATION_IDS.morning,
+        ar.morningReminderTitle,
+        ar.morningReminderBody,
+        '3',
+        reminders.morning.time
+      );
+    } catch {
+      // scheduling may fail if exact alarm denied — fallback is inexact; ignore error
+    }
+  }
+  if (reminders.evening.enabled) {
+    try {
+      await createDailyTrigger(
+        nf,
+        REMINDER_NOTIFICATION_IDS.evening,
+        ar.eveningReminderTitle,
+        ar.eveningReminderBody,
+        '4',
+        reminders.evening.time
+      );
+    } catch {
+      // no-op
+    }
+  }
+}
+
+export async function rescheduleReminders(reminders: RemindersState): Promise<void> {
+  await scheduleReminders(reminders);
 }
