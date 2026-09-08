@@ -8,6 +8,7 @@ import { Provider } from 'react-redux';
 import { createAppStore, type AppStore } from './src/store';
 import { loadPersistedState } from './src/store/persistence';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { ensureAdhkarChannel } from './src/notifications/notifeeService';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -23,6 +24,12 @@ export default function App() {
   useEffect(() => {
     loadPersistedState().then((state) => setAppStore(createAppStore(state)));
   }, []);
+
+  // Create notifee channel once store is ready (no scheduling yet — see #15)
+  useEffect(() => {
+    if (!appStore) return;
+    void ensureAdhkarChannel();
+  }, [appStore]);
 
   if (!fontsLoaded || !appStore) {
     return (

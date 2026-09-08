@@ -70,4 +70,12 @@ export const ar = {
   audioEnabledLabel: 'تفعيل تشغيل الصوت',
   audioLabel: 'تشغيل صوت الذكر التالي تلقائيا',
   volumeNavLabel: 'التنقل بين الأذكار بأزرار الصوت',
+
+  // Notifications — permission & channel
+  notifPermissionTitle: 'التنبيهات غير مفعّلة',
+  notifPermissionBody: 'فعّل التنبيهات لتصلك تذكيرات الأذكار في موعدها.',
+  notifPermissionOpenSettings: 'فتح الإعدادات',
+  notifPermissionRequest: 'تفعيل التنبيهات',
+  exactAlarmRationale: 'قد يتأخر التذكير حوالي 15 دقيقة في وضع توفير الطاقة إذا لم يُمنح إذن المنبّه الدقيق.',
+  notifChannelName: 'تذكير الأذكار',
 } as const;

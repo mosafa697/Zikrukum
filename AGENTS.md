@@ -21,6 +21,7 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
 | Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) |
+| Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go) |
 | Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
 | Fonts | `expo-font` (loaded in `App.tsx`: `ScheherazadeNew`, `TajawalBold` → `Tajawal-ExtraBold.ttf`, `TajawalRegular`, `Amiri`, `AmiriBold`; note unused `assets/fonts/Tajawal-Bold.ttf` on disk) |
@@ -54,9 +55,14 @@ Zikrukum/
     │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next)
     ├── components/             # Shared UI components
     │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
+    │   ├── PermissionBlockedBanner.tsx # Notifee permission denied banner (themed, RTL, guarded)
     │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
+    ├── notifications/          # Notifee channel + permission + service (adhkar-reminders)
+    │   ├── channels.ts         # Single Android channel definition
+    │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings (guarded)
+    │   └── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     ├── config/
     │   └── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
     ├── dataset/
