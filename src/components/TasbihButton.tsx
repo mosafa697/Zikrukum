@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Text, TouchableOpacity, Animated, StyleSheet, Dimensions } from 'react-native';
+import { Text, TouchableOpacity, Animated, StyleSheet, Dimensions, Platform } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -129,8 +129,11 @@ export function TasbihButton({ onPress, count = 0, accessibilityLabel }: TasbihB
         <Animated.View
           style={[
             styles.buttonWrap,
+            Platform.select({
+              web: { boxShadow: `0px 14px 20px ${theme.tasbihShadowColor}` } as any,
+              default: { shadowColor: theme.tasbihShadowColor },
+            }),
             {
-              shadowColor: theme.tasbihShadowColor,
               transform: [{ scale: scaleAnim }],
               width: innerSize,
               height: innerSize,
@@ -171,10 +174,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 16,
+    ...Platform.select({
+      web: { boxShadow: '0px 14px 20px rgba(0,0,0,0.4)' } as any,
+      default: {
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.4,
+        shadowRadius: 20,
+        elevation: 16,
+      },
+    }),
   },
   label: {
     fontFamily: AZKAR_COUNTER_FONT,
@@ -182,9 +190,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#F3ECD8',
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    ...Platform.select({
+      web: { textShadow: '0 1px 4px rgba(0,0,0,0.4)' } as any,
+      default: {
+        textShadowColor: 'rgba(0,0,0,0.4)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
+      },
+    }),
   },
 });
 

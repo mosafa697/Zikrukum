@@ -164,8 +164,11 @@ export function FreeTasbihScreen() {
 
   return (
     <Pressable style={styles.gradient} onPress={handleTap}>
-      <LinearGradient colors={theme.bgGradient} style={StyleSheet.absoluteFill} pointerEvents="none" />
-      <View style={styles.card} pointerEvents="box-none">
+      <LinearGradient
+        colors={theme.bgGradient}
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' } as any]}
+      />
+      <View style={[styles.card, { pointerEvents: 'box-none' } as any]}>
         <ScreenHeader
           title={t('freeTasbih')}
           showBack
@@ -182,7 +185,7 @@ export function FreeTasbihScreen() {
           }
         />
 
-        <View style={styles.counterArea} pointerEvents="none">
+        <View style={[styles.counterArea, { pointerEvents: 'none' } as any]}>
           <TasbihButton
             onPress={handleTap}
             count={count}
@@ -194,8 +197,8 @@ export function FreeTasbihScreen() {
           style={[
             styles.totalChip,
             { backgroundColor: theme.buttonBgColor, borderColor: theme.buttonBorderColor },
+            { pointerEvents: 'none' } as any,
           ]}
-          pointerEvents="none"
         >
           <Text style={[styles.meta, { color: theme.secondaryTextColor }]}>
             {t('totalCounter')}

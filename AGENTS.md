@@ -49,6 +49,7 @@ Zikrukum/
 ├── App.tsx                     # Entry: loads fonts + persisted store, renders providers
 ├── index.ts                    # Expo entry point
 ├── app.json                    # Expo config (name, scheme, plugins)
+├── metro.config.js             # Metro resolver: mocks `react-native-track-player`/`shaka-player` on web
 ├── assets/                     # Fonts, icons
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
@@ -90,6 +91,8 @@ Zikrukum/
     │   └── slices/             # One file per Redux slice (see State Management)
     ├── theme/
     │   └── azkarTheme.ts       # AzkarTheme type, 3 themes (light/solarized/dark), font constants
+    ├── mocks/
+    │   └── empty.js            # Web stub for `react-native-track-player`/`shaka-player` (metro.config.js)
     ├── types/                  # .d.ts module declarations
     ├── utils/
         ├── numberFormatting.ts # formatNumber() (Western digits; Hindi conversion disabled) + formatAudioTime()
@@ -203,9 +206,10 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 - **Functional components + hooks only.** Named exports for screens/components (`export function CategoriesScreen`).
 - **Styles**: `StyleSheet.create` at the bottom of the file; theme colors applied inline via the `theme` object.
 - **Formatting**: Prettier — single quotes, semicolons, `trailingComma: 'es5'`, `printWidth: 110`, 2-space tabs.
-- **Lint**: ESLint flat config (`eslint.config.js`); `no-console` and `no-explicit-any` are warnings; `import/no-unresolved` disabled (Metro resolution).
+- **Lint**: ESLint flat config (`eslint.config.js`); `no-console` is warn, `import/no-unresolved` disabled (Metro resolution).
 - Run `npm run lint:fix` before considering work done.
 - **Animated values**: keep them in `useMemo`, not `useRef` (lint-enforced past issue).
+- **Web vs native styles**: on web `shadow*`→`boxShadow`, `textShadow*`→`textShadow`, `pointerEvents` prop→`style.pointerEvents` (react-native-web deprecation warnings); use `Platform.select` to keep `shadow*`/`elevation` on native and `boxShadow` on web.
 - Interaction debounce timings are centralized in `config.interaction` (counter/nav/long-press guards) — use `useTimeGuardedCallback` rather than ad-hoc timers.
 
 ## Workflow Notes

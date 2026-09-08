@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   I18nManager,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -269,8 +270,7 @@ export function PhraseCard({
               {phraseOverflow ? (
                 <LinearGradient
                   colors={['transparent', colors.cardBgColor]}
-                  pointerEvents="none"
-                  style={styles.overflowFade}
+                  style={[styles.overflowFade, { pointerEvents: 'none' } as any]}
                 />
               ) : null}
             </Pressable>
@@ -418,10 +418,15 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 20,
     padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Platform.select({
+      web: { boxShadow: '0px 2px 8px rgba(0,0,0,0.08)' } as any,
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+      },
+    }),
     overflow: 'hidden',
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
@@ -444,9 +449,14 @@ const styles = StyleSheet.create({
     writingDirection: 'rtl',
     paddingHorizontal: 12,
     paddingVertical: 5,
-    textShadowColor: 'rgba(255,255,255,0.6)',
-    textShadowRadius: 3,
-    textShadowOffset: { width: 0, height: 0 },
+    ...Platform.select({
+      web: { textShadow: '0 0 3px rgba(255,255,255,0.6)' } as any,
+      default: {
+        textShadowColor: 'rgba(255,255,255,0.6)',
+        textShadowRadius: 3,
+        textShadowOffset: { width: 0, height: 0 },
+      },
+    }),
   },
   headerIconBtn: {
     width: 37,

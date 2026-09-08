@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -85,9 +85,9 @@ export function CategoriesScreen() {
               {
                 opacity: searchAnim,
                 maxHeight: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 88] }),
-              },
+                pointerEvents: isSearchOpen ? 'auto' : 'none',
+              } as any,
             ]}
-            pointerEvents={isSearchOpen ? 'auto' : 'none'}
           >
             <View
               style={[
@@ -214,10 +214,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    elevation: 4,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 14px rgba(0,0,0,0.12)' } as any,
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.12,
+        shadowRadius: 14,
+        elevation: 4,
+      },
+    }),
     justifyContent: 'flex-end',
     alignItems: 'center',
   },

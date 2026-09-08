@@ -32,7 +32,7 @@ export function createAppStore(preloadedState?: Partial<RootState>) {
   return configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().prepend(listenerMiddleware.middleware),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     preloadedState: preloadedState as any,
   });
 }
