@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import * as KeepAwake from 'expo-keep-awake';
-import { VolumeManager } from 'react-native-volume-manager';
+import { getVolumeManager } from '../utils/volumeManager';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -134,10 +134,13 @@ export function CategoryScreen() {
   // through; otherwise nav mode re-engages and the baseline re-syncs.
   useEffect(() => {
     if (!volumeNavEnabled) return;
+    const vm = getVolumeManager();
+    if (!vm) return;
     logVolumeNav('audio active changed', { audioActive, audioStatus });
-    void VolumeManager.showNativeVolumeUI({ enabled: audioActive });
+    void vm.showNativeVolumeUI({ enabled: audioActive });
     if (!audioActive) {
-      void VolumeManager.getVolume()
+      void vm
+        .getVolume()
         .then(({ volume }) => {
           lastVolumeRef.current = volume;
         })
@@ -218,23 +221,28 @@ export function CategoryScreen() {
     let listener: { remove: () => void } | null = null;
 
     const init = async () => {
+      const vm = getVolumeManager();
+      if (!vm) {
+        logVolumeNav('VolumeManager unavailable (Expo Go?)');
+        return;
+      }
       try {
-        const { volume } = await VolumeManager.getVolume();
+        const { volume } = await vm.getVolume();
         let baseline = volume;
         if (baseline <= VOLUME_NAV_RAIL_EPS || baseline >= 1 - VOLUME_NAV_RAIL_EPS) {
           // At a rail no event fires — re-center so both keys work.
           logVolumeNav('volume at rail, re-centering', { volume });
-          await VolumeManager.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false });
+          await vm.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false });
           try {
-            baseline = (await VolumeManager.getVolume()).volume;
+            baseline = (await vm.getVolume()).volume;
           } catch {
             baseline = VOLUME_NAV_BASELINE;
           }
         }
         lastVolumeRef.current = baseline;
         logVolumeNav('listener attached', { baseline });
-        await VolumeManager.showNativeVolumeUI({ enabled: false });
-        listener = VolumeManager.addVolumeListener(({ volume }) => {
+        await vm.showNativeVolumeUI({ enabled: false });
+        listener = vm.addVolumeListener(({ volume }) => {
           const playbackStatus = audioStatusRef.current;
           if (isAudioPlayingRef.current || playIntentRef.current) {
             // Audio active: keys belong to the OS; track volume for resume.
@@ -259,10 +267,12 @@ export function CategoryScreen() {
             logVolumeNav('no delta (rail?), re-centering', { volume });
             lastVolumeRef.current = volume;
             volumeRestoringRef.current = true;
-            void VolumeManager.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false })
+            void getVolumeManager()
+              ?.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false })
               .then(async () => {
                 try {
-                  const { volume: actual } = await VolumeManager.getVolume();
+                  const vm2 = getVolumeManager();
+                  const { volume: actual } = (await vm2?.getVolume()) ?? { volume: VOLUME_NAV_BASELINE };
                   lastVolumeRef.current = actual;
                 } catch {
                   lastVolumeRef.current = VOLUME_NAV_BASELINE;
@@ -315,10 +325,12 @@ export function CategoryScreen() {
           }
           lastVolumeRef.current = last;
           volumeRestoringRef.current = true;
-          void VolumeManager.setVolume(last, { playSound: false, showUI: false })
+          void getVolumeManager()
+            ?.setVolume(last, { playSound: false, showUI: false })
             .then(async () => {
               try {
-                const { volume: actual } = await VolumeManager.getVolume();
+                const vm2 = getVolumeManager();
+                const { volume: actual } = (await vm2?.getVolume()) ?? { volume: last };
                 lastVolumeRef.current = actual;
               } catch {
                 lastVolumeRef.current = last;
@@ -342,7 +354,7 @@ export function CategoryScreen() {
     return () => {
       listener?.remove();
       logVolumeNav('listener detached');
-      void VolumeManager.showNativeVolumeUI({ enabled: true });
+      void getVolumeManager()?.showNativeVolumeUI({ enabled: true });
       lastVolumeRef.current = null;
       volumeRestoringRef.current = false;
     };
