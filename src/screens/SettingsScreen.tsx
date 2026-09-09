@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Alert,
-  Linking,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -48,12 +37,17 @@ import { ADHKAR_CHANNEL_ID } from '../notifications/channels';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { config } from '../config/config';
 
-// Border color shown around the selected theme circle
 const THEME_SELECTED_BORDER: Record<AzkarThemeName, string> = {
-  light: '#2563eb',
-  solarized: '#00753a',
-  dark: '#ffffff',
+  light: '#1E4338',
+  solarized: '#1E4338',
+  dark: '#FFFFFF',
 };
+
+const REMINDER_ICONS = {
+  morning: 'sunny-outline',
+  evening: 'moon-outline',
+  friday: 'business-outline',
+} as const;
 
 export function SettingsScreen() {
   const dispatch = useDispatch();
@@ -67,9 +61,6 @@ export function SettingsScreen() {
   const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
   const colors = getAzkarTheme(theme);
 
-  const [contactOpen, setContactOpen] = useState(false);
-  const [contactName, setContactName] = useState('');
-  const [contactMsg, setContactMsg] = useState('');
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
   const reminders = useSelector((s: RootState) => s.reminders);
   const {
@@ -79,16 +70,6 @@ export function SettingsScreen() {
   } = useNotificationPermissions();
   const notifDenied = notifStatus === 'denied';
   const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | 'friday' | null>(null);
-
-  const handleSendContact = () => {
-    if (!contactName.trim() || !contactMsg.trim()) {
-      Alert.alert(t('alert'), t('fillNameAndMessage'));
-      return;
-    }
-    const subject = encodeURIComponent(`Zikrukum - ${contactName.trim()}`);
-    const body = encodeURIComponent(contactMsg.trim());
-    Linking.openURL(`mailto:?subject=${subject}&body=${body}`);
-  };
 
   const handleResetTotalCount = async () => {
     await Promise.all(azkar.map((category) => removeStoredValue(`azkar-index-${category.id}`)));
@@ -140,6 +121,58 @@ export function SettingsScreen() {
     return d;
   })();
 
+  const renderReminderRow = (
+    key: 'morning' | 'evening' | 'friday',
+    label: string,
+    reminder: { enabled: boolean; time: { hour: number; minute: number } },
+    guardedToggle: () => void
+  ) => {
+    const iconName = REMINDER_ICONS[key];
+    const timeText = formatTime(reminder.time.hour, reminder.time.minute);
+
+    return (
+      <View
+        key={key}
+        style={[
+          styles.reminderItemRow,
+          {
+            borderBottomWidth: key !== 'friday' ? StyleSheet.hairlineWidth : 0,
+            borderBottomColor: colors.buttonBorderColor,
+          },
+        ]}
+      >
+        <View style={styles.reminderLabelRow}>
+          <Ionicons name={iconName} size={22} color={colors.iconColor} />
+          <Text style={[styles.reminderTitle, { color: colors.textColor }]}>{label}</Text>
+        </View>
+        <View style={styles.reminderControlsRow}>
+          <Pressable
+            onPress={() => setPickerTarget(key)}
+            style={[
+              styles.timePill,
+              {
+                backgroundColor: colors.secondaryBgColor,
+                opacity: reminder.enabled ? 1 : 0.55,
+              },
+            ]}
+            accessibilityLabel={t('pickTime')}
+          >
+            <Text style={[styles.timePillText, { color: colors.textColor }]}>{timeText}</Text>
+          </Pressable>
+          <Switch
+            value={reminder.enabled}
+            onValueChange={() => guardedToggle()}
+            disabled={notifDenied}
+            trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
+            thumbColor="#FFFFFF"
+            ios_backgroundColor={colors.sliderBg}
+            style={notifDenied ? { opacity: 0.5 } : undefined}
+          />
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bgColor }]}>
       <ScreenHeader title={t('settings')} showBack />
@@ -147,7 +180,11 @@ export function SettingsScreen() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
           ]}
         >
           <Text style={[styles.label, { color: colors.textColor }]}>{t('systemTheme')}</Text>
@@ -177,7 +214,11 @@ export function SettingsScreen() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
           ]}
         >
           <Text style={[styles.label, { color: colors.textColor }]}>{t('fontSize')}</Text>
@@ -209,7 +250,11 @@ export function SettingsScreen() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
           ]}
         >
           <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
@@ -330,164 +375,16 @@ export function SettingsScreen() {
         <View
           style={[
             styles.reminderGroupCard,
-            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
           ]}
         >
-          {/* Morning */}
-          <View style={styles.reminderItemRow}>
-            <View style={styles.reminderItemTextCol}>
-              <Text style={[styles.reminderItemTitle, { color: colors.textColor }]}>
-                {t('morningAdhkarReminder')}
-              </Text>
-              <View style={styles.reminderDotRow}>
-                <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
-                  {reminders.morning.enabled ? t('reminderEnabled') : t('reminderDisabled')}
-                </Text>
-                <View
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: reminders.morning.enabled
-                        ? colors.sliderBgActive
-                        : colors.secondaryTextColor,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-            <View style={styles.reminderItemActions}>
-              <Pressable
-                onPress={() => setPickerTarget('morning')}
-                style={[
-                  styles.timePillNew,
-                  {
-                    backgroundColor: colors.secondaryBgColor,
-                    opacity: reminders.morning.enabled ? 1 : 0.55,
-                  },
-                ]}
-                accessibilityLabel={t('pickTime')}
-              >
-                <Text style={[styles.timePillTextNew, { color: colors.textColor }]}>
-                  {formatTime(reminders.morning.time.hour, reminders.morning.time.minute)}
-                </Text>
-              </Pressable>
-              <Switch
-                value={reminders.morning.enabled}
-                onValueChange={() => {
-                  guardedToggleMorning();
-                }}
-                disabled={notifDenied}
-                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={colors.sliderBg}
-                style={notifDenied ? { opacity: 0.5 } : undefined}
-              />
-            </View>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.buttonBorderColor }]} />
-          {/* Evening */}
-          <View style={styles.reminderItemRow}>
-            <View style={styles.reminderItemTextCol}>
-              <Text style={[styles.reminderItemTitle, { color: colors.textColor }]}>
-                {t('eveningAdhkarReminder')}
-              </Text>
-              <View style={styles.reminderDotRow}>
-                <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
-                  {reminders.evening.enabled ? t('reminderEnabled') : t('reminderDisabled')}
-                </Text>
-                <View
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: reminders.evening.enabled
-                        ? colors.sliderBgActive
-                        : colors.secondaryTextColor,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-            <View style={styles.reminderItemActions}>
-              <Pressable
-                onPress={() => setPickerTarget('evening')}
-                style={[
-                  styles.timePillNew,
-                  {
-                    backgroundColor: colors.secondaryBgColor,
-                    opacity: reminders.evening.enabled ? 1 : 0.55,
-                  },
-                ]}
-                accessibilityLabel={t('pickTime')}
-              >
-                <Text style={[styles.timePillTextNew, { color: colors.textColor }]}>
-                  {formatTime(reminders.evening.time.hour, reminders.evening.time.minute)}
-                </Text>
-              </Pressable>
-              <Switch
-                value={reminders.evening.enabled}
-                onValueChange={() => {
-                  guardedToggleEvening();
-                }}
-                disabled={notifDenied}
-                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={colors.sliderBg}
-                style={notifDenied ? { opacity: 0.5 } : undefined}
-              />
-            </View>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.buttonBorderColor }]} />
-          {/* Friday */}
-          <View style={styles.reminderItemRow}>
-            <View style={styles.reminderItemTextCol}>
-              <Text style={[styles.reminderItemTitle, { color: colors.textColor }]}>
-                {t('fridayAdhkarReminder')}
-              </Text>
-              <View style={styles.reminderDotRow}>
-                <Text style={[styles.reminderSubText, { color: colors.secondaryTextColor }]}>
-                  {reminders.friday.enabled ? t('reminderEnabled') : t('reminderDisabled')}
-                </Text>
-                <View
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: reminders.friday.enabled
-                        ? colors.sliderBgActive
-                        : colors.secondaryTextColor,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-            <View style={styles.reminderItemActions}>
-              <Pressable
-                onPress={() => setPickerTarget('friday')}
-                style={[
-                  styles.timePillNew,
-                  {
-                    backgroundColor: colors.secondaryBgColor,
-                    opacity: reminders.friday.enabled ? 1 : 0.55,
-                  },
-                ]}
-                accessibilityLabel={t('pickTime')}
-              >
-                <Text style={[styles.timePillTextNew, { color: colors.textColor }]}>
-                  {formatTime(reminders.friday.time.hour, reminders.friday.time.minute)}
-                </Text>
-              </Pressable>
-              <Switch
-                value={reminders.friday.enabled}
-                onValueChange={() => {
-                  guardedToggleFriday();
-                }}
-                disabled={notifDenied}
-                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={colors.sliderBg}
-                style={notifDenied ? { opacity: 0.5 } : undefined}
-              />
-            </View>
-          </View>
+          {renderReminderRow('morning', t('morningAdhkarReminder'), reminders.morning, guardedToggleMorning)}
+          {renderReminderRow('evening', t('eveningAdhkarReminder'), reminders.evening, guardedToggleEvening)}
+          {renderReminderRow('friday', t('fridayAdhkarReminder'), reminders.friday, guardedToggleFriday)}
 
           {pickerTarget && Platform.OS !== 'web' ? (
             <DateTimePicker
@@ -525,20 +422,16 @@ export function SettingsScreen() {
           ) : null}
         </View>
 
-        <View style={styles.infoRow}>
-          <Ionicons name="information-circle-outline" size={14} color={colors.secondaryTextColor} />
-          <Text style={[styles.rationaleText, { color: colors.secondaryTextColor }]}>
-            {t('exactAlarmRationale')}
-          </Text>
-        </View>
-
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
           ]}
         >
-          <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
           {resetConfirmVisible ? (
             <View style={styles.row}>
               <Pressable
@@ -558,7 +451,7 @@ export function SettingsScreen() {
               </Pressable>
             </View>
           ) : (
-            <View style={styles.row}>
+            <View style={styles.totalCounterRow}>
               <Pressable
                 onPress={() => setResetConfirmVisible(true)}
                 hitSlop={12}
@@ -576,81 +469,22 @@ export function SettingsScreen() {
               >
                 <Ionicons name="trash-outline" size={20} color={colors.textColor} />
               </Pressable>
-              <Text
-                style={[
-                  styles.countValue,
-                  { color: colors.iconColor, backgroundColor: colors.secondaryBgColor },
-                ]}
-              >
-                {formatNumber(totalCount)}
-              </Text>
+              <View style={styles.totalCounterContent}>
+                <Text style={[styles.totalCounterLabel, { color: colors.textColor }]}>
+                  {t('totalDhikrs')}
+                </Text>
+                <Text
+                  style={[
+                    styles.countValue,
+                    { color: colors.iconColor, backgroundColor: colors.secondaryBgColor },
+                  ]}
+                >
+                  {formatNumber(totalCount)}
+                </Text>
+              </View>
             </View>
           )}
         </View>
-
-        {/* <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
-          ]}
-        >
-          <Pressable
-            onPress={() => setContactOpen((v) => !v)}
-            style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive }]}
-          >
-            <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>
-              {contactOpen ? t('close') : t('contactMe')}
-            </Text>
-          </Pressable>
-          {contactOpen && (
-            <View style={styles.contactForm}>
-              <TextInput
-                value={contactName}
-                onChangeText={setContactName}
-                placeholder={t('namePlaceholder')}
-                placeholderTextColor={colors.iconColor}
-                style={[
-                  styles.input,
-                  {
-                    color: colors.textColor,
-                    borderColor: colors.buttonBorderColor,
-                    backgroundColor: colors.bgColor,
-                  },
-                ]}
-              />
-              <TextInput
-                value={contactMsg}
-                onChangeText={setContactMsg}
-                placeholder={t('messagePlaceholder')}
-                placeholderTextColor={colors.iconColor}
-                multiline
-                numberOfLines={4}
-                style={[
-                  styles.input,
-                  styles.inputMultiline,
-                  {
-                    color: colors.textColor,
-                    borderColor: colors.buttonBorderColor,
-                    backgroundColor: colors.bgColor,
-                  },
-                ]}
-              />
-              <Pressable
-                onPress={() => Linking.openURL('https://github.com/mosafa697/azkar')}
-                style={styles.githubRow}
-              >
-                <Ionicons name="logo-github" size={16} color={colors.iconColor} />
-                <Text style={[styles.githubText, { color: colors.iconColor }]}>{t('contributeGithub')}</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleSendContact}
-                style={[styles.contactBtn, { backgroundColor: colors.sliderBgActive, marginTop: 4 }]}
-              >
-                <Text style={[styles.contactBtnText, { color: colors.iconColorActive }]}>{t('send')}</Text>
-              </Pressable>
-            </View>
-          )}
-        </View> */}
       </ScrollView>
     </View>
   );
@@ -658,8 +492,17 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { padding: 16, gap: 12, paddingBottom: 32 },
-  card: { borderRadius: 16, padding: 16, borderWidth: 1 },
+  scrollContent: { padding: 16, gap: 16, paddingBottom: 32 },
+  card: { borderRadius: 20, padding: 20 },
+  cardThemed: {
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#000',
+  },
   label: {
     fontSize: 15,
     fontWeight: '700',
@@ -734,25 +577,36 @@ const styles = StyleSheet.create({
     fontFamily: AZKAR_PRIMARY_FONT,
     textAlign: 'center',
   },
-  reminderRow: {
+  reminderItemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
-  reminderLabelCol: { flex: 1, gap: 4, alignItems: 'flex-end' },
-  reminderSubText: { fontSize: 12, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
-  reminderActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  reminderLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  reminderControlsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  reminderTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   timePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
+    borderRadius: 20,
+    minWidth: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  timePillText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT },
+  timePillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: AZKAR_COUNTER_FONT,
+    textAlign: 'center',
+  },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 0 },
   rationaleText: {
     fontSize: 11,
@@ -781,42 +635,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   reminderGroupCard: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
-  },
-  reminderItemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 12,
-  },
-  reminderItemTextCol: { flex: 1, gap: 4, alignItems: 'flex-end' },
-  reminderItemTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: AZKAR_PRIMARY_FONT,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  reminderDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  reminderItemActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  timePillNew: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
-    minWidth: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timePillTextNew: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: AZKAR_COUNTER_FONT,
-    textAlign: 'center',
   },
   infoRow: {
     flexDirection: 'row',
@@ -824,6 +645,25 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 2,
     paddingHorizontal: 4,
+  },
+  totalCounterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalCounterContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  totalCounterLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   contactBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   contactBtnText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
