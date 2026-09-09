@@ -12,6 +12,7 @@ import {
 import type { RootState } from '../store';
 import type { AzkarPhrase, AzkarCategory } from '../mappers/azkarMapper';
 import type { PlaybackStatus } from '../store/slices/playbackSlice';
+import { isFeatureEnabled } from '../config/features';
 
 type UseZikrAudioOptions = {
   phrase: AzkarPhrase | undefined;
@@ -189,6 +190,7 @@ export function useZikrAudio({
   }, [source, phraseId, dispatch]);
 
   const toggle = useCallback(async () => {
+    if (!isFeatureEnabled('foregroundAudio')) return;
     if (!audioEnabled || source.kind === 'missing') return;
 
     const player = playerRef.current;
@@ -271,12 +273,13 @@ export function useZikrAudio({
 
   // Determine what status to expose
   const status: PlaybackStatus = useMemo(() => {
+    if (!isFeatureEnabled('foregroundAudio')) return 'missing';
     if (source.kind === 'missing') return 'missing';
     if (playbackState.currentPhraseId !== phraseId) return 'idle';
     return playbackState.status;
   }, [source.kind, playbackState.currentPhraseId, playbackState.status, phraseId]);
 
-  const audioAvailable = source.kind === 'local' && status !== 'error';
+  const audioAvailable = isFeatureEnabled('foregroundAudio') && source.kind === 'local' && status !== 'error';
 
   return { status, audioAvailable, toggle, stop };
 }

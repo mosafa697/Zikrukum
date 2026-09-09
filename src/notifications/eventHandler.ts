@@ -1,4 +1,5 @@
 import { REMINDER_PLAY_ACTION_ID } from './notifeeService';
+import { isFeatureEnabled } from '../config/features';
 import { playCategory } from '../audio/trackPlayerService';
 
 // Debounce duplicate Play taps (headless + foreground may fire close together)
@@ -6,6 +7,7 @@ let lastPlayAt = 0;
 const PLAY_DEBOUNCE_MS = 500;
 
 async function handlePlay(categoryId: string): Promise<void> {
+  if (!isFeatureEnabled('backgroundAudio')) return;
   const now = Date.now();
   if (now - lastPlayAt < PLAY_DEBOUNCE_MS) return;
   lastPlayAt = now;
@@ -28,6 +30,7 @@ export function getHandlePlay() {
 
 // Foreground event handler shape matches notifee's EventType
 export async function handleNotifeeEvent(type: number, detail: unknown): Promise<void> {
+  if (!isFeatureEnabled('backgroundAudio')) return;
   // EventType.ACTION_PRESS = 2, PRESS = 1 — we check pressAction.id instead of numeric type.
   const d = detail as {
     pressAction?: { id: string };

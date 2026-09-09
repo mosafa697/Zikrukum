@@ -24,6 +24,7 @@ import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/stor
 import { t } from '../i18n';
 import { useZikrAudio } from '../audio/useZikrAudio';
 import { config } from '../config/config';
+import { isFeatureEnabled } from '../config/features';
 
 // Volume nav pins the system volume mid-range so both keys always produce a
 // detectable delta (at the min/max rails Android fires no event).
@@ -153,6 +154,7 @@ export function CategoryScreen() {
   // While audio is active the native volume UI stays visible and presses pass
   // through; otherwise nav mode re-engages and the baseline re-syncs.
   useEffect(() => {
+    if (!isFeatureEnabled('volumeNav')) return;
     if (!volumeNavEnabled) return;
     const vm = getVolumeManager();
     if (!vm) return;
@@ -234,9 +236,11 @@ export function CategoryScreen() {
   // Hardware volume buttons navigate between zikr phrases. The native volume UI
   // is hidden and the volume is snapped back to its previous value so the
   // buttons act as next/previous controls without actually changing the volume.
-  // Only active while the user has enabled the feature in Settings.
+  // Only active while the user has enabled the feature in Settings and
+  // the global volumeNav feature flag is on.
   // Exception (#10): while audio is active, presses control system volume.
   useEffect(() => {
+    if (!isFeatureEnabled('volumeNav')) return;
     if (!volumeNavEnabled) return;
     let listener: { remove: () => void } | null = null;
 

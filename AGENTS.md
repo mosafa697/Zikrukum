@@ -20,8 +20,9 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | State | Redux Toolkit 2.x (`@reduxjs/toolkit` + `react-redux`) |
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
-| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) + `react-native-track-player` (background playback, `src/audio/trackPlayerService` + `playbackService`, requires prebuild, guarded for web) |
-| Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go) |
+| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) + `react-native-track-player` (background playback, `src/audio/trackPlayerService` + `playbackService`, requires prebuild, guarded for web; gated by `features.backgroundAudio` — currently `false`) |
+| Feature flags | `src/config/features.ts` (`FEATURES` + `isFeatureEnabled` + `useFeature`) — build-time kill-switches, no deletion; `backgroundAudio`/`foregroundAudio`/`reminders`/`volumeNav`, edited before each build |
+| Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go; gated by `features.reminders` + `features.backgroundAudio` for `تشغيل` action) |
 | Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
 | Fonts | `expo-font` (loaded in `App.tsx`: `ScheherazadeNew`, `TajawalBold` → `Tajawal-ExtraBold.ttf`, `TajawalRegular`, `Amiri`, `AmiriBold`; note unused `assets/fonts/Tajawal-Bold.ttf` on disk) |
@@ -70,7 +71,9 @@ Zikrukum/
     │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers
     ├── config/
-    │   └── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
+    │   ├── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
+    │   ├── features.ts         # Build-time kill-switches (FEATURES map) — edit before each build
+    │   └── useFeature.ts       # useFeature(key) hook wrapper around isFeatureEnabled
     ├── dataset/
     │   └── azkar-sample.json   # Bundled azkar data (categories + phrases, Arabic text)
     ├── i18n/
@@ -107,7 +110,7 @@ Zikrukum/
 1. Load fonts via `useFonts`.
 2. `loadPersistedState()` reads AsyncStorage → `createAppStore(preloadedState)`.
 3. Renders `GestureHandlerRootView > Redux Provider > SafeAreaProvider > RootNavigator`.
-4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)`; store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`).
+4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)` (gated by `features.reminders`); `setupPlayer()` gated by `features.backgroundAudio`; `notifee.onForegroundEvent` handoff gated by `features.backgroundAudio`; store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`).
 
 The store is created **once** at startup with preloaded persisted state; do not create additional stores.
 

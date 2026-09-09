@@ -1,7 +1,8 @@
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import { azkar } from '../mappers/azkarMapper';
 import { resolveAudioSource, resolveLocalAudioUri } from './audioSource';
 import { getStoredValue } from '../utils/storage';
+import { isFeatureEnabled } from '../config/features';
 
 // Guarded TrackPlayer import
 let TrackPlayer: typeof import('react-native-track-player').default | null = null;
@@ -10,6 +11,12 @@ let cachedTrackPlayer: typeof import('react-native-track-player').default | null
 function getTrackPlayer(): typeof import('react-native-track-player').default | null {
   if (cachedTrackPlayer) return cachedTrackPlayer;
   if (Platform.OS === 'web') return null;
+  // Expo Go guard: avoid require that throws uncaught native-module-not-found
+  // Check native module presence before requiring (even try/catch is reported as uncaught by Metro).
+  const hasNativeModule = Boolean(
+    (NativeModules as any)?.TrackPlayerModule || (NativeModules as any)?.MusicModule
+  );
+  if (!hasNativeModule) return null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     TrackPlayer = require('react-native-track-player').default;
@@ -21,12 +28,14 @@ function getTrackPlayer(): typeof import('react-native-track-player').default | 
 }
 
 export function isTrackPlayerSupported(): boolean {
+  if (!isFeatureEnabled('backgroundAudio')) return false;
   return Platform.OS !== 'web' && getTrackPlayer() !== null;
 }
 
 let isSetup = false;
 
 export async function setupPlayer(): Promise<boolean> {
+  if (!isFeatureEnabled('backgroundAudio')) return false;
   const TP = getTrackPlayer();
   if (!TP) return false;
   if (isSetup) return true;
@@ -87,6 +96,7 @@ export async function playCategory(
   categoryId: string,
   opts: { startAtCurrentPhrase?: boolean } = {}
 ): Promise<boolean> {
+  if (!isFeatureEnabled('backgroundAudio')) return false;
   const TP = getTrackPlayer();
   if (!TP) return false;
   const ok = await setupPlayer();

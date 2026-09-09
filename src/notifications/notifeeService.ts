@@ -1,6 +1,7 @@
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import { ADHKAR_CHANNEL, ADHKAR_CHANNEL_ID } from './channels';
 import { getNextFridayTriggerTimestamp, getNextTriggerTimestamp } from './scheduler';
+import { isFeatureEnabled } from '../config/features';
 import type { RemindersState } from '../store/slices/reminderSlice';
 
 // Guarded notifee import — web returns the .web mock, native returns the native module.
@@ -10,6 +11,9 @@ let notifee: typeof import('@notifee/react-native').default | null = null;
 function getNotifee(): typeof import('@notifee/react-native').default | null {
   if (notifee) return notifee;
   if (Platform.OS === 'web') return null;
+  // Expo Go guard: requiring the module throws an uncaught "native module not found"
+  // even inside try/catch (Metro global handler). Check NativeModules first to avoid the require entirely.
+  if (!(NativeModules as any)?.NotifeeApiModule) return null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     notifee = require('@notifee/react-native').default;
@@ -28,6 +32,7 @@ export function isNotifeeSupported(): boolean {
  * Returns true if channel exists/created, false if notifee unavailable (web / Expo Go).
  */
 export async function ensureAdhkarChannel(): Promise<boolean> {
+  if (!isFeatureEnabled('reminders')) return false;
   const nf = getNotifee();
   if (!nf) return false;
   try {
@@ -155,6 +160,7 @@ async function createWeeklyTrigger(
 ) {
   const timestamp = getNextFridayTriggerTimestamp(time);
   const type = 'friday';
+  const withPlayAction = isFeatureEnabled('backgroundAudio');
   await nf.createTriggerNotification(
     {
       id,
@@ -165,12 +171,16 @@ async function createWeeklyTrigger(
         channelId: ADHKAR_CHANNEL_ID,
         smallIcon: 'ic_launcher',
         pressAction: { id: 'default' },
-        actions: [
-          {
-            title: 'تشغيل',
-            pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
-          },
-        ],
+        ...(withPlayAction
+          ? {
+              actions: [
+                {
+                  title: 'تشغيل',
+                  pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
+                },
+              ],
+            }
+          : {}),
       },
       ios: { categoryId: 'adhkar-reminder' },
     },
@@ -193,6 +203,7 @@ async function createDailyTrigger(
 ) {
   const timestamps = getNextTriggerTimestamp(time);
   const type = id.startsWith('morning') ? 'morning' : 'evening';
+  const withPlayAction = isFeatureEnabled('backgroundAudio');
   // Use AlarmManager exact if permission granted; fallback to WorkManager automatically.
   await nf.createTriggerNotification(
     {
@@ -204,12 +215,16 @@ async function createDailyTrigger(
         channelId: ADHKAR_CHANNEL_ID,
         smallIcon: 'ic_launcher',
         pressAction: { id: 'default' },
-        actions: [
-          {
-            title: 'تشغيل',
-            pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
-          },
-        ],
+        ...(withPlayAction
+          ? {
+              actions: [
+                {
+                  title: 'تشغيل',
+                  pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
+                },
+              ],
+            }
+          : {}),
       },
       ios: {
         categoryId: 'adhkar-reminder',
@@ -235,6 +250,7 @@ export async function cancelReminders(): Promise<void> {
 }
 
 export async function scheduleReminders(reminders: RemindersState): Promise<void> {
+  if (!isFeatureEnabled('reminders')) return;
   const nf = getNotifee();
   if (!nf) return;
   // Permission gate — no-op if denied (UI already shows banner)
