@@ -18,8 +18,8 @@ export function getVolumeManager(): VolumeManagerType | null {
   }
   const hasNative = Boolean(
     (NativeModules as unknown as { VolumeManager?: unknown })?.VolumeManager ||
-      (NativeModules as unknown as { VolumeManagerModule?: unknown })?.VolumeManagerModule ||
-      (NativeModules as unknown as { RNVolumeManager?: unknown })?.RNVolumeManager
+    (NativeModules as unknown as { VolumeManagerModule?: unknown })?.VolumeManagerModule ||
+    (NativeModules as unknown as { RNVolumeManager?: unknown })?.RNVolumeManager
   );
   if (!hasNative) {
     cached = null;

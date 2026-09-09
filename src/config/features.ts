@@ -10,12 +10,9 @@
  * AND it with platform guards (`Platform.OS !== 'web'` etc.).
  */
 
-export type FeatureKey = 'backgroundAudio' | 'foregroundAudio' | 'reminders' | 'volumeNav';
+export type FeatureKey = 'foregroundAudio' | 'reminders' | 'volumeNav';
 
 export const FEATURES: Record<FeatureKey, boolean> = {
-  // Background/killed-state playback via react-native-track-player + media notification
-  // + reminder `تشغيل` Play action. Disabled: patch/licensing instability.
-  backgroundAudio: false,
   // Foreground per-phrase playback via expo-audio (useZikrAudio)
   foregroundAudio: true,
   // Adhkar reminders via @notifee (channel + scheduling)

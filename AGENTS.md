@@ -20,9 +20,9 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | State | Redux Toolkit 2.x (`@reduxjs/toolkit` + `react-redux`) |
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
-| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) + `react-native-track-player` (background playback, `src/audio/trackPlayerService` + `playbackService`, requires prebuild, guarded for web; gated by `features.backgroundAudio` — currently `false`) |
-| Feature flags | `src/config/features.ts` (`FEATURES` + `isFeatureEnabled` + `useFeature`) — build-time kill-switches, no deletion; `backgroundAudio`/`foregroundAudio`/`reminders`/`volumeNav`, edited before each build |
-| Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go; gated by `features.reminders` + `features.backgroundAudio` for `تشغيل` action) |
+| Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) |
+| Feature flags | `src/config/features.ts` (`FEATURES` + `isFeatureEnabled` + `useFeature`) — build-time kill-switches, no deletion; `foregroundAudio`/`reminders`/`volumeNav`, edited before each build |
+| Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go; gated by `features.reminders`) |
 | Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
 | Fonts | `expo-font` (loaded in `App.tsx`: `ScheherazadeNew`, `TajawalBold` → `Tajawal-ExtraBold.ttf`, `TajawalRegular`, `Amiri`, `AmiriBold`; note unused `assets/fonts/Tajawal-Bold.ttf` on disk) |
@@ -50,13 +50,11 @@ Zikrukum/
 ├── App.tsx                     # Entry: loads fonts + persisted store, renders providers
 ├── index.ts                    # Expo entry point
 ├── app.json                    # Expo config (name, scheme, plugins)
-├── metro.config.js             # Metro resolver: mocks `react-native-track-player`/`shaka-player` on web
+├── metro.config.js             # Metro config (default Expo)
 ├── assets/                     # Fonts, icons
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
     │   ├── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
-    │   ├── playbackService.ts  # TrackPlayer headless service (RemotePlay/Pause/Stop/Next/Prev)
-    │   ├── trackPlayerService.ts # TrackPlayer setup + playCategory queue (offline file:// URIs, guarded)
     │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next)
     ├── components/             # Shared UI components
     │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
@@ -66,7 +64,6 @@ Zikrukum/
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── notifications/          # Notifee channel + permission + service (adhkar-reminders)
     │   ├── channels.ts         # Single Android channel definition
-    │   ├── eventHandler.ts     # notifee Play action → TrackPlayer handoff (foreground/background)
     │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings, scheduling (guarded)
     │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers
@@ -94,8 +91,7 @@ Zikrukum/
     │   └── slices/             # One file per Redux slice (see State Management)
     ├── theme/
     │   └── azkarTheme.ts       # AzkarTheme type, 3 themes (light/solarized/dark), font constants
-    ├── mocks/
-    │   └── empty.js            # Web stub for `react-native-track-player`/`shaka-player` (metro.config.js)
+    ├── mocks/                  # (removed — was TrackPlayer/shaka web stub)
     ├── types/                  # .d.ts module declarations
     ├── utils/
         ├── numberFormatting.ts # formatNumber() (Western digits; Hindi conversion disabled) + formatAudioTime()
@@ -110,7 +106,7 @@ Zikrukum/
 1. Load fonts via `useFonts`.
 2. `loadPersistedState()` reads AsyncStorage → `createAppStore(preloadedState)`.
 3. Renders `GestureHandlerRootView > Redux Provider > SafeAreaProvider > RootNavigator`.
-4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)` (gated by `features.reminders`); `setupPlayer()` gated by `features.backgroundAudio`; `notifee.onForegroundEvent` handoff gated by `features.backgroundAudio`; store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`).
+4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)` (gated by `features.reminders`); store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`).
 
 The store is created **once** at startup with preloaded persisted state; do not create additional stores.
 

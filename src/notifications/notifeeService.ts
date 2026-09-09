@@ -160,7 +160,6 @@ async function createWeeklyTrigger(
 ) {
   const timestamp = getNextFridayTriggerTimestamp(time);
   const type = 'friday';
-  const withPlayAction = isFeatureEnabled('backgroundAudio');
   await nf.createTriggerNotification(
     {
       id,
@@ -171,16 +170,6 @@ async function createWeeklyTrigger(
         channelId: ADHKAR_CHANNEL_ID,
         smallIcon: 'ic_launcher',
         pressAction: { id: 'default' },
-        ...(withPlayAction
-          ? {
-              actions: [
-                {
-                  title: 'تشغيل',
-                  pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
-                },
-              ],
-            }
-          : {}),
       },
       ios: { categoryId: 'adhkar-reminder' },
     },
@@ -203,7 +192,6 @@ async function createDailyTrigger(
 ) {
   const timestamps = getNextTriggerTimestamp(time);
   const type = id.startsWith('morning') ? 'morning' : 'evening';
-  const withPlayAction = isFeatureEnabled('backgroundAudio');
   // Use AlarmManager exact if permission granted; fallback to WorkManager automatically.
   await nf.createTriggerNotification(
     {
@@ -215,16 +203,6 @@ async function createDailyTrigger(
         channelId: ADHKAR_CHANNEL_ID,
         smallIcon: 'ic_launcher',
         pressAction: { id: 'default' },
-        ...(withPlayAction
-          ? {
-              actions: [
-                {
-                  title: 'تشغيل',
-                  pressAction: { id: REMINDER_PLAY_ACTION_ID, launchActivity: 'default' },
-                },
-              ],
-            }
-          : {}),
       },
       ios: {
         categoryId: 'adhkar-reminder',
@@ -321,8 +299,6 @@ export async function cancelMediaNotification(): Promise<void> {
   const nf = getNotifee();
   if (!nf) return;
   try {
-    // TrackPlayer owns the media notification; cancel any leftover displayed notifee notifications
-    // with reminder ids to avoid stale notifications persisting after stop.
     await nf.cancelDisplayedNotifications();
   } catch {
     // no-op, idempotent

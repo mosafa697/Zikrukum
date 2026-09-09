@@ -16,10 +16,7 @@
     ],
     "icon": "./assets/icon.png",
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "UIBackgroundModes": ["audio"]
-      }
+      "supportsTablet": true
     },
     "android": {
       "package": "com.azkar.zikrukum",
@@ -34,9 +31,7 @@
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        "android.permission.RECEIVE_BOOT_COMPLETED"
       ]
     },
     "plugins": [
