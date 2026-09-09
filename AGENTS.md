@@ -215,11 +215,12 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 ## Workflow Notes
 
 - GitHub issues are the source of truth for tasks — `TODO.md` is a changelog only (completed work log, no new checkboxes).
-- Task lifecycle via `gh-cli` labels: `todo` (default on create) → `in-progress` (claimed) → `review` (optional) → `done` + closed.
+- Task lifecycle via `gh-cli` labels: `todo` (default on create) → `in-progress` (claimed) → `review` (review passed, awaiting user approval) → `done` + closed. `review` is now a required gate — no commit/push before it.
 - Agent skills in `.agents/skills/` encode recurring workflows — load the relevant skill before starting work:
   - `zikrukum-plan` — plan + edge cases + questions, then `gh issue create --label todo`.
-  - `zikrukum-implement` — pick next `todo` (or explicit ID), move to `in-progress`, implement per plan.
-  - `zikrukum-review` — verify per `expo-verify`, update changelog, commit + push related files, move to `done` + close.
+  - `zikrukum-implement` — pick next `todo` (or explicit ID), move to `in-progress`, implement per plan (does not commit or close — hands off to `zikrukum-review`).
+  - `zikrukum-review` — verify per `expo-verify`, update changelog (`TODO.md`/`AGENTS.md` unstaged), move `in-progress` → `review` on pass (or `todo` on fail) and wait for user approval — never commits/pushes.
+  - `zikrukum-commit` — stage related files only, commit + push, move `review` → `done` + close — only after review passed and user explicitly requested commit.
   - `zikrukum-conventions` — any task (arch, navigation, style rules).
   - `redux-persisted-setting` — persisted settings (3-place wiring rule).
   - `zikrukum-theming` — themes, fonts, RTL, Arabic strings.

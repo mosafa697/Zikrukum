@@ -26,4 +26,4 @@ Use after planning, when starting code changes.
 ## Rules
 - Exactly one active `in-progress` issue per worker.
 - `TODO.md` is a changelog, not a task list — do not add new checkboxes here.
-- Never commit secrets; only commit/push on explicit request.
+- Never commit or push here — that is `zikrukum-commit` after `zikrukum-review` passes and user explicitly approves. Never commit secrets.
