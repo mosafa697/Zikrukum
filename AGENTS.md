@@ -64,7 +64,8 @@ Zikrukum/
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── notifications/          # Notifee channel + permission + service (adhkar-reminders)
     │   ├── channels.ts         # Single Android channel definition
-    │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings, scheduling (guarded)
+    │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings, scheduling, foreground-press + initial-notification helpers (guarded)
+    │   ├── notificationRouter.ts # Tap deep-link: extractCategoryId/handleNotificationPress + killed-state AsyncStorage backup
     │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers
     ├── config/
@@ -79,7 +80,8 @@ Zikrukum/
     ├── mappers/
     │   └── azkarMapper.ts      # Maps raw JSON -> AzkarCategory/AzkarPhrase types, assigns category icons
     ├── navigation/
-    │   └── RootNavigator.tsx   # Native stack navigator + RootStackParamList type
+    │   ├── RootNavigator.tsx   # Native stack navigator + RootStackParamList type
+    │   └── navigationRef.ts    # navigationRef + isReadyRef + pending queue + navigateToCategory (tap deep-link target)
     ├── screens/
     │   ├── CategoriesScreen.tsx  # Home: category list, search, favourites sort, verse banner
     │   ├── CategoryScreen.tsx    # Zikr reader: phrase pager, counters, shuffle, reset
@@ -115,6 +117,8 @@ The store is created **once** at startup with preloaded persisted state; do not 
 Single native stack (`RootStackParamList`), headers hidden (`headerShown: false` — screens render custom headers):
 
 - `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`
+
+Reminder taps deep-link via `navigationRef` (`src/navigation/navigationRef.ts`, ready-gated pending queue, unknown ids fall back to `Categories`) + `notificationRouter` (`extractCategoryId`/`handleNotificationPress` + killed-state AsyncStorage backup consumed in `App.tsx`; headless `onBackgroundEvent` PRESS handler in `index.ts`).
 
 Non-home screens use the shared `ScreenHeader` component (chromeless: optional `leftAction` slot or back chevron, centered title, optional `rightAction` slot, and an optional `bottom` row that renders directly under the header); `PhraseCard` keeps its own custom header with the progress pill. The top safe-area strip is themed via `SafeAreaView` inside `RootNavigator` (matches `theme.bgColor`), not in `App.tsx`.
 

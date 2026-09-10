@@ -8,7 +8,14 @@ import { Provider } from 'react-redux';
 import { createAppStore, type AppStore } from './src/store';
 import { loadPersistedState } from './src/store/persistence';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { ensureAdhkarChannel, scheduleReminders } from './src/notifications/notifeeService';
+import {
+  ensureAdhkarChannel,
+  getInitialNotificationData,
+  isNotifeeSupported,
+  scheduleReminders,
+  subscribeForegroundNotificationPress,
+} from './src/notifications/notifeeService';
+import { consumePendingCategory, handleNotificationPress } from './src/notifications/notificationRouter';
 import { isFeatureEnabled } from './src/config/features';
 import type { RemindersState } from './src/store/slices/reminderSlice';
 
@@ -25,6 +32,26 @@ export default function App() {
   // Load persisted settings before first render
   useEffect(() => {
     loadPersistedState().then((state) => setAppStore(createAppStore(state)));
+  }, []);
+
+  // Notification tap deep-link: foreground presses + killed-state cold start.
+  // Navigation readiness is handled via the pending queue in navigationRef.
+  useEffect(() => {
+    if (!isFeatureEnabled('reminders')) return;
+    if (!isNotifeeSupported()) return;
+    const unsubscribe = subscribeForegroundNotificationPress((data) => handleNotificationPress(data));
+    (async () => {
+      try {
+        const initialData = await getInitialNotificationData();
+        // Always clear the headless backup so stale presses never fire later.
+        const pending = await consumePendingCategory();
+        const target = initialData ?? (pending ? { categoryId: pending } : null);
+        if (target) handleNotificationPress(target);
+      } catch {
+        // no-op: deep-link must never crash startup
+      }
+    })();
+    return unsubscribe;
   }, []);
 
   // Create notifee channel + schedule daily reminders + reschedule on time/toggle and on AppState active (timezone / reboot).

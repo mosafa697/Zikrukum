@@ -9,6 +9,7 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { FreeTasbihScreen } from '../screens/FreeTasbihScreen';
 import { RootState } from '../store';
 import { getAzkarTheme } from '../theme/azkarTheme';
+import { flushPendingNavigation, isReadyRef, navigationRef } from './navigationRef';
 
 export type RootStackParamList = {
   Categories: undefined;
@@ -25,7 +26,13 @@ export function RootNavigator() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bgColor }} edges={['top']}>
-      <NavigationContainer>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          isReadyRef.current = true;
+          flushPendingNavigation();
+        }}
+      >
         <Stack.Navigator
           initialRouteName="Categories"
           screenOptions={{

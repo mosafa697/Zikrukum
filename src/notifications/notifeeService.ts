@@ -88,6 +88,55 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
   }
 }
 
+function getPressEventType(): number {
+  // EventType.PRESS === 1 — read at runtime so web/Expo Go never resolve the module.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const eventType = require('@notifee/react-native').EventType as { PRESS?: number } | undefined;
+    if (typeof eventType?.PRESS === 'number') return eventType.PRESS;
+  } catch {
+    // fall through to the known enum value
+  }
+  return 1;
+}
+
+type NotifeePressEvent = {
+  type: number;
+  detail?: { notification?: { data?: unknown } };
+};
+
+/**
+ * Subscribe to foreground notification presses. Returns an unsubscribe fn.
+ * No-op (returns a no-op unsubscribe) when notifee is unavailable.
+ */
+export function subscribeForegroundNotificationPress(handler: (data: unknown) => void): () => void {
+  const nf = getNotifee();
+  if (!nf) return () => {};
+  try {
+    const press = getPressEventType();
+    return nf.onForegroundEvent(({ type, detail }: NotifeePressEvent) => {
+      if (type === press) handler(detail?.notification?.data);
+    });
+  } catch {
+    return () => {};
+  }
+}
+
+/**
+ * Data payload of the notification that cold-started the app (killed state),
+ * or null when the app was not launched from a notification.
+ */
+export async function getInitialNotificationData(): Promise<unknown | null> {
+  const nf = getNotifee();
+  if (!nf) return null;
+  try {
+    const initial = await nf.getInitialNotification();
+    return initial?.notification?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function openSystemNotificationSettings(channelId?: string): Promise<void> {
   const nf = getNotifee();
   if (!nf) return;
