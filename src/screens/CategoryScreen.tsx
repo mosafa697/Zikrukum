@@ -32,13 +32,6 @@ import { isFeatureEnabled } from '../config/features';
 const VOLUME_NAV_BASELINE = 0.5;
 const VOLUME_NAV_RAIL_EPS = 0.02;
 
-function logVolumeNav(...args: unknown[]) {
-  if (__DEV__) {
-    // eslint-disable-next-line no-console
-    console.log('[VolumeNav:Category]', ...args);
-  }
-}
-
 export function CategoryScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -164,7 +157,6 @@ export function CategoryScreen() {
     if (!volumeNavEnabled) return;
     const vm = getVolumeManager();
     if (!vm) return;
-    logVolumeNav('audio active changed', { audioActive, audioStatus });
     void vm.showNativeVolumeUI({ enabled: audioActive });
     if (!audioActive) {
       void vm
@@ -253,7 +245,6 @@ export function CategoryScreen() {
     const init = async () => {
       const vm = getVolumeManager();
       if (!vm) {
-        logVolumeNav('VolumeManager unavailable (Expo Go?)');
         return;
       }
       try {
@@ -261,7 +252,6 @@ export function CategoryScreen() {
         let baseline = volume;
         if (baseline <= VOLUME_NAV_RAIL_EPS || baseline >= 1 - VOLUME_NAV_RAIL_EPS) {
           // At a rail no event fires — re-center so both keys work.
-          logVolumeNav('volume at rail, re-centering', { volume });
           await vm.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false });
           try {
             baseline = (await vm.getVolume()).volume;
@@ -270,20 +260,16 @@ export function CategoryScreen() {
           }
         }
         lastVolumeRef.current = baseline;
-        logVolumeNav('listener attached', { baseline });
         await vm.showNativeVolumeUI({ enabled: false });
         listener = vm.addVolumeListener(({ volume }) => {
-          const playbackStatus = audioStatusRef.current;
           if (isAudioPlayingRef.current || playIntentRef.current) {
             // Audio active: keys belong to the OS; track volume for resume.
             lastVolumeRef.current = volume;
-            logVolumeNav('audio active — passing through', { volume, playbackStatus });
             return;
           }
           if (volumeRestoringRef.current) {
             // The swallowed press still moved the real volume — re-baseline.
             lastVolumeRef.current = volume;
-            logVolumeNav('dropped during restore', { volume });
             return;
           }
 
@@ -294,7 +280,6 @@ export function CategoryScreen() {
           }
           if (volume === last) {
             // No delta means a system rail — re-center.
-            logVolumeNav('no delta (rail?), re-centering', { volume });
             lastVolumeRef.current = volume;
             volumeRestoringRef.current = true;
             void getVolumeManager()
@@ -320,10 +305,8 @@ export function CategoryScreen() {
           if (now - volumeNavGuardRef.current < config.interaction.counterGuardMs) {
             // Debounced, but the press still moved the volume — re-baseline.
             lastVolumeRef.current = volume;
-            logVolumeNav('dropped by guard', { volume, last });
             return;
           }
-          logVolumeNav('volume nav', { volume, last, playbackStatus });
           const maxIndex = maxIndexRef.current;
           if (volume > last && indexRef.current > 0) {
             // Volume up -> go back to the previous zikr without touching the counter.
@@ -379,7 +362,6 @@ export function CategoryScreen() {
         });
       } catch {
         // Unavailable in Expo Go — test volume keys on a custom dev build.
-        logVolumeNav('VolumeManager unavailable (Expo Go?)');
       }
     };
 
@@ -387,7 +369,6 @@ export function CategoryScreen() {
 
     return () => {
       listener?.remove();
-      logVolumeNav('listener detached');
       void getVolumeManager()?.showNativeVolumeUI({ enabled: true });
       lastVolumeRef.current = null;
       volumeRestoringRef.current = false;
