@@ -9,6 +9,7 @@ import favouriteCategoriesReducer from './slices/favouriteCategoriesSlice';
 import audioReducer from './slices/audioSlice';
 import playbackReducer from './slices/playbackSlice';
 import volumeNavReducer from './slices/volumeNavSlice';
+import hapticsReducer from './slices/hapticsSlice';
 import reminderReducer from './slices/reminderSlice';
 import milestonesReducer from './slices/milestonesSlice';
 import { listenerMiddleware } from './persistence';
@@ -25,6 +26,7 @@ const rootReducer = combineReducers({
   audio: audioReducer,
   playback: playbackReducer,
   volumeNav: volumeNavReducer,
+  haptics: hapticsReducer,
   reminders: reminderReducer,
   milestones: milestonesReducer,
 });

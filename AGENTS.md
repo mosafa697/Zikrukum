@@ -140,6 +140,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
 | `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
+| `haptics` | `{ enabled }` | yes | Vibrate on each successful dhikr count on/off, default off (Settings) |
 | `reminders` | `{ morning: {enabled, time}, evening: {enabled, time}, friday: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00/Friday 09:00 defaults, `@react-native-community/datetimepicker`) |
 | `milestones` | `{ enabled, achieved: string[], streakCount, lastOpenDate }` | yes | Progress milestones (fire-once `achieved` set incl. count-seed migration; streak advances once/day) |
 | `playback` | `{ currentPhraseId, status, currentTime, duration, errorKey? }` | no | Current audio playback state |

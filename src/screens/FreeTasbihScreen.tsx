@@ -10,6 +10,7 @@ import { config } from '../config/config';
 import { t } from '../i18n';
 import { RootState } from '../store';
 import { incrementTotalCount } from '../store/slices/totalCountSlice';
+import { triggerCountHaptic } from '../utils/haptics';
 import { AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { formatNumber } from '../utils/numberFormatting';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
@@ -25,16 +26,22 @@ export function FreeTasbihScreen() {
   const themeName = useSelector((state: RootState) => state.theme.value);
   const theme = getAzkarTheme(themeName);
   const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
+  const hapticsEnabled = useSelector((state: RootState) => state.haptics.enabled);
   const [count, setCount] = useState(0);
 
   const lastVolumeRef = useRef<number | null>(null);
   const volumeNavGuardRef = useRef(0);
   const volumeRestoringRef = useRef(false);
+  // Latest haptics flag for the volume listener, which cannot read fresh
+  // Redux state without re-registering.
+  const hapticsRef = useRef(hapticsEnabled);
+  hapticsRef.current = hapticsEnabled;
 
   const tap = useCallback(() => {
     setCount((c) => c + 1);
     dispatch(incrementTotalCount());
-  }, [dispatch]);
+    if (hapticsEnabled) triggerCountHaptic();
+  }, [dispatch, hapticsEnabled]);
 
   const handleTap = useTimeGuardedCallback(tap, config.interaction.freeTasbihTapGuardMs);
 
@@ -109,6 +116,7 @@ export function FreeTasbihScreen() {
           if (volume < last) {
             setCount((c) => c + 1);
             dispatch(incrementTotalCount());
+            if (hapticsRef.current) triggerCountHaptic();
           } else if (volume > last) {
             setCount((c) => Math.max(0, c - 1));
           }

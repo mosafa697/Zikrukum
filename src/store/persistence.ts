@@ -7,6 +7,7 @@ import { toggleAppearance } from './slices/subTextSlice';
 import { setFavouriteCategories, toggleFavouriteCategory } from './slices/favouriteCategoriesSlice';
 import { toggleAutoPlayNext, toggleAudioEnabled } from './slices/audioSlice';
 import { toggleVolumeNav } from './slices/volumeNavSlice';
+import { setHaptics, toggleHaptics } from './slices/hapticsSlice';
 import {
   setEveningEnabled,
   setEveningTime,
@@ -100,6 +101,14 @@ listenerMiddleware.startListening({
 });
 
 listenerMiddleware.startListening({
+  matcher: isAnyOf(toggleHaptics, setHaptics),
+  effect: async (_, api) => {
+    const { haptics } = api.getState() as { haptics: { enabled: boolean } };
+    await setStoredValue('vibrateOnCount', haptics.enabled);
+  },
+});
+
+listenerMiddleware.startListening({
   matcher: isAnyOf(
     toggleMorning,
     toggleEvening,
@@ -144,6 +153,7 @@ export async function loadPersistedState() {
     autoPlayNext,
     audioEnabled,
     volumeNavEnabled,
+    vibrateOnCount,
     adhkarReminders,
     milestones,
   ] = await Promise.all([
@@ -156,6 +166,7 @@ export async function loadPersistedState() {
     getStoredValue<boolean>('autoPlayNext', true),
     getStoredValue<boolean>('audioEnabled', true),
     getStoredValue<boolean>('volumeNavEnabled', false),
+    getStoredValue<boolean>('vibrateOnCount', false),
     getStoredValue<typeof REMINDER_DEFAULTS>('adhkarReminders', REMINDER_DEFAULTS),
     getStoredValue<typeof MILESTONES_DEFAULTS>('milestones', MILESTONES_DEFAULTS),
   ]);
@@ -186,6 +197,7 @@ export async function loadPersistedState() {
     audio: { autoPlayNext, audioEnabled },
     playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
     volumeNav: { enabled: volumeNavEnabled },
+    haptics: { enabled: vibrateOnCount },
     reminders: mergedReminders,
     milestones: {
       enabled: milestones.enabled ?? MILESTONES_DEFAULTS.enabled,

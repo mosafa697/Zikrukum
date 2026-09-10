@@ -12,6 +12,7 @@ import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { toggleAudioEnabled, toggleAutoPlayNext } from '../store/slices/audioSlice';
 import { toggleVolumeNav } from '../store/slices/volumeNavSlice';
+import { toggleHaptics } from '../store/slices/hapticsSlice';
 import {
   setEveningEnabled,
   setEveningTime,
@@ -70,6 +71,7 @@ export function SettingsScreen() {
   const autoPlayNext = useSelector((state: RootState) => state.audio.autoPlayNext);
   const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
   const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
+  const hapticsEnabled = useSelector((state: RootState) => state.haptics.enabled);
   const colors = getAzkarTheme(theme);
 
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
@@ -499,6 +501,24 @@ export function SettingsScreen() {
                 name={volumeNavEnabled ? 'play-skip-forward' : 'play-skip-forward-outline'}
                 size={18}
                 color={volumeNavEnabled ? colors.iconColorActive : colors.textColor}
+              />
+            </View>
+          </Pressable>
+          <Pressable onPress={() => dispatch(toggleHaptics())} style={styles.toggleRow}>
+            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('vibrateOnCount')}</Text>
+            <View
+              style={[
+                styles.toggleBtn,
+                {
+                  backgroundColor: hapticsEnabled ? colors.sliderBgActive : colors.buttonBgColor,
+                  borderColor: hapticsEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name={hapticsEnabled ? 'phone-portrait' : 'phone-portrait-outline'}
+                size={18}
+                color={hapticsEnabled ? colors.iconColorActive : colors.textColor}
               />
             </View>
           </Pressable>

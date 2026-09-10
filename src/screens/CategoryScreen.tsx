@@ -24,6 +24,7 @@ import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/storage';
 import { t } from '../i18n';
 import { useZikrAudio } from '../audio/useZikrAudio';
+import { triggerCountHaptic } from '../utils/haptics';
 import { config } from '../config/config';
 import { isFeatureEnabled } from '../config/features';
 
@@ -49,6 +50,7 @@ export function CategoryScreen() {
   const audioEnabled = useSelector((state: RootState) => state.audio.audioEnabled);
   const isLastPhrase = useSelector((state: RootState) => state.indexCount.isLastPhrase);
   const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
+  const hapticsEnabled = useSelector((state: RootState) => state.haptics.enabled);
   const shouldAutoPlayRef = useRef(false);
 
   const [isAnimating, setIsAnimating] = useState(false);
@@ -67,6 +69,10 @@ export function CategoryScreen() {
   const phraseCountRef = useRef(currentPhrase?.count ?? 1);
   phraseClicksRef.current = clicks[index] ?? 0;
   phraseCountRef.current = currentPhrase?.count ?? 1;
+  // Latest haptics flag for the volume listener and audio-loop callback,
+  // which cannot read fresh Redux state without re-registering.
+  const hapticsRef = useRef(hapticsEnabled);
+  hapticsRef.current = hapticsEnabled;
   const lastVolumeRef = useRef<number | null>(null);
   const volumeNavGuardRef = useRef(0);
   const volumeRestoringRef = useRef(false);
@@ -88,6 +94,7 @@ export function CategoryScreen() {
       return next;
     });
     dispatch(incrementTotalCount());
+    if (hapticsRef.current) triggerCountHaptic();
     setIsAnimating(true);
     if (newCount >= phraseCount) {
       setTimeout(() => dispatch(incrementIndex()), 300);
@@ -327,6 +334,7 @@ export function CategoryScreen() {
                 return next;
               });
               dispatch(incrementTotalCount());
+              if (hapticsRef.current) triggerCountHaptic();
               setIsAnimating(true);
               if (newCount >= phraseCount) {
                 setTimeout(() => dispatch(incrementIndex()), 300);
@@ -396,6 +404,7 @@ export function CategoryScreen() {
       return next;
     });
     dispatch(incrementTotalCount());
+    if (hapticsEnabled) triggerCountHaptic();
     setIsAnimating(true);
 
     if (newCount >= phraseCount) {
@@ -406,7 +415,7 @@ export function CategoryScreen() {
       dispatch(completeCategory(categoryId));
     }
     setTimeout(() => setIsAnimating(false), 300);
-  }, [clicks, index, categoryPhrases, categoryId, dispatch]);
+  }, [clicks, index, categoryPhrases, categoryId, dispatch, hapticsEnabled]);
 
   // Home button: clear saved index and return to Categories
   const handleBack = useCallback(async () => {

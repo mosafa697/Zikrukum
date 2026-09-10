@@ -70,6 +70,7 @@ export const ar = {
   audioEnabledLabel: 'تفعيل تشغيل الصوت',
   audioLabel: 'تشغيل صوت الذكر التالي تلقائيا',
   volumeNavLabel: 'التنقل بين الأذكار بأزرار الصوت',
+  vibrateOnCount: 'الاهتزاز عند كل عدّ',
 
   // Notifications — permission & channel
   notifPermissionTitle: 'التنبيهات غير مفعلة',
