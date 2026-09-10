@@ -78,6 +78,10 @@ export const ar = {
   notifPermissionRequest: 'تفعيل التنبيهات',
   notifMismatchWarning:
     'التذكيرات مفعّلة في التطبيق لكن تنبيهات النظام محظورة — لن تصلك التذكيرات حتى تفعّلها من إعدادات النظام.',
+  notifRationaleTitle: 'فعّل التنبيهات',
+  notifRationaleBody:
+    'نرسل لك تذكيرات الأذكار في مواعيدها وتنبيهات عند إتمام إنجازاتك. يمكنك إيقافها في أي وقت من الإعدادات.',
+  notifRationaleContinue: 'متابعة',
   exactAlarmRationale: 'قد يتأخر التذكير حوالي 15 دقيقة في وضع توفير الطاقة، إلا إذا سمح النظام بإذن الدقة.',
   notifChannelName: 'تذكير الأذكار',
 
@@ -100,4 +104,29 @@ export const ar = {
   fridayReminderBody: 'حان وقت سنن يوم الجمعة — اغتنم الفضل',
   fridayAdhkarReminder: 'تذكير سنن يوم الجمعة',
   reminderNotificationChannel: 'تذكير الأذكار',
+
+  // Milestone notifications
+  milestoneNotifications: 'تنبيهات الإنجازات',
+  milestoneCategoryFirstTitle: 'ما شاء الله، أول فئة كاملة!',
+  milestoneCategoryFirstBody: 'أتممت جميع أذكار هذه الفئة من أول مرة. واصل الذكر كل يوم.',
+  milestoneCategoryTitle: 'أتممت فئة من الأذكار',
+  milestoneCategoryBody: 'أكملت جميع الأذكار في هذه الفئة. بارك الله فيك.',
+  milestoneCount100Title: 'وصلت إلى 100 ذكر!',
+  milestoneCount100Body: 'بلغ مجموع أذكارك 100. استمر، فالقليل الدائم خير.',
+  milestoneCount1000Title: 'وصلت إلى 1000 ذكر!',
+  milestoneCount1000Body: 'بلغ مجموع أذكارك 1000. ما شاء الله، واصل التقدم.',
+  milestoneCount10000Title: 'وصلت إلى 10000 ذكر!',
+  milestoneCount10000Body: 'بلغ مجموع أذكارك 10000. إنجاز عظيم، ثبتك الله.',
+  milestoneStreak3Title: 'سلسلة 3 أيام!',
+  milestoneStreak3Body: 'فتحت التطبيق وذكرت الله 3 أيام متتالية. حافظ على السلسلة.',
+  milestoneStreak7Title: 'سلسلة أسبوع كامل!',
+  milestoneStreak7Body: '7 أيام متتالية من الذكر. أسأل الله لك الثبات.',
+  milestoneStreak30Title: 'سلسلة 30 يوما!',
+  milestoneStreak30Body: 'شهر كامل من الذكر اليومي. إنجاز يستحق الفخر.',
+  milestoneStreak40Title: 'سلسلة 40 يوما!',
+  milestoneStreak40Body: '40 يوما متتالية من الذكر. زادك الله قربا.',
+  milestoneAllCategoriesTitle: 'أكملت جميع الفئات!',
+  milestoneAllCategoriesBody: 'أتممت كل فئات الأذكار مرة على الأقل. تقبل الله منك.',
+  milestoneFridayTitle: 'يوم الجمعة',
+  milestoneFridayBody: 'اغتنم يوم الجمعة بكثرة الذكر والصلاة على النبي ﷺ.',
 } as const;

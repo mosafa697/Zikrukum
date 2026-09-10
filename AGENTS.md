@@ -59,6 +59,7 @@ Zikrukum/
     ├── components/             # Shared UI components
     │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
     │   ├── PermissionBlockedBanner.tsx # Notifee permission denied banner (themed, RTL, guarded)
+    │   ├── PermissionRationaleDialog.tsx # One-time pre-permission rationale Modal (themed, RTL, guarded)
     │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
     │   └── TasbihButton.tsx    # Circular tasbih counter button
@@ -66,6 +67,7 @@ Zikrukum/
     │   ├── channels.ts         # Single Android channel definition
     │   ├── notifeeService.ts   # Channel creation, permission, exact-alarm, openSettings, scheduling, foreground-press + initial-notification helpers (guarded)
     │   ├── notificationRouter.ts # Tap deep-link: extractCategoryId/handleNotificationPress + killed-state AsyncStorage backup
+    │   ├── milestones.ts       # Milestone defs/copy tables, quiet-hours, local-day + streak helpers, isMilestonePress
     │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers
     ├── config/
@@ -89,6 +91,7 @@ Zikrukum/
     │   └── SettingsScreen.tsx    # Theme, font scale, subtext, audio toggles
     ├── store/
     │   ├── index.ts            # createAppStore(), RootState, AppDispatch types
+    │   ├── milestoneListeners.ts # Milestone firing listeners (incrementTotalCount/completeCategory/advanceStreak -> display)
     │   ├── persistence.ts      # Listener middleware -> AsyncStorage; loadPersistedState()
     │   └── slices/             # One file per Redux slice (see State Management)
     ├── theme/
@@ -108,7 +111,7 @@ Zikrukum/
 1. Load fonts via `useFonts`.
 2. `loadPersistedState()` reads AsyncStorage → `createAppStore(preloadedState)`.
 3. Renders `GestureHandlerRootView > Redux Provider > SafeAreaProvider > RootNavigator`.
-4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)` (gated by `features.reminders`); store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`).
+4. After store ready: `ensureAdhkarChannel()` + `scheduleReminders(reminders)` (gated by `features.reminders`); store `subscribe` (deduped via JSON) + `AppState` `active` listener reschedule for timezone/reboot (wall-clock `scheduler.ts`). Open-streak advances once per local calendar day on startup + `AppState` `active` (`advanceStreak`, milestone listeners in `milestoneListeners.ts` fire category/count/streak celebrations).
 
 The store is created **once** at startup with preloaded persisted state; do not create additional stores.
 
@@ -138,6 +141,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
 | `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
 | `reminders` | `{ morning: {enabled, time}, evening: {enabled, time}, friday: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00/Friday 09:00 defaults, `@react-native-community/datetimepicker`) |
+| `milestones` | `{ enabled, achieved: string[], streakCount, lastOpenDate }` | yes | Progress milestones (fire-once `achieved` set incl. count-seed migration; streak advances once/day) |
 | `playback` | `{ currentPhraseId, status, currentTime, duration, errorKey? }` | no | Current audio playback state |
 
 ### Persistence Pattern

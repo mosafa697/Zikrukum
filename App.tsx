@@ -16,6 +16,8 @@ import {
   subscribeForegroundNotificationPress,
 } from './src/notifications/notifeeService';
 import { consumePendingCategory, handleNotificationPress } from './src/notifications/notificationRouter';
+import { getLocalDayStrings, isMilestonePress } from './src/notifications/milestones';
+import { advanceStreak, type MilestonesState } from './src/store/slices/milestonesSlice';
 import { isFeatureEnabled } from './src/config/features';
 import type { RemindersState } from './src/store/slices/reminderSlice';
 
@@ -39,20 +41,41 @@ export default function App() {
   useEffect(() => {
     if (!isFeatureEnabled('reminders')) return;
     if (!isNotifeeSupported()) return;
-    const unsubscribe = subscribeForegroundNotificationPress((data) => handleNotificationPress(data));
+    const unsubscribe = subscribeForegroundNotificationPress((data) => {
+      // Milestone taps just foreground the app — no navigation.
+      if (isMilestonePress(data)) return;
+      handleNotificationPress(data);
+    });
     (async () => {
       try {
         const initialData = await getInitialNotificationData();
         // Always clear the headless backup so stale presses never fire later.
         const pending = await consumePendingCategory();
         const target = initialData ?? (pending ? { categoryId: pending } : null);
-        if (target) handleNotificationPress(target);
+        if (target && !isMilestonePress(target)) handleNotificationPress(target);
       } catch {
         // no-op: deep-link must never crash startup
       }
     })();
     return unsubscribe;
   }, []);
+
+  // Open-streak: advance once per local calendar day on startup + foreground.
+  useEffect(() => {
+    if (!appStore) return;
+    const advance = () => {
+      const state = appStore.getState() as { milestones?: MilestonesState };
+      if (!state.milestones) return;
+      const { today, yesterday } = getLocalDayStrings(new Date());
+      if (state.milestones.lastOpenDate === today) return;
+      appStore.dispatch(advanceStreak({ today, yesterday }));
+    };
+    advance();
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') advance();
+    });
+    return () => sub.remove();
+  }, [appStore]);
 
   // Create notifee channel + schedule daily reminders + reschedule on time/toggle and on AppState active (timezone / reboot).
   useEffect(() => {

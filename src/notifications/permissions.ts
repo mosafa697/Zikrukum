@@ -7,6 +7,7 @@ import {
   requestNotificationPermission,
   type NotificationPermissionStatus,
 } from './notifeeService';
+import { getStoredValue, setStoredValue } from '../utils/storage';
 
 export type UseNotificationPermissionsReturn = {
   supported: boolean;
@@ -72,6 +73,21 @@ export function useNotificationPermissions(): UseNotificationPermissionsReturn {
     refresh,
     openSettings,
   };
+}
+
+/**
+ * One-time pre-permission rationale flag. Plain AsyncStorage (not a Redux
+ * slice, so the persisted-setting 3-place rule does not apply). The real OS
+ * state is still re-checked on every focus regardless of this flag.
+ */
+const PRE_PERMISSION_RATIONALE_KEY = 'notifPrePermissionShown';
+
+export async function wasRationaleShown(): Promise<boolean> {
+  return getStoredValue<boolean>(PRE_PERMISSION_RATIONALE_KEY, false);
+}
+
+export async function markRationaleShown(): Promise<void> {
+  await setStoredValue(PRE_PERMISSION_RATIONALE_KEY, true);
 }
 
 /**

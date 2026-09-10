@@ -20,6 +20,7 @@ import {
   setMorningEnabled,
   setMorningTime,
 } from '../store/slices/reminderSlice';
+import { setMilestonesEnabled } from '../store/slices/milestonesSlice';
 import {
   AZKAR_COUNTER_FONT,
   AZKAR_PRIMARY_FONT,
@@ -33,8 +34,14 @@ import { removeStoredValue } from '../utils/storage';
 import { azkar } from '../mappers/azkarMapper';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { PermissionBlockedBanner } from '../components/PermissionBlockedBanner';
-import { useNotificationPermissions } from '../notifications/permissions';
+import { PermissionRationaleDialog } from '../components/PermissionRationaleDialog';
+import {
+  markRationaleShown,
+  useNotificationPermissions,
+  wasRationaleShown,
+} from '../notifications/permissions';
 import { ADHKAR_CHANNEL_ID } from '../notifications/channels';
+import { scheduleReminders } from '../notifications/notifeeService';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { config } from '../config/config';
 
@@ -50,6 +57,9 @@ const REMINDER_ICONS = {
   friday: 'business-outline',
 } as const;
 
+type ReminderKey = 'morning' | 'evening' | 'friday';
+type PermissionToggleKey = ReminderKey | 'milestones';
+
 export function SettingsScreen() {
   const dispatch = useDispatch();
   const theme = useSelector((state: RootState) => state.theme.value) as AzkarThemeName;
@@ -64,6 +74,7 @@ export function SettingsScreen() {
 
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
   const reminders = useSelector((s: RootState) => s.reminders);
+  const milestonesEnabled = useSelector((s: RootState) => s.milestones.enabled);
   const {
     status: notifStatus,
     granted: notifGranted,
@@ -74,9 +85,11 @@ export function SettingsScreen() {
   const notifDenied = notifStatus === 'denied';
   const anyReminderEnabled =
     reminders.morning.enabled || reminders.evening.enabled || reminders.friday.enabled;
-  const hasMismatch = anyReminderEnabled && !notifGranted;
+  const hasMismatch = (anyReminderEnabled || milestonesEnabled) && !notifGranted;
   const showBanner = notifDenied || hasMismatch;
   const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | 'friday' | null>(null);
+  // Pending rationale dialog target — one-time pre-permission explainer.
+  const [rationaleKey, setRationaleKey] = useState<PermissionToggleKey | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -93,6 +106,74 @@ export function SettingsScreen() {
   const formatTime = (hour: number, minute: number) =>
     `${formatNumber(String(hour).padStart(2, '0'))}:${formatNumber(String(minute).padStart(2, '0'))}`;
 
+  const requestAndEnableMilestones = useCallback(async () => {
+    const result = await requestNotif();
+    if (result === 'authorized' || result === 'provisional') {
+      dispatch(setMilestonesEnabled(true));
+      return;
+    }
+    // Post-request denied => blocked: direct to system Settings, no re-prompt loop.
+    // Plain denied keeps Redux off — retry later from Settings.
+    if (result === 'denied') {
+      await openNotifSettings(ADHKAR_CHANNEL_ID);
+    }
+  }, [dispatch, requestNotif, openNotifSettings]);
+
+  const handleToggleMilestones = useCallback(
+    async (nextValue: boolean) => {
+      // OFF always allowed — clears Redux so mismatch resolves by opt-out.
+      if (!nextValue) {
+        dispatch(setMilestonesEnabled(false));
+        return;
+      }
+      // ON requires real OS permission — never flip on without grant.
+      if (notifGranted) {
+        dispatch(setMilestonesEnabled(true));
+        return;
+      }
+      // First opt-in while undecided: one-time rationale, then the OS prompt.
+      if (notifStatus === 'not-determined' && !(await wasRationaleShown())) {
+        setRationaleKey('milestones');
+        return;
+      }
+      await requestAndEnableMilestones();
+    },
+    [dispatch, notifGranted, notifStatus, requestAndEnableMilestones]
+  );
+
+  const guardedToggleMilestones = useTimeGuardedCallback(
+    (nextValue: boolean) => void handleToggleMilestones(nextValue),
+    config.interaction.navButtonGuardMs
+  );
+
+  const requestAndEnable = useCallback(
+    async (key: PermissionToggleKey) => {
+      if (key === 'milestones') {
+        await requestAndEnableMilestones();
+        return;
+      }
+      const setEnabled =
+        key === 'morning' ? setMorningEnabled : key === 'evening' ? setEveningEnabled : setFridayEnabled;
+      const result = await requestNotif();
+      if (result === 'authorized' || result === 'provisional') {
+        dispatch(setEnabled(true));
+        // Schedule immediately so the first reminder is armed without
+        // waiting for the store-subscribe reschedule in App.tsx.
+        void scheduleReminders({
+          ...reminders,
+          [key]: { ...reminders[key], enabled: true },
+        });
+        return;
+      }
+      // Post-request denied => blocked: direct to system Settings, no re-prompt loop.
+      // Plain denied keeps Redux off — retry later from Settings.
+      if (result === 'denied') {
+        await openNotifSettings(ADHKAR_CHANNEL_ID);
+      }
+    },
+    [dispatch, requestNotif, openNotifSettings, reminders, requestAndEnableMilestones]
+  );
+
   const handleToggleReminder = useCallback(
     async (key: 'morning' | 'evening' | 'friday', nextValue: boolean) => {
       const setEnabled =
@@ -105,20 +186,37 @@ export function SettingsScreen() {
       // ON requires real OS permission — never claim on while OS disabled.
       if (notifGranted) {
         dispatch(setEnabled(true));
+        void scheduleReminders({
+          ...reminders,
+          [key]: { ...reminders[key], enabled: true },
+        });
         return;
       }
-      const result = await requestNotif();
-      if (result === 'authorized' || result === 'provisional') {
-        dispatch(setEnabled(true));
+      // First opt-in while undecided: one-time rationale, then the OS prompt.
+      if (notifStatus === 'not-determined' && !(await wasRationaleShown())) {
+        setRationaleKey(key);
         return;
       }
-      // Post-request denied => blocked: direct to system Settings, no re-prompt loop.
-      if (result === 'denied') {
-        await openNotifSettings(ADHKAR_CHANNEL_ID);
-      }
+      await requestAndEnable(key);
     },
-    [dispatch, notifGranted, requestNotif, openNotifSettings]
+    [dispatch, notifGranted, notifStatus, requestAndEnable, reminders]
   );
+
+  const handleRationaleContinue = useTimeGuardedCallback(() => {
+    const key = rationaleKey;
+    if (!key) return;
+    void (async () => {
+      await markRationaleShown();
+      setRationaleKey(null);
+      await requestAndEnable(key);
+    })();
+  }, config.interaction.navButtonGuardMs);
+
+  const handleRationaleCancel = useTimeGuardedCallback(() => {
+    if (!rationaleKey) return;
+    // Cancel counts as decided — no repeat rationale, Redux stays off.
+    void markRationaleShown().then(() => setRationaleKey(null));
+  }, config.interaction.navButtonGuardMs);
 
   const guardedToggleMorning = useTimeGuardedCallback(
     (nextValue: boolean) => void handleToggleReminder('morning', nextValue),
@@ -216,6 +314,11 @@ export function SettingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bgColor }]}>
       <ScreenHeader title={t('settings')} showBack />
+      <PermissionRationaleDialog
+        visible={rationaleKey !== null}
+        onContinue={handleRationaleContinue}
+        onCancel={handleRationaleCancel}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View
           style={[
@@ -467,6 +570,33 @@ export function SettingsScreen() {
               </Pressable>
             </View>
           ) : null}
+        </View>
+
+        <View
+          style={[
+            styles.reminderGroupCard,
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
+          ]}
+        >
+          <View style={[styles.reminderItemRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.reminderLabelRow}>
+              <Ionicons name="trophy-outline" size={22} color={colors.iconColor} />
+              <Text style={[styles.reminderTitle, { color: colors.textColor }]}>
+                {t('milestoneNotifications')}
+              </Text>
+            </View>
+            <Switch
+              value={milestonesEnabled && notifGranted}
+              onValueChange={(nextValue) => guardedToggleMilestones(nextValue)}
+              trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor={colors.sliderBg}
+            />
+          </View>
         </View>
 
         <View

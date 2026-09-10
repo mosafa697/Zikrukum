@@ -20,6 +20,15 @@ import {
   toggleMorning,
   REMINDER_DEFAULTS,
 } from './slices/reminderSlice';
+import {
+  advanceStreak,
+  completeCategory,
+  recordMilestone,
+  setMilestones,
+  setMilestonesEnabled,
+  toggleMilestonesEnabled,
+  MILESTONES_DEFAULTS,
+} from './slices/milestonesSlice';
 import { getStoredValue, setStoredValue } from '../utils/storage';
 import { config } from '../config/config';
 import type { AzkarThemeName } from '../theme/azkarTheme';
@@ -109,6 +118,21 @@ listenerMiddleware.startListening({
   },
 });
 
+listenerMiddleware.startListening({
+  matcher: isAnyOf(
+    setMilestonesEnabled,
+    toggleMilestonesEnabled,
+    recordMilestone,
+    completeCategory,
+    advanceStreak,
+    setMilestones
+  ),
+  effect: async (_, api) => {
+    const { milestones } = api.getState() as { milestones: typeof MILESTONES_DEFAULTS };
+    await setStoredValue('milestones', milestones);
+  },
+});
+
 export async function loadPersistedState() {
   const [
     theme,
@@ -121,6 +145,7 @@ export async function loadPersistedState() {
     audioEnabled,
     volumeNavEnabled,
     adhkarReminders,
+    milestones,
   ] = await Promise.all([
     getStoredValue<AzkarThemeName>('theme', 'solarized'),
     getStoredValue<number>('totalCount', 0),
@@ -132,6 +157,7 @@ export async function loadPersistedState() {
     getStoredValue<boolean>('audioEnabled', true),
     getStoredValue<boolean>('volumeNavEnabled', false),
     getStoredValue<typeof REMINDER_DEFAULTS>('adhkarReminders', REMINDER_DEFAULTS),
+    getStoredValue<typeof MILESTONES_DEFAULTS>('milestones', MILESTONES_DEFAULTS),
   ]);
 
   // Migrate stored reminders without friday field
@@ -140,6 +166,15 @@ export async function loadPersistedState() {
     evening: adhkarReminders.evening ?? REMINDER_DEFAULTS.evening,
     friday: (adhkarReminders as typeof REMINDER_DEFAULTS).friday ?? REMINDER_DEFAULTS.friday,
   };
+
+  // Seed count milestones already crossed by the stored lifetime total so
+  // existing users do not get backlogged celebrations on the next tap.
+  const achieved = Array.isArray(milestones.achieved) ? [...milestones.achieved] : [];
+  for (const threshold of [100, 1000, 10000]) {
+    if (totalCount >= threshold && !achieved.includes(`count-${threshold}`)) {
+      achieved.push(`count-${threshold}`);
+    }
+  }
 
   return {
     theme: { value: theme, list: ['light', 'solarized', 'dark'] as AzkarThemeName[] },
@@ -152,5 +187,11 @@ export async function loadPersistedState() {
     playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
     volumeNav: { enabled: volumeNavEnabled },
     reminders: mergedReminders,
+    milestones: {
+      enabled: milestones.enabled ?? MILESTONES_DEFAULTS.enabled,
+      achieved,
+      streakCount: milestones.streakCount ?? 0,
+      lastOpenDate: milestones.lastOpenDate ?? null,
+    },
   };
 }

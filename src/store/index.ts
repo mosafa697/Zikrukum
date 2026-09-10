@@ -10,7 +10,9 @@ import audioReducer from './slices/audioSlice';
 import playbackReducer from './slices/playbackSlice';
 import volumeNavReducer from './slices/volumeNavSlice';
 import reminderReducer from './slices/reminderSlice';
+import milestonesReducer from './slices/milestonesSlice';
 import { listenerMiddleware } from './persistence';
+import './milestoneListeners';
 
 const rootReducer = combineReducers({
   phases: phasesReducer,
@@ -24,6 +26,7 @@ const rootReducer = combineReducers({
   playback: playbackReducer,
   volumeNav: volumeNavReducer,
   reminders: reminderReducer,
+  milestones: milestonesReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

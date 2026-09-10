@@ -17,6 +17,7 @@ import {
   incrementIndex,
 } from '../store/slices/indexCountSlice';
 import { incrementTotalCount } from '../store/slices/totalCountSlice';
+import { completeCategory } from '../store/slices/milestonesSlice';
 import { RootState } from '../store';
 import { PhraseCard } from '../components/PhraseCard';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
@@ -98,8 +99,13 @@ export function CategoryScreen() {
     if (newCount >= phraseCount) {
       setTimeout(() => dispatch(incrementIndex()), 300);
     }
+    // Natural count-through of the final phrase completes the category.
+    // Resets navigate without counting, so they never reach this branch.
+    if (newCount >= phraseCount && idx === maxIndexRef.current) {
+      dispatch(completeCategory(categoryId));
+    }
     setTimeout(() => setIsAnimating(false), 300);
-  }, [dispatch]);
+  }, [dispatch, categoryId]);
 
   const handleAudioEnded = useCallback(() => {
     if (!audioEnabled || !autoPlayNext) return;
@@ -342,6 +348,10 @@ export function CategoryScreen() {
               if (newCount >= phraseCount) {
                 setTimeout(() => dispatch(incrementIndex()), 300);
               }
+              // Natural count-through of the final phrase completes the category.
+              if (newCount >= phraseCount && idx === maxIndex) {
+                dispatch(completeCategory(categoryId));
+              }
               setTimeout(() => setIsAnimating(false), 300);
             } else if (idx < maxIndex) {
               dispatch(incrementIndex());
@@ -382,7 +392,7 @@ export function CategoryScreen() {
       lastVolumeRef.current = null;
       volumeRestoringRef.current = false;
     };
-  }, [dispatch, volumeNavEnabled, setClicks, setIsAnimating]);
+  }, [dispatch, volumeNavEnabled, categoryId, setClicks, setIsAnimating]);
 
   // Reset store on unmount to cover the native back gesture path
   useEffect(() => {
@@ -410,8 +420,12 @@ export function CategoryScreen() {
     if (newCount >= phraseCount) {
       setTimeout(() => dispatch(incrementIndex()), 300);
     }
+    // Natural count-through of the final phrase completes the category.
+    if (newCount >= phraseCount && index === categoryPhrases.length - 1) {
+      dispatch(completeCategory(categoryId));
+    }
     setTimeout(() => setIsAnimating(false), 300);
-  }, [clicks, index, categoryPhrases, dispatch]);
+  }, [clicks, index, categoryPhrases, categoryId, dispatch]);
 
   const handleReset = useCallback(async () => {
     await removeStoredValue(`azkar-index-${categoryId}`);

@@ -137,6 +137,39 @@ export async function getInitialNotificationData(): Promise<unknown | null> {
   }
 }
 
+/**
+ * Immediate (non-scheduled) notification for progress milestones. Reuses the
+ * single adhkar-reminders channel so settings stay unified. Returns true when
+ * displayed; false when notifee is unavailable or display fails.
+ */
+export async function displayMilestoneNotification(input: {
+  id: string;
+  title: string;
+  body: string;
+  data?: Record<string, string | number | object>;
+}): Promise<boolean> {
+  if (!isFeatureEnabled('reminders')) return false;
+  const nf = getNotifee();
+  if (!nf) return false;
+  try {
+    await ensureAdhkarChannel();
+    await nf.displayNotification({
+      id: input.id,
+      title: input.title,
+      body: input.body,
+      data: input.data ?? { milestone: input.id },
+      android: {
+        channelId: ADHKAR_CHANNEL_ID,
+        smallIcon: 'ic_launcher',
+        pressAction: { id: 'default' },
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function openSystemNotificationSettings(channelId?: string): Promise<void> {
   const nf = getNotifee();
   if (!nf) return;
