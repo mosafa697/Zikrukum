@@ -45,8 +45,8 @@ export function FreeTasbihScreen() {
 
   const handleTap = useTimeGuardedCallback(tap, config.interaction.freeTasbihTapGuardMs);
 
-  // Hardware volume buttons control the free tasbih counter: volume up decrements
-  // (never below 0, without affecting the global total), volume down increments.
+  // Hardware volume buttons control the free tasbih counter: both keys
+  // increment (+1 plus the global total), matching screen taps.
   // Only active while the user has enabled volume nav in Settings.
   useEffect(() => {
     if (!volumeNavEnabled) return;
@@ -118,7 +118,9 @@ export function FreeTasbihScreen() {
             dispatch(incrementTotalCount());
             if (hapticsRef.current) triggerCountHaptic();
           } else if (volume > last) {
-            setCount((c) => Math.max(0, c - 1));
+            setCount((c) => c + 1);
+            dispatch(incrementTotalCount());
+            if (hapticsRef.current) triggerCountHaptic();
           }
           lastVolumeRef.current = last;
           volumeRestoringRef.current = true;
