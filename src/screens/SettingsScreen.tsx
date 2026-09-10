@@ -38,7 +38,7 @@ import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { config } from '../config/config';
 
 const THEME_SELECTED_BORDER: Record<AzkarThemeName, string> = {
-  light: '#1E4338',
+  light: '#000000',
   solarized: '#1E4338',
   dark: '#FFFFFF',
 };
@@ -368,10 +368,6 @@ export function SettingsScreen() {
           />
         ) : null}
 
-        <Text style={[styles.sectionHeader, { color: colors.secondaryTextColor }]}>
-          {t('reminderSchedule')}
-        </Text>
-
         <View
           style={[
             styles.reminderGroupCard,
@@ -382,6 +378,9 @@ export function SettingsScreen() {
             },
           ]}
         >
+          <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
+            {t('reminderSchedule')}
+          </Text>
           {renderReminderRow('morning', t('morningAdhkarReminder'), reminders.morning, guardedToggleMorning)}
           {renderReminderRow('evening', t('eveningAdhkarReminder'), reminders.evening, guardedToggleEvening)}
           {renderReminderRow('friday', t('fridayAdhkarReminder'), reminders.friday, guardedToggleFriday)}
@@ -432,6 +431,7 @@ export function SettingsScreen() {
             },
           ]}
         >
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('totalDhikrs')}</Text>
           {resetConfirmVisible ? (
             <View style={styles.row}>
               <Pressable
@@ -470,9 +470,6 @@ export function SettingsScreen() {
                 <Ionicons name="trash-outline" size={20} color={colors.textColor} />
               </Pressable>
               <View style={styles.totalCounterContent}>
-                <Text style={[styles.totalCounterLabel, { color: colors.textColor }]}>
-                  {t('totalDhikrs')}
-                </Text>
                 <Text
                   style={[
                     styles.countValue,
@@ -539,7 +536,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   disabledToggleRow: { opacity: 0.5 },
   toggleText: { fontSize: 15, fontFamily: AZKAR_PRIMARY_FONT },
@@ -581,7 +578,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 14,
   },
   reminderLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -607,15 +604,6 @@ const styles = StyleSheet.create({
     fontFamily: AZKAR_COUNTER_FONT,
     textAlign: 'center',
   },
-  divider: { height: StyleSheet.hairlineWidth, marginVertical: 0 },
-  rationaleText: {
-    fontSize: 11,
-    fontFamily: AZKAR_PRIMARY_FONT,
-    textAlign: 'right',
-    lineHeight: 16,
-    flex: 1,
-    writingDirection: 'rtl',
-  },
   webTimeFallback: {
     marginTop: 12,
     gap: 8,
@@ -624,27 +612,10 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   webTimeText: { fontSize: 13, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
-  sectionHeader: {
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: AZKAR_PRIMARY_FONT,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    marginTop: 4,
-    marginBottom: -4,
-    paddingHorizontal: 4,
-  },
   reminderGroupCard: {
     borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    marginTop: 2,
-    paddingHorizontal: 4,
   },
   totalCounterRow: {
     flexDirection: 'row',
@@ -658,26 +629,4 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 12,
   },
-  totalCounterLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: AZKAR_PRIMARY_FONT,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  contactBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
-  contactBtnText: { fontSize: 14, fontWeight: '700', fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'center' },
-  contactForm: { marginTop: 12, gap: 10 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    fontFamily: AZKAR_PRIMARY_FONT,
-    textAlign: 'right',
-  },
-  inputMultiline: { minHeight: 90, textAlignVertical: 'top' },
-  githubRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
-  githubText: { fontSize: 13, fontFamily: AZKAR_PRIMARY_FONT, textDecorationLine: 'underline' },
 });
