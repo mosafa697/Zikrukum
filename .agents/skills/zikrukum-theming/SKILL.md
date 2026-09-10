@@ -16,7 +16,7 @@ Use when adding UI, changing colors, adding text, or debugging RTL/mirroring iss
   const themeName = useSelector((s: RootState) => s.theme.value);
   const theme = getAzkarTheme(themeName);
   ```
-- Palette direction: light = white/sand + emerald + shiny blue accents; solarized = warm sand + deep emerald `#2F5D50` + gold `#BB9A4F`; dark = matte black-blue + blue accents.
+- Palette direction: light = white/sand + relaxed shiny blue accents (`#3B82F6`/`#60A5FA`/`#9BC6FC`, no emerald); solarized = warm sand + deep emerald `#2F5D50` + gold `#BB9A4F`; dark = matte black-blue + blue accents.
 - Always use tokens (`bgColor`, `bgGradient`, `verseGradient`, `accentGradient`, `tasbihGradient`, `cardBgColor`, `textColor`, etc.). Never hardcode hex values in screens.
 - Visual reference: the built screens + `AZKAR_THEME_MAP` palettes are the source of truth (the old `adhkar-redesign.html` file was removed from the repo).
 

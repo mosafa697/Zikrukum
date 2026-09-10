@@ -156,7 +156,7 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 - Themes live in `AZKAR_THEME_MAP` (`src/theme/azkarTheme.ts`): `light`, `solarized`, `dark` (default: solarized).
 - Access pattern in screens: `const themeName = useSelector((s: RootState) => s.theme.value); const theme = getAzkarTheme(themeName);`
 - Palette direction per theme:
-  - `light`: clean white/sand surfaces, emerald primary, relaxed shiny blue active accents.
+  - `light`: clean white/sand surfaces with relaxed shiny blue active accents (`#3B82F6`, `#60A5FA`, `#9BC6FC`) across banners, icon chips, toggles and the tasbih button.
   - `solarized`: warm sand backgrounds, deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`).
   - `dark`: matte black-blue surfaces, blue primary accents, comfortable low-saturation text.
 - Theme tokens include gradient pairs for page background (`bgGradient`), verse/hadith banners (`verseGradient`), icon chips (`accentGradient`), and the Free Tasbih button (`tasbihGradient`), plus matching text/glow/shadow colors. Screens should use these tokens instead of hardcoded redesign colors so all three themes adapt consistently.
