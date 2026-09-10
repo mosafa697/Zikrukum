@@ -130,4 +130,11 @@ export const ar = {
   milestoneAllCategoriesBody: 'أتممت كل فئات الأذكار مرة على الأقل. تقبل الله منك.',
   milestoneFridayTitle: 'يوم الجمعة',
   milestoneFridayBody: 'اغتنم يوم الجمعة بكثرة الذكر والصلاة على النبي ﷺ.',
+
+  // Achievements screen
+  achievements: 'لوحة الإنجازات',
+  achievementCompleted: 'مكتمل',
+  achievementLocked: 'مغلق',
+  achievementOfAdhkar: 'من الأذكار',
+  achievementDays: 'أيام',
 } as const;

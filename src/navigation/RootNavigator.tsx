@@ -7,6 +7,7 @@ import { CategoriesScreen } from '../screens/CategoriesScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { FreeTasbihScreen } from '../screens/FreeTasbihScreen';
+import { AchievementsScreen } from '../screens/AchievementsScreen';
 import { RootState } from '../store';
 import { getAzkarTheme } from '../theme/azkarTheme';
 import { flushPendingNavigation, isReadyRef, navigationRef } from './navigationRef';
@@ -16,6 +17,7 @@ export type RootStackParamList = {
   Category: { categoryId: string };
   Settings: undefined;
   FreeTasbih: undefined;
+  Achievements: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,6 +47,7 @@ export function RootNavigator() {
           <Stack.Screen name="Category" component={CategoryScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="FreeTasbih" component={FreeTasbihScreen} />
+          <Stack.Screen name="Achievements" component={AchievementsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaView>

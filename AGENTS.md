@@ -88,6 +88,7 @@ Zikrukum/
     │   ├── CategoriesScreen.tsx  # Home: category list, search, favourites sort, verse banner
     │   ├── CategoryScreen.tsx    # Zikr reader: phrase pager, counters, shuffle, reset
     │   ├── FreeTasbihScreen.tsx  # Free-form tasbih counter
+    │   ├── AchievementsScreen.tsx  # Milestone badges (read-only derivation, entry from Settings)
     │   └── SettingsScreen.tsx    # Theme, font scale, subtext, audio toggles
     ├── store/
     │   ├── index.ts            # createAppStore(), RootState, AppDispatch types
@@ -119,7 +120,7 @@ The store is created **once** at startup with preloaded persisted state; do not 
 
 Single native stack (`RootStackParamList`), headers hidden (`headerShown: false` — screens render custom headers):
 
-- `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`
+- `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`; `Settings` → `Achievements` (milestone badges)
 
 Reminder taps deep-link via `navigationRef` (`src/navigation/navigationRef.ts`, ready-gated pending queue, unknown ids fall back to `Categories`) + `notificationRouter` (`extractCategoryId`/`handleNotificationPress` + killed-state AsyncStorage backup consumed in `App.tsx`; headless `onBackgroundEvent` PRESS handler in `index.ts`).
 

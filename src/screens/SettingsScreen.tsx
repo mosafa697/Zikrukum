@@ -3,7 +3,9 @@ import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 import { RootState } from '../store';
 import { setTheme } from '../store/slices/themeSlice';
 import { toggleAppearance } from '../store/slices/subTextSlice';
@@ -63,6 +65,7 @@ type PermissionToggleKey = ReminderKey | 'milestones';
 
 export function SettingsScreen() {
   const dispatch = useDispatch();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const theme = useSelector((state: RootState) => state.theme.value) as AzkarThemeName;
   const showSubText = useSelector((state: RootState) => state.subText.value);
   const fontScale = useSelector((state: RootState) => state.fontScale.value);
@@ -145,6 +148,11 @@ export function SettingsScreen() {
 
   const guardedToggleMilestones = useTimeGuardedCallback(
     (nextValue: boolean) => void handleToggleMilestones(nextValue),
+    config.interaction.navButtonGuardMs
+  );
+
+  const guardedOpenAchievements = useTimeGuardedCallback(
+    () => navigation.navigate('Achievements'),
     config.interaction.navButtonGuardMs
   );
 
@@ -603,12 +611,18 @@ export function SettingsScreen() {
           ]}
         >
           <View style={[styles.reminderItemRow, { borderBottomWidth: 0 }]}>
-            <View style={styles.reminderLabelRow}>
+            <Pressable
+              onPress={guardedOpenAchievements}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('achievements')}
+              style={[styles.reminderLabelRow, { flex: 1 }]}
+            >
               <Ionicons name="trophy-outline" size={22} color={colors.iconColor} />
               <Text style={[styles.reminderTitle, { color: colors.textColor }]}>
                 {t('milestoneNotifications')}
               </Text>
-            </View>
+            </Pressable>
             <Switch
               value={milestonesEnabled && notifGranted}
               onValueChange={(nextValue) => guardedToggleMilestones(nextValue)}
