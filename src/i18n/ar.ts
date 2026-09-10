@@ -76,6 +76,8 @@ export const ar = {
   notifPermissionBody: 'فعّل التنبيهات لتصلك تذكيرات الأذكار في موعدها المحدد.',
   notifPermissionOpenSettings: 'فتح الإعدادات',
   notifPermissionRequest: 'تفعيل التنبيهات',
+  notifMismatchWarning:
+    'التذكيرات مفعّلة في التطبيق لكن تنبيهات النظام محظورة — لن تصلك التذكيرات حتى تفعّلها من إعدادات النظام.',
   exactAlarmRationale: 'قد يتأخر التذكير حوالي 15 دقيقة في وضع توفير الطاقة، إلا إذا سمح النظام بإذن الدقة.',
   notifChannelName: 'تذكير الأذكار',
 

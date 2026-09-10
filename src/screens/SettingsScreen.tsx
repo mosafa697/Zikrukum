@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useFocusEffect } from '@react-navigation/native';
 import { RootState } from '../store';
 import { setTheme } from '../store/slices/themeSlice';
 import { toggleAppearance } from '../store/slices/subTextSlice';
@@ -12,12 +13,12 @@ import { toggleShuffle } from '../store/slices/phasesSlice';
 import { toggleAudioEnabled, toggleAutoPlayNext } from '../store/slices/audioSlice';
 import { toggleVolumeNav } from '../store/slices/volumeNavSlice';
 import {
+  setEveningEnabled,
   setEveningTime,
+  setFridayEnabled,
   setFridayTime,
+  setMorningEnabled,
   setMorningTime,
-  toggleEvening,
-  toggleFriday,
-  toggleMorning,
 } from '../store/slices/reminderSlice';
 import {
   AZKAR_COUNTER_FONT,
@@ -65,11 +66,23 @@ export function SettingsScreen() {
   const reminders = useSelector((s: RootState) => s.reminders);
   const {
     status: notifStatus,
+    granted: notifGranted,
     request: requestNotif,
+    refresh: refreshNotif,
     openSettings: openNotifSettings,
   } = useNotificationPermissions();
   const notifDenied = notifStatus === 'denied';
+  const anyReminderEnabled =
+    reminders.morning.enabled || reminders.evening.enabled || reminders.friday.enabled;
+  const hasMismatch = anyReminderEnabled && !notifGranted;
+  const showBanner = notifDenied || hasMismatch;
   const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | 'friday' | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshNotif();
+    }, [refreshNotif])
+  );
 
   const handleResetTotalCount = async () => {
     await Promise.all(azkar.map((category) => removeStoredValue(`azkar-index-${category.id}`)));
@@ -80,16 +93,43 @@ export function SettingsScreen() {
   const formatTime = (hour: number, minute: number) =>
     `${formatNumber(String(hour).padStart(2, '0'))}:${formatNumber(String(minute).padStart(2, '0'))}`;
 
+  const handleToggleReminder = useCallback(
+    async (key: 'morning' | 'evening' | 'friday', nextValue: boolean) => {
+      const setEnabled =
+        key === 'morning' ? setMorningEnabled : key === 'evening' ? setEveningEnabled : setFridayEnabled;
+      // OFF always allowed — clears Redux so mismatch resolves by opt-out.
+      if (!nextValue) {
+        dispatch(setEnabled(false));
+        return;
+      }
+      // ON requires real OS permission — never claim on while OS disabled.
+      if (notifGranted) {
+        dispatch(setEnabled(true));
+        return;
+      }
+      const result = await requestNotif();
+      if (result === 'authorized' || result === 'provisional') {
+        dispatch(setEnabled(true));
+        return;
+      }
+      // Post-request denied => blocked: direct to system Settings, no re-prompt loop.
+      if (result === 'denied') {
+        await openNotifSettings(ADHKAR_CHANNEL_ID);
+      }
+    },
+    [dispatch, notifGranted, requestNotif, openNotifSettings]
+  );
+
   const guardedToggleMorning = useTimeGuardedCallback(
-    () => dispatch(toggleMorning()),
+    (nextValue: boolean) => void handleToggleReminder('morning', nextValue),
     config.interaction.navButtonGuardMs
   );
   const guardedToggleEvening = useTimeGuardedCallback(
-    () => dispatch(toggleEvening()),
+    (nextValue: boolean) => void handleToggleReminder('evening', nextValue),
     config.interaction.navButtonGuardMs
   );
   const guardedToggleFriday = useTimeGuardedCallback(
-    () => dispatch(toggleFriday()),
+    (nextValue: boolean) => void handleToggleReminder('friday', nextValue),
     config.interaction.navButtonGuardMs
   );
 
@@ -125,10 +165,12 @@ export function SettingsScreen() {
     key: 'morning' | 'evening' | 'friday',
     label: string,
     reminder: { enabled: boolean; time: { hour: number; minute: number } },
-    guardedToggle: () => void
+    guardedToggle: (nextValue: boolean) => void
   ) => {
     const iconName = REMINDER_ICONS[key];
     const timeText = formatTime(reminder.time.hour, reminder.time.minute);
+    // Never claim on while OS disabled — switch reflects effective state.
+    const effectiveEnabled = reminder.enabled && notifGranted;
 
     return (
       <View
@@ -152,7 +194,7 @@ export function SettingsScreen() {
               styles.timePill,
               {
                 backgroundColor: colors.secondaryBgColor,
-                opacity: reminder.enabled ? 1 : 0.55,
+                opacity: effectiveEnabled ? 1 : 0.55,
               },
             ]}
             accessibilityLabel={t('pickTime')}
@@ -160,13 +202,11 @@ export function SettingsScreen() {
             <Text style={[styles.timePillText, { color: colors.textColor }]}>{timeText}</Text>
           </Pressable>
           <Switch
-            value={reminder.enabled}
-            onValueChange={() => guardedToggle()}
-            disabled={notifDenied}
+            value={effectiveEnabled}
+            onValueChange={(nextValue) => guardedToggle(nextValue)}
             trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
             thumbColor="#FFFFFF"
             ios_backgroundColor={colors.sliderBg}
-            style={notifDenied ? { opacity: 0.5 } : undefined}
           />
         </View>
       </View>
@@ -361,7 +401,7 @@ export function SettingsScreen() {
           </Pressable>
         </View>
 
-        {notifDenied ? (
+        {showBanner ? (
           <PermissionBlockedBanner
             onOpenSettings={() => void openNotifSettings(ADHKAR_CHANNEL_ID)}
             onRequest={() => void requestNotif()}
@@ -381,6 +421,14 @@ export function SettingsScreen() {
           <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
             {t('reminderSchedule')}
           </Text>
+          {hasMismatch ? (
+            <Text
+              style={[styles.mismatchWarning, { color: colors.secondaryTextColor }]}
+              accessibilityRole="alert"
+            >
+              {t('notifMismatchWarning')}
+            </Text>
+          ) : null}
           {renderReminderRow('morning', t('morningAdhkarReminder'), reminders.morning, guardedToggleMorning)}
           {renderReminderRow('evening', t('eveningAdhkarReminder'), reminders.evening, guardedToggleEvening)}
           {renderReminderRow('friday', t('fridayAdhkarReminder'), reminders.friday, guardedToggleFriday)}
@@ -612,6 +660,15 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   webTimeText: { fontSize: 13, fontFamily: AZKAR_PRIMARY_FONT, textAlign: 'right' },
+  mismatchWarning: {
+    fontSize: 12,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    lineHeight: 18,
+    paddingHorizontal: 14,
+    paddingBottom: 4,
+  },
   reminderGroupCard: {
     borderRadius: 20,
     borderWidth: 1,

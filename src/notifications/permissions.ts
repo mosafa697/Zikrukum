@@ -13,6 +13,7 @@ export type UseNotificationPermissionsReturn = {
   status: NotificationPermissionStatus;
   loading: boolean;
   denied: boolean;
+  granted: boolean;
   request: () => Promise<NotificationPermissionStatus>;
   refresh: () => Promise<void>;
   openSettings: (channelId?: string) => Promise<void>;
@@ -66,6 +67,7 @@ export function useNotificationPermissions(): UseNotificationPermissionsReturn {
     status,
     loading,
     denied: status === 'denied',
+    granted: status === 'authorized' || status === 'provisional',
     request,
     refresh,
     openSettings,
