@@ -408,12 +408,6 @@ export function CategoryScreen() {
     setTimeout(() => setIsAnimating(false), 300);
   }, [clicks, index, categoryPhrases, categoryId, dispatch]);
 
-  const handleReset = useCallback(async () => {
-    await removeStoredValue(`azkar-index-${categoryId}`);
-    dispatch(setIndexCount(0));
-    setClicks(new Array(categoryData?.phrases?.length ?? 0).fill(0));
-  }, [categoryId, categoryData?.phrases?.length, dispatch]);
-
   // Home button: clear saved index and return to Categories
   const handleBack = useCallback(async () => {
     await removeStoredValue(`azkar-index-${categoryId}`);
@@ -437,7 +431,6 @@ export function CategoryScreen() {
       onPhraseClick={handlePhraseClick}
       isAnimating={isAnimating}
       onBack={handleBack}
-      onReset={handleReset}
       categoryName={categoryData.title}
       audioEnabled={audioEnabled}
       audioAvailable={audioAvailable}

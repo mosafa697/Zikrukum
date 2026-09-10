@@ -14,11 +14,14 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
+import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { setIndexCount } from '../store/slices/indexCountSlice';
-import { decrementFontScale, incrementFontScale } from '../store/slices/fontScaleSlice';
 import { RootState } from '../store';
 import type { AzkarPhrase } from '../mappers/azkarMapper';
 import { config } from '../config/config';
@@ -44,7 +47,6 @@ type PhraseCardProps = {
   onPhraseClick: () => void;
   isAnimating: boolean;
   onBack: () => void;
-  onReset: () => void;
   categoryName: string;
   audioEnabled: boolean;
   audioAvailable: boolean;
@@ -58,7 +60,6 @@ export function PhraseCard({
   onPhraseClick,
   isAnimating,
   onBack,
-  onReset,
   categoryName,
   audioEnabled,
   audioAvailable,
@@ -66,6 +67,7 @@ export function PhraseCard({
   onToggleAudio,
 }: PhraseCardProps) {
   const dispatch = useDispatch();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const index = useSelector((state: RootState) => state.indexCount.value);
   const phasesLength = useSelector((state: RootState) => state.indexCount.phasesLength);
@@ -196,6 +198,10 @@ export function PhraseCard({
   );
 
   const guardedCounterPress = useTimeGuardedCallback(onPhraseClick, config.interaction.counterGuardMs);
+  const guardedSettingsPress = useTimeGuardedCallback(
+    () => navigation.navigate('Settings'),
+    config.interaction.navButtonGuardMs
+  );
 
   const startLongPress = useCallback(() => {
     longPressTimerRef.current = setTimeout(() => {
@@ -298,12 +304,9 @@ export function PhraseCard({
     <View style={[styles.outerContainer, { backgroundColor: colors.bgColor }]}>
       <View style={[styles.card, { backgroundColor: colors.cardBgColor }]}>
         <View style={styles.header}>
-          <View style={[styles.headerSide, styles.headerRight]}>
+          <View style={styles.headerSide}>
             <Pressable style={styles.headerIconBtn} onPress={onBack} accessibilityLabel={t('back')}>
               <Ionicons name="chevron-back" size={22} color={colors.textColor} />
-            </Pressable>
-            <Pressable style={styles.headerIconBtn} onPress={onReset} accessibilityLabel={t('reset')}>
-              <Ionicons name="refresh-outline" size={20} color={colors.textColor} />
             </Pressable>
           </View>
 
@@ -312,27 +315,26 @@ export function PhraseCard({
               <View
                 style={[
                   styles.progressFill,
-                  { width: `${progressPercentage}%` as any, backgroundColor: colors.sliderBgActive },
+                  { width: `${progressPercentage}%` as any, backgroundColor: colors.progressFill },
                 ]}
               />
-              <Text style={[styles.categoryLabel, { color: colors.textColor }]}>{categoryName}</Text>
+              <Text
+                style={[styles.categoryLabel, { color: colors.textColor }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {categoryName}
+              </Text>
             </View>
           </View>
 
           <View style={styles.headerSide}>
             <Pressable
               style={styles.headerIconBtn}
-              onPress={() => dispatch(decrementFontScale())}
-              accessibilityLabel={t('decreaseFontSize')}
+              onPress={guardedSettingsPress}
+              accessibilityLabel={t('settings')}
             >
-              <Ionicons name="remove" size={20} color={colors.textColor} />
-            </Pressable>
-            <Pressable
-              style={styles.headerIconBtn}
-              onPress={() => dispatch(incrementFontScale())}
-              accessibilityLabel={t('increaseFontSize')}
-            >
-              <Ionicons name="add" size={20} color={colors.textColor} />
+              <SimpleLineIcons name="settings" size={18} color={colors.textColor} />
             </Pressable>
           </View>
         </View>
@@ -430,9 +432,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  headerSide: { flexDirection: 'row', gap: 8 },
-  headerRight: { justifyContent: 'flex-end' },
-  headerCenter: { flex: 1, alignItems: 'center', marginHorizontal: 8, gap: 4 },
+  headerSide: { width: 40, alignItems: 'center', justifyContent: 'center' },
+  headerCenter: { flex: 1, marginHorizontal: 4 },
   progressTrack: {
     borderRadius: 999,
     overflow: 'hidden',
@@ -449,14 +450,6 @@ const styles = StyleSheet.create({
     writingDirection: 'rtl',
     paddingHorizontal: 12,
     paddingVertical: 5,
-    ...Platform.select({
-      web: { textShadow: '0 0 3px rgba(255,255,255,0.6)' } as any,
-      default: {
-        textShadowColor: 'rgba(255,255,255,0.6)',
-        textShadowRadius: 3,
-        textShadowOffset: { width: 0, height: 0 },
-      },
-    }),
   },
   headerIconBtn: {
     width: 37,

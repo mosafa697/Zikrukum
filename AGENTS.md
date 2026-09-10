@@ -167,7 +167,7 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
   - `light`: clean white/sand surfaces with relaxed shiny blue active accents (`#3B82F6`, `#60A5FA`, `#9BC6FC`) across banners, icon chips, toggles and the tasbih button.
   - `solarized`: warm sand backgrounds, deep emerald primary (`#2F5D50`), gold accent (`#BB9A4F`).
   - `dark`: matte black-blue surfaces, blue primary accents, comfortable low-saturation text.
-- Theme tokens include gradient pairs for page background (`bgGradient`), verse/hadith banners (`verseGradient`), icon chips (`accentGradient`), and the Free Tasbih button (`tasbihGradient`), plus matching text/glow/shadow colors. Screens should use these tokens instead of hardcoded redesign colors so all three themes adapt consistently.
+- Theme tokens include gradient pairs for page background (`bgGradient`), verse/hadith banners (`verseGradient`), icon chips (`accentGradient`), and the Free Tasbih button (`tasbihGradient`), plus the dhikr progress-pill fill (`progressFill`, tuned so the centered title meets contrast on the fill), plus matching text/glow/shadow colors. Screens should use these tokens instead of hardcoded redesign colors so all three themes adapt consistently.
 - Fonts: `AZKAR_PRIMARY_FONT`/`AZKAR_TITLE_FONT` use `ScheherazadeNew` (Regular-only face). Use `AZKAR_COUNTER_FONT` (`TajawalBold` = `Tajawal-ExtraBold.ttf`) for numeric counters, since `fontWeight` has no bold face to resolve against on the regular-only Scheherazade font.
 - The former redesign reference (`adhkar-redesign.html`) was removed from the repo; the built screens + `AZKAR_THEME_MAP` palettes are now the visual source of truth.
 
