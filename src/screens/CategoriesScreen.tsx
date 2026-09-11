@@ -10,7 +10,6 @@ import { azkar } from '../mappers/azkarMapper';
 import { RootState } from '../store';
 import { AZKAR_PRIMARY_FONT, AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
-import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { toggleFavouriteCategory } from '../store/slices/favouriteCategoriesSlice';
 import { ScreenHeader } from '../components/ScreenHeader';
 
@@ -75,7 +74,7 @@ export function CategoriesScreen() {
             accessibilityLabel={t('settings')}
             style={styles.headerActionBtn}
           >
-            <SimpleLineIcons name="settings" size={18} color={theme.textColor} />
+            <Ionicons name="menu" size={22} color={theme.textColor} />
           </Pressable>
         }
         bottom={

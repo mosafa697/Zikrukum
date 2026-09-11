@@ -19,7 +19,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { setIndexCount } from '../store/slices/indexCountSlice';
 import { RootState } from '../store';
@@ -334,7 +333,7 @@ export function PhraseCard({
               onPress={guardedSettingsPress}
               accessibilityLabel={t('settings')}
             >
-              <SimpleLineIcons name="settings" size={18} color={colors.textColor} />
+              <Ionicons name="menu" size={22} color={colors.textColor} />
             </Pressable>
           </View>
         </View>
