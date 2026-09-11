@@ -98,10 +98,7 @@ export function AchievementsScreen() {
 
   const renderBadge = ({ item }: ListRenderItemInfo<Badge>) => (
     <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor },
-      ]}
+      style={[styles.card, { backgroundColor: colors.cardBgColor, borderColor: colors.buttonBorderColor }]}
     >
       {item.active ? (
         <LinearGradient colors={colors.accentGradient} style={styles.iconChip}>
@@ -114,9 +111,7 @@ export function AchievementsScreen() {
       )}
       <View style={styles.textCol}>
         <Text style={[styles.title, { color: colors.textColor }]}>{item.title}</Text>
-        <Text style={[styles.description, { color: colors.secondaryTextColor }]}>
-          {item.description}
-        </Text>
+        <Text style={[styles.description, { color: colors.secondaryTextColor }]}>{item.description}</Text>
       </View>
       <View
         style={[
