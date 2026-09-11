@@ -10,7 +10,7 @@ export const config = {
   },
   font: {
     minScale: 0.8,
-    maxScale: 1.6,
+    maxScale: 1.7,
     defaultScale: 1.2,
     scaleIncrement: 0.1,
   },

@@ -9,7 +9,12 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 import { RootState } from '../store';
 import { setTheme } from '../store/slices/themeSlice';
 import { toggleAppearance } from '../store/slices/subTextSlice';
-import { incrementFontScale, decrementFontScale } from '../store/slices/fontScaleSlice';
+import {
+  FONT_SCALE_STEPS,
+  fontScaleToStep,
+  setFontScale,
+  stepToFontScale,
+} from '../store/slices/fontScaleSlice';
 import { resetTotalCount } from '../store/slices/totalCountSlice';
 import { toggleShuffle } from '../store/slices/phasesSlice';
 import { toggleAudioEnabled, toggleAutoPlayNext } from '../store/slices/audioSlice';
@@ -76,6 +81,12 @@ export function SettingsScreen() {
   const volumeNavEnabled = useSelector((state: RootState) => state.volumeNav.enabled);
   const hapticsEnabled = useSelector((state: RootState) => state.haptics.enabled);
   const colors = getAzkarTheme(theme);
+  const fontStep = fontScaleToStep(fontScale);
+
+  const guardedSetFontStep = useTimeGuardedCallback(
+    (step: number) => dispatch(setFontScale(stepToFontScale(step))),
+    config.interaction.navButtonGuardMs
+  );
 
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
   const reminders = useSelector((s: RootState) => s.reminders);
@@ -377,7 +388,9 @@ export function SettingsScreen() {
           <Text style={[styles.label, { color: colors.textColor }]}>{t('fontSize')}</Text>
           <View style={styles.row}>
             <Pressable
-              onPress={() => dispatch(decrementFontScale())}
+              onPress={() => guardedSetFontStep(Math.max(fontStep - 1, 1))}
+              accessibilityRole="button"
+              accessibilityLabel={t('decreaseFontSize')}
               style={[
                 styles.iconBtn,
                 { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
@@ -385,11 +398,24 @@ export function SettingsScreen() {
             >
               <Ionicons name="remove" size={20} color={colors.textColor} />
             </Pressable>
-            <Text style={[styles.valueText, { color: colors.textColor }]}>
-              {formatNumber(fontScale.toFixed(1))}
-            </Text>
+            <View style={styles.stepsWrap}>
+              <Text
+                style={[
+                  styles.previewText,
+                  {
+                    color: colors.textColor,
+                    fontSize: fontScale * 16,
+                    lineHeight: fontScale * 16 * 1.8,
+                  },
+                ]}
+              >
+                {t('fontSizePreview')}
+              </Text>
+            </View>
             <Pressable
-              onPress={() => dispatch(incrementFontScale())}
+              onPress={() => guardedSetFontStep(Math.min(fontStep + 1, FONT_SCALE_STEPS))}
+              accessibilityRole="button"
+              accessibilityLabel={t('increaseFontSize')}
               style={[
                 styles.iconBtn,
                 { backgroundColor: colors.buttonBgColor, borderColor: colors.buttonBorderColor },
@@ -737,12 +763,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  valueText: {
-    fontSize: 16,
-    fontWeight: '700',
+  stepsWrap: { flex: 1, gap: 8 },
+  previewText: {
     fontFamily: AZKAR_PRIMARY_FONT,
-    flex: 1,
+    fontWeight: '700',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   toggleRow: {
     flexDirection: 'row',

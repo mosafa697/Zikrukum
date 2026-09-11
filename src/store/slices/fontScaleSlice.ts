@@ -5,6 +5,26 @@ export type FontScaleState = {
   value: number;
 };
 
+/** Number of steps in the Settings font-size scale (step N = minScale + (N-1) * increment). */
+export const FONT_SCALE_STEPS = 10;
+
+function clampFontScale(value: number): number {
+  const rounded = Math.round(value * 10) / 10;
+  return Math.min(Math.max(rounded, config.font.minScale), config.font.maxScale);
+}
+
+/** Map a 1-based settings step (1..FONT_SCALE_STEPS) to its fontScale value. */
+export function stepToFontScale(step: number): number {
+  const safe = Math.min(Math.max(Math.round(step), 1), FONT_SCALE_STEPS);
+  return clampFontScale(config.font.minScale + (safe - 1) * config.font.scaleIncrement);
+}
+
+/** Map a stored fontScale value to its nearest 1-based settings step (for migration/display). */
+export function fontScaleToStep(value: number): number {
+  const step = Math.round((value - config.font.minScale) / config.font.scaleIncrement) + 1;
+  return Math.min(Math.max(step, 1), FONT_SCALE_STEPS);
+}
+
 const initialState: FontScaleState = {
   value: config.font.defaultScale,
 };
@@ -14,13 +34,13 @@ const fontScaleSlice = createSlice({
   initialState,
   reducers: {
     incrementFontScale: (state) => {
-      state.value = Math.min(state.value + config.font.scaleIncrement, config.font.maxScale);
+      state.value = clampFontScale(state.value + config.font.scaleIncrement);
     },
     decrementFontScale: (state) => {
-      state.value = Math.max(state.value - config.font.scaleIncrement, config.font.minScale);
+      state.value = clampFontScale(state.value - config.font.scaleIncrement);
     },
     setFontScale: (state, action: PayloadAction<number>) => {
-      state.value = action.payload;
+      state.value = clampFontScale(action.payload);
     },
   },
 });

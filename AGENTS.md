@@ -136,7 +136,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `indexCount` | `{ value, phasesLength, isLastPhrase }` | per-category (`azkar-index-{id}`) | Current phrase index within a category |
 | `totalCount` | `{ value: number }` | yes | Lifetime tasbih tap count |
 | `theme` | `{ value: AzkarThemeName, list }` | yes | light / solarized / dark |
-| `fontScale` | `{ value: number }` | yes | Font size multiplier (0.8–1.6, default 1.2, step 0.1 per `config.font`) |
+| `fontScale` | `{ value: number }` | yes | Font size multiplier (10-step Settings scale: step N = 0.8 + (N-1)×0.1, range 0.8–1.7, default 1.2 = step 5; limits per `config.font`) |
 | `subText` | `{ value: boolean }` | yes | Show/hide phrase subtext |
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
