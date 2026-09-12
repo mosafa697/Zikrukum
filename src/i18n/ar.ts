@@ -88,6 +88,10 @@ export const ar = {
   notifPermissionRequest: 'تفعيل التنبيهات',
   notifMismatchWarning:
     'التذكيرات مفعّلة في التطبيق لكن تنبيهات النظام محظورة — لن تصلك التذكيرات حتى تفعّلها من إعدادات النظام.',
+  notifStatusActive: 'التنبيهات مفعّلة — ستصلك التذكيرات في مواعيدها',
+  notifStatusDenied: 'تنبيهات النظام محظورة — لن تصلك التذكيرات',
+  notifStatusNotRequested: 'لم يُطلب إذن التنبيهات بعد',
+  notifStatusSchedulesOff: 'الإذن ممنوح لكن جميع التذكيرات متوقفة',
   notifRationaleTitle: 'فعّل التنبيهات',
   notifRationaleBody:
     'نرسل لك تذكيرات الأذكار في مواعيدها وتنبيهات عند إتمام إنجازاتك. يمكنك إيقافها في أي وقت من الإعدادات.',

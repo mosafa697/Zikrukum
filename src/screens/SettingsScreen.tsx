@@ -106,7 +106,8 @@ export function SettingsScreen() {
   const showBanner = notifDenied || hasMismatch;
   const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | 'friday' | null>(null);
   // Pending rationale dialog target — one-time pre-permission explainer.
-  const [rationaleKey, setRationaleKey] = useState<PermissionToggleKey | null>(null);
+  // 'permission-only' requests the OS permission without enabling any schedule.
+  const [rationaleKey, setRationaleKey] = useState<PermissionToggleKey | 'permission-only' | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -169,9 +170,15 @@ export function SettingsScreen() {
   );
 
   const requestAndEnable = useCallback(
-    async (key: PermissionToggleKey) => {
+    async (key: PermissionToggleKey | 'permission-only') => {
       if (key === 'milestones') {
         await requestAndEnableMilestones();
+        return;
+      }
+      // Status-row request: record the OS decision without flipping any schedule.
+      // Toggles enabled afterwards find the grant and turn on directly.
+      if (key === 'permission-only') {
+        await requestNotif();
         return;
       }
       const setEnabled =
@@ -250,6 +257,55 @@ export function SettingsScreen() {
   );
   const guardedToggleFriday = useTimeGuardedCallback(
     (nextValue: boolean) => void handleToggleReminder('friday', nextValue),
+    config.interaction.navButtonGuardMs
+  );
+
+  // Notification activation status — real OS permission first, schedule state
+  // second. Reminder-scoped wording so it never contradicts the milestones
+  // mismatch explainer rendered below it.
+  const notifDisplayState: 'active' | 'denied' | 'not-requested' | 'schedules-off' = notifDenied
+    ? 'denied'
+    : !notifGranted
+      ? 'not-requested'
+      : !anyReminderEnabled
+        ? 'schedules-off'
+        : 'active';
+
+  const notifStatusText =
+    notifDisplayState === 'active'
+      ? t('notifStatusActive')
+      : notifDisplayState === 'denied'
+        ? t('notifStatusDenied')
+        : notifDisplayState === 'not-requested'
+          ? t('notifStatusNotRequested')
+          : t('notifStatusSchedulesOff');
+
+  const notifStatusIcon =
+    notifDisplayState === 'active'
+      ? 'checkmark-circle'
+      : notifDisplayState === 'denied'
+        ? 'alert-circle'
+        : notifDisplayState === 'not-requested'
+          ? 'notifications-outline'
+          : 'pause-circle-outline';
+
+  // Status-row request: one-time rationale, then the OS prompt. No schedule
+  // is flipped here, so this never re-prompts unexpectedly.
+  const handleStatusRequest = useCallback(async () => {
+    if (notifStatus === 'not-determined' && !(await wasRationaleShown())) {
+      setRationaleKey('permission-only');
+      return;
+    }
+    await requestNotif();
+  }, [notifStatus, requestNotif]);
+
+  const guardedStatusRequest = useTimeGuardedCallback(
+    () => void handleStatusRequest(),
+    config.interaction.navButtonGuardMs
+  );
+
+  const guardedOpenNotifSettings = useTimeGuardedCallback(
+    () => void openNotifSettings(ADHKAR_CHANNEL_ID),
     config.interaction.navButtonGuardMs
   );
 
@@ -579,6 +635,34 @@ export function SettingsScreen() {
           <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
             {t('reminderSchedule')}
           </Text>
+          <View style={[styles.statusRow, { backgroundColor: colors.secondaryBgColor }]}>
+            <Ionicons
+              name={notifStatusIcon}
+              size={20}
+              color={notifDisplayState === 'active' ? colors.sliderBgActive : colors.secondaryTextColor}
+            />
+            <Text style={[styles.statusText, { color: colors.textColor }]}>{notifStatusText}</Text>
+            {notifDisplayState === 'denied' ? (
+              <Pressable
+                onPress={guardedOpenNotifSettings}
+                style={[styles.statusAction, { backgroundColor: colors.sliderBgActive }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('notifPermissionOpenSettings')}
+              >
+                <Text style={styles.statusActionText}>{t('notifPermissionOpenSettings')}</Text>
+              </Pressable>
+            ) : null}
+            {notifDisplayState === 'not-requested' ? (
+              <Pressable
+                onPress={guardedStatusRequest}
+                style={[styles.statusAction, { backgroundColor: colors.sliderBgActive }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('notifPermissionRequest')}
+              >
+                <Text style={styles.statusActionText}>{t('notifPermissionRequest')}</Text>
+              </Pressable>
+            ) : null}
+          </View>
           {hasMismatch ? (
             <Text
               style={[styles.mismatchWarning, { color: colors.secondaryTextColor }]}
@@ -889,6 +973,38 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingHorizontal: 14,
     paddingBottom: 4,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 14,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  statusText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    lineHeight: 20,
+  },
+  statusAction: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusActionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   reminderGroupCard: {
     borderRadius: 20,
