@@ -104,10 +104,7 @@ function SpeedButton({ rate, colors, onPress }: { rate: number; colors: AzkarThe
   const isActive = rate !== 1;
   return (
     <Pressable
-      style={[
-        styles.speedBtn,
-        { backgroundColor: isActive ? colors.sliderBgActive : colors.secondaryBgColor },
-      ]}
+      style={[styles.speedBtn, { backgroundColor: isActive ? colors.sliderBgActive : colors.cardBgColor }]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${t('playbackSpeed')}: ${rate}x`}
@@ -246,7 +243,7 @@ export function AudioPlayerBar({
 
   return (
     <Pressable
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.secondaryBgColor }]}
       onPress={isError ? onToggle : undefined}
       disabled={!isError}
       accessibilityLabel={label}
@@ -271,7 +268,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   button: {
     width: BUTTON_SIZE,

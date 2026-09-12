@@ -42,7 +42,6 @@ import { formatNumber } from '../utils/numberFormatting';
 import { removeStoredValue } from '../utils/storage';
 import { azkar } from '../mappers/azkarMapper';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { PermissionBlockedBanner } from '../components/PermissionBlockedBanner';
 import { PermissionRationaleDialog } from '../components/PermissionRationaleDialog';
 import {
   markRationaleShown,
@@ -103,7 +102,6 @@ export function SettingsScreen() {
   const anyReminderEnabled =
     reminders.morning.enabled || reminders.evening.enabled || reminders.friday.enabled;
   const hasMismatch = (anyReminderEnabled || milestonesEnabled) && !notifGranted;
-  const showBanner = notifDenied || hasMismatch;
   const [pickerTarget, setPickerTarget] = useState<'morning' | 'evening' | 'friday' | null>(null);
   // Pending rationale dialog target — one-time pre-permission explainer.
   // 'permission-only' requests the OS permission without enabling any schedule.
@@ -615,16 +613,9 @@ export function SettingsScreen() {
           </Pressable>
         </View>
 
-        {showBanner ? (
-          <PermissionBlockedBanner
-            onOpenSettings={() => void openNotifSettings(ADHKAR_CHANNEL_ID)}
-            onRequest={() => void requestNotif()}
-          />
-        ) : null}
-
         <View
           style={[
-            styles.reminderGroupCard,
+            styles.card,
             {
               ...styles.cardThemed,
               backgroundColor: colors.cardBgColor,
@@ -632,9 +623,7 @@ export function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
-            {t('reminderSchedule')}
-          </Text>
+          <Text style={[styles.label, { color: colors.textColor }]}>{t('reminderSchedule')}</Text>
           <View style={[styles.statusRow, { backgroundColor: colors.secondaryBgColor }]}>
             <Ionicons
               name={notifStatusIcon}
@@ -713,7 +702,7 @@ export function SettingsScreen() {
 
         <View
           style={[
-            styles.reminderGroupCard,
+            styles.card,
             {
               ...styles.cardThemed,
               backgroundColor: colors.cardBgColor,
@@ -721,7 +710,18 @@ export function SettingsScreen() {
             },
           ]}
         >
-          <View style={[styles.reminderItemRow, { borderBottomWidth: 0 }]}>
+          <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
+            {t('achievements')}
+          </Text>
+          <View
+            style={[
+              styles.reminderItemRow,
+              {
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.buttonBorderColor,
+              },
+            ]}
+          >
             <Pressable
               onPress={guardedOpenAchievements}
               hitSlop={8}
@@ -742,22 +742,7 @@ export function SettingsScreen() {
               ios_backgroundColor={colors.sliderBg}
             />
           </View>
-        </View>
-
-        <View
-          style={[
-            styles.reminderGroupCard,
-            {
-              ...styles.cardThemed,
-              backgroundColor: colors.cardBgColor,
-              borderColor: colors.buttonBorderColor,
-            },
-          ]}
-        >
-          <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
-            {t('achievements')}
-          </Text>
-          <View style={styles.achievementsBtnWrap}>
+          <View>
             <Pressable
               onPress={guardedOpenAchievements}
               accessibilityRole="button"
@@ -931,8 +916,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
   },
   reminderLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   reminderControlsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -1005,15 +988,6 @@ const styles = StyleSheet.create({
     fontFamily: AZKAR_PRIMARY_FONT,
     color: '#FFFFFF',
     textAlign: 'center',
-  },
-  reminderGroupCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  achievementsBtnWrap: {
-    paddingHorizontal: 14,
-    paddingBottom: 14,
   },
   achievementsBtn: {
     flexDirection: 'row',

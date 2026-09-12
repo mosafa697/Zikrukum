@@ -84,8 +84,6 @@ export const ar = {
   vibrateOnCount: 'الاهتزاز عند كل عدّ',
 
   // Notifications — permission & channel
-  notifPermissionTitle: 'التنبيهات غير مفعلة',
-  notifPermissionBody: 'فعّل التنبيهات لتصلك تذكيرات الأذكار في موعدها المحدد.',
   notifPermissionOpenSettings: 'فتح الإعدادات',
   notifPermissionRequest: 'تفعيل التنبيهات',
   notifMismatchWarning:
@@ -147,7 +145,7 @@ export const ar = {
   milestoneFridayBody: 'اغتنم يوم الجمعة بكثرة الذكر والصلاة على النبي ﷺ.',
 
   // Achievements screen
-  achievements: 'لوحة الإنجازات',
+  achievements: 'الإنجازات',
   openAchievements: 'عرض لوحة الإنجازات',
   achievementCompleted: 'مكتمل',
   achievementLocked: 'مغلق',
