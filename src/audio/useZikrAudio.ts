@@ -6,6 +6,7 @@ import {
   setCurrentPhrase,
   setPlaybackStatus,
   setPlaybackTime,
+  setPlaybackRate as setPlaybackRateAction,
   setPlaybackError,
   resetPlayback,
 } from '../store/slices/playbackSlice';
@@ -27,6 +28,9 @@ type UseZikrAudioResult = {
   audioAvailable: boolean;
   toggle: () => void;
   stop: () => void;
+  rate: number;
+  setRate: (rate: number) => void;
+  seekTo: (seconds: number) => void;
 };
 
 function loadPlayer(uri: string): AudioPlayer {
@@ -69,6 +73,10 @@ export function useZikrAudio({
   const currentPhraseIdRef = useRef<number>(phraseId);
   const loadRequestRef = useRef(0);
   const remainingRepeatsRef = useRef(repeatCount);
+  // Session-only speed. Fresh players (phrase change / reload) inherit it in
+  // ensurePlayer; the store copy keeps the UI in sync. Seeded from the store
+  // so remounts (leave + re-enter) keep the session rate.
+  const rateRef = useRef(playbackState.rate);
 
   useEffect(() => {
     onLoopRef.current = onLoop;
@@ -177,6 +185,14 @@ export function useZikrAudio({
       });
 
       playerRef.current = player;
+      try {
+        // Keep the recitation voice natural at slow/fast speeds, and carry
+        // over the session rate chosen via setRate.
+        player.shouldCorrectPitch = true;
+        player.setPlaybackRate(rateRef.current);
+      } catch {
+        // ignore — default rate still plays
+      }
       isLoadingRef.current = false;
       dispatch(setPlaybackTime({ currentTime: player.currentTime, duration: player.duration }));
       return player;
@@ -246,6 +262,48 @@ export function useZikrAudio({
     dispatch(setPlaybackTime({ currentTime: 0, duration: 0 }));
   }, [dispatch]);
 
+  // Applies immediately on the live player (playing or paused) and is
+  // inherited by fresh players via rateRef. Never touches the repeat-count
+  // loop bookkeeping — rate only changes wall-clock loop duration.
+  const setRate = useCallback(
+    (next: number) => {
+      const valid = Number.isFinite(next) ? Math.min(Math.max(next, 0.5), 2) : 1;
+      rateRef.current = valid;
+      dispatch(setPlaybackRateAction(valid));
+      const player = playerRef.current;
+      if (player) {
+        try {
+          player.setPlaybackRate(valid);
+        } catch {
+          // ignore — rate applies on next load via rateRef
+        }
+      }
+    },
+    [dispatch]
+  );
+
+  // Seeks within [0, duration]; works paused and playing. Does not alter
+  // remainingRepeatsRef — a seek near the end just triggers the normal
+  // didJustFinish loop path once.
+  const seekTo = useCallback(
+    async (seconds: number) => {
+      const player = playerRef.current;
+      if (!player) return;
+      const duration = player.duration;
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      const target = Math.min(Math.max(seconds, 0), duration);
+      try {
+        await player.seekTo(target);
+        if (currentPhraseIdRef.current !== phraseId) return;
+        dispatch(setPlaybackTime({ currentTime: target, duration }));
+      } catch {
+        if (currentPhraseIdRef.current !== phraseId) return;
+        dispatch(setPlaybackError('playbackError'));
+      }
+    },
+    [dispatch, phraseId]
+  );
+
   // Poll the player while playing so the progress bar/time stay in sync.
   useEffect(() => {
     if (playbackState.status !== 'playing' || !playerRef.current) {
@@ -281,5 +339,5 @@ export function useZikrAudio({
 
   const audioAvailable = isFeatureEnabled('foregroundAudio') && source.kind === 'local' && status !== 'error';
 
-  return { status, audioAvailable, toggle, stop };
+  return { status, audioAvailable, toggle, stop, rate: playbackState.rate, setRate, seekTo };
 }

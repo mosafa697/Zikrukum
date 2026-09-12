@@ -195,7 +195,7 @@ export async function loadPersistedState() {
     subText: { value: subText },
     favouriteCategories: { ids: favouriteCategories },
     audio: { autoPlayNext, audioEnabled },
-    playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0 },
+    playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0, rate: 1 },
     volumeNav: { enabled: volumeNavEnabled },
     haptics: { enabled: vibrateOnCount },
     reminders: mergedReminders,

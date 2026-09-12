@@ -143,6 +143,9 @@ export function CategoryScreen() {
     status: audioStatus,
     audioAvailable,
     toggle: toggleAudio,
+    rate: audioRate,
+    setRate: setAudioRate,
+    seekTo: seekAudioTo,
   } = useZikrAudio({
     phrase: currentPhrase,
     category: categoryData,
@@ -171,6 +174,20 @@ export function CategoryScreen() {
     playIntentRef.current = audioStatus !== 'playing';
     void toggleAudio();
   }, [audioStatus, toggleAudio]);
+
+  // Speed cycles are guarded against double taps; seeks are gesture-committed
+  // (one commit per release) so they pass straight through.
+  const handleRateChange = useTimeGuardedCallback(
+    (rate: number) => setAudioRate(rate),
+    config.interaction.navButtonGuardMs
+  );
+
+  const handleSeekAudio = useCallback(
+    (seconds: number) => {
+      void seekAudioTo(seconds);
+    },
+    [seekAudioTo]
+  );
 
   useEffect(() => {
     if (
@@ -561,6 +578,9 @@ export function CategoryScreen() {
         audioAvailable={audioAvailable}
         audioStatus={audioStatus}
         onToggleAudio={handleToggleAudio}
+        audioRate={audioRate}
+        onRateChange={handleRateChange}
+        onSeekAudio={handleSeekAudio}
       />
       <CategoryDialog
         visible={completionVisible}

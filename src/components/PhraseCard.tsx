@@ -51,6 +51,9 @@ type PhraseCardProps = {
   audioAvailable: boolean;
   audioStatus: PlaybackStatus;
   onToggleAudio: () => void;
+  audioRate: number;
+  onRateChange: (rate: number) => void;
+  onSeekAudio: (seconds: number) => void;
 };
 
 export function PhraseCard({
@@ -64,6 +67,9 @@ export function PhraseCard({
   audioAvailable,
   audioStatus,
   onToggleAudio,
+  audioRate,
+  onRateChange,
+  onSeekAudio,
 }: PhraseCardProps) {
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -368,6 +374,9 @@ export function PhraseCard({
           audioAvailable={audioAvailable}
           onToggle={onToggleAudio}
           colors={colors}
+          rate={audioRate}
+          onRateChange={onRateChange}
+          onSeek={onSeekAudio}
         />
 
         {showSubText && phrase.subtext ? (

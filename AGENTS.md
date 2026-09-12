@@ -55,9 +55,9 @@ Zikrukum/
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
     │   ├── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
-    │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next)
+    │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next, session rate + seek)
     ├── components/             # Shared UI components
-    │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
+    │       ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + speed cycle + seekable progress)
     │   ├── CategoryDialog.tsx    # Generic themed RTL dialog for CategoryScreen notices (completion + exit confirm)
     │   ├── PermissionBlockedBanner.tsx # Notifee permission denied banner (themed, RTL, guarded)
     │   ├── PermissionRationaleDialog.tsx # One-time pre-permission rationale Modal (themed, RTL, guarded)

@@ -7,6 +7,8 @@ type PlaybackState = {
   status: PlaybackStatus;
   currentTime: number;
   duration: number;
+  // Session-only playback speed multiplier (1 = normal). Not persisted.
+  rate: number;
   errorKey?: string;
 };
 
@@ -15,6 +17,7 @@ const initialState: PlaybackState = {
   status: 'idle',
   currentTime: 0,
   duration: 0,
+  rate: 1,
   errorKey: undefined,
 };
 
@@ -39,6 +42,9 @@ const playbackSlice = createSlice({
       state.currentTime = action.payload.currentTime;
       state.duration = action.payload.duration;
     },
+    setPlaybackRate(state, action: PayloadAction<number>) {
+      state.rate = action.payload;
+    },
     setPlaybackError(state, action: PayloadAction<string>) {
       state.status = 'error';
       state.errorKey = action.payload;
@@ -53,6 +59,12 @@ const playbackSlice = createSlice({
   },
 });
 
-export const { setCurrentPhrase, setPlaybackStatus, setPlaybackTime, setPlaybackError, resetPlayback } =
-  playbackSlice.actions;
+export const {
+  setCurrentPhrase,
+  setPlaybackStatus,
+  setPlaybackTime,
+  setPlaybackRate,
+  setPlaybackError,
+  resetPlayback,
+} = playbackSlice.actions;
 export default playbackSlice.reducer;

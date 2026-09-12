@@ -74,6 +74,8 @@ export const ar = {
   audioLoadingLabel: 'جاري التحميل',
   audioNoRecordingLabel: 'لا يوجد تسجيل صوتي',
   audioNoRecordingSubtext: 'لا يتوفر تسجيل صوتي',
+  playbackSpeed: 'سرعة التشغيل',
+  seekAudioHint: 'اسحب على الشريط أو اضغط عليه للتنقل في الصوت',
 
   // SettingsScreen
   audioEnabledLabel: 'تفعيل تشغيل الصوت',
