@@ -134,6 +134,7 @@ export const ar = {
 
   // Achievements screen
   achievements: 'لوحة الإنجازات',
+  openAchievements: 'عرض لوحة الإنجازات',
   achievementCompleted: 'مكتمل',
   achievementLocked: 'مغلق',
   achievementOfAdhkar: 'من الأذكار',

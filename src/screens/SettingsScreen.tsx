@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -661,6 +662,36 @@ export function SettingsScreen() {
 
         <View
           style={[
+            styles.reminderGroupCard,
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
+          ]}
+        >
+          <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
+            {t('achievements')}
+          </Text>
+          <View style={styles.achievementsBtnWrap}>
+            <Pressable
+              onPress={guardedOpenAchievements}
+              accessibilityRole="button"
+              accessibilityLabel={t('openAchievements')}
+            >
+              <LinearGradient colors={colors.accentGradient} style={styles.achievementsBtn}>
+                <Ionicons name="trophy-outline" size={22} color={colors.accentTextColor} />
+                <Text style={[styles.achievementsBtnText, { color: colors.accentTextColor }]}>
+                  {t('openAchievements')}
+                </Text>
+                <Ionicons name="chevron-back" size={20} color={colors.accentTextColor} />
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+
+        <View
+          style={[
             styles.card,
             {
               ...styles.cardThemed,
@@ -863,6 +894,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
+  },
+  achievementsBtnWrap: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+  },
+  achievementsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  achievementsBtnText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
+    writingDirection: 'rtl',
   },
   totalCounterRow: {
     flexDirection: 'row',
