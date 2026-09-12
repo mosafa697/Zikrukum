@@ -58,6 +58,7 @@ Zikrukum/
     │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next)
     ├── components/             # Shared UI components
     │   ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + progress)
+    │   ├── CategoryDialog.tsx    # Generic themed RTL dialog for CategoryScreen notices (completion + exit confirm)
     │   ├── PermissionBlockedBanner.tsx # Notifee permission denied banner (themed, RTL, guarded)
     │   ├── PermissionRationaleDialog.tsx # One-time pre-permission rationale Modal (themed, RTL, guarded)
     │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page

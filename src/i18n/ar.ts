@@ -23,6 +23,14 @@ export const ar = {
   // CategoryScreen
   loadingDhikr: 'جارٍ تحميل الذكر...',
 
+  // CategoryScreen dialogs ({count} is replaced with the formatted number)
+  categoryCompleteTitle: 'أتممت هذه الفئة',
+  categoryCompleteBody: 'لقد قرأت {count} من الأذكار. أتممت هذه الفئة.',
+  exitIncompleteTitle: 'مغادرة الفئة',
+  exitIncompleteBody: 'لقد قرأت {count} من الأذكار. هل تريد المغادرة قبل إتمام هذه الفئة؟',
+  continueReading: 'مواصلة القراءة',
+  leaveCategory: 'مغادرة الفئة',
+
   // FreeTasbihScreen
   reset: 'إعادة تعيين',
   tasbih: 'سبّح',

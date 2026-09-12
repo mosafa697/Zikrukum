@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { BackHandler, StyleSheet, View, Text } from 'react-native';
 import * as KeepAwake from 'expo-keep-awake';
 import { getVolumeManager } from '../utils/volumeManager';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,9 +20,12 @@ import { incrementTotalCount } from '../store/slices/totalCountSlice';
 import { completeCategory } from '../store/slices/milestonesSlice';
 import { RootState } from '../store';
 import { PhraseCard } from '../components/PhraseCard';
+import { CategoryDialog } from '../components/CategoryDialog';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { getStoredValue, setStoredValue, removeStoredValue } from '../utils/storage';
 import { t } from '../i18n';
+import { formatNumber } from '../utils/numberFormatting';
+import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { useZikrAudio } from '../audio/useZikrAudio';
 import { triggerCountHaptic } from '../utils/haptics';
 import { config } from '../config/config';
@@ -55,6 +58,29 @@ export function CategoryScreen() {
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [clicks, setClicks] = useState<number[]>([]);
+  // #37 completion notice + #38 exit confirmation dialog state.
+  const [completionVisible, setCompletionVisible] = useState(false);
+  const [exitVisible, setExitVisible] = useState(false);
+  // Exactly-once guard for the completion notice, per category visit.
+  const completionShownRef = useRef(false);
+  // Lets an approved Leave pass through beforeRemove without re-intercepting.
+  const allowLeaveRef = useRef(false);
+  // Which back path is awaiting confirmation: header button or system back.
+  const pendingSourceRef = useRef<'header' | 'back' | null>(null);
+
+  // Progress derivation from clicks (not index): swipes and audio auto-advance
+  // move the index without counting, so only counted taps measure progress.
+  const completedItems = categoryPhrases.filter((phrase, i) => (clicks[i] ?? 0) >= phrase.count).length;
+  const totalTaps = clicks.reduce((sum, n) => sum + (n ?? 0), 0);
+  const allComplete =
+    categoryPhrases.length > 0 &&
+    clicks.length === categoryPhrases.length &&
+    completedItems === categoryPhrases.length;
+  const allCompleteRef = useRef(allComplete);
+  allCompleteRef.current = allComplete;
+  // Mirrored for the mount-once BackHandler/beforeRemove listeners.
+  const totalTapsRef = useRef(totalTaps);
+  totalTapsRef.current = totalTaps;
 
   const currentPhrase = categoryPhrases[index];
   const remainingCount = Math.max(0, (currentPhrase?.count ?? 1) - (clicks[index] ?? 0));
@@ -216,6 +242,26 @@ export function CategoryScreen() {
       setStoredValue(`azkar-index-${categoryId}`, index);
     }
   }, [index, categoryId, categoryPhrases.length]);
+
+  // Fresh dialog state per category visit.
+  useEffect(() => {
+    completionShownRef.current = false;
+    allowLeaveRef.current = false;
+    pendingSourceRef.current = null;
+    setCompletionVisible(false);
+    setExitVisible(false);
+  }, [categoryId]);
+
+  // #37: show the completion notice exactly once, when every phrase has been
+  // counted through. clicks[] starts at zero and only grows via natural
+  // count-through (tap / audio loop / volume-down), so restores, swipes and
+  // resets can never satisfy this — only real completion fires it.
+  useEffect(() => {
+    if (allComplete && !completionShownRef.current) {
+      completionShownRef.current = true;
+      setCompletionVisible(true);
+    }
+  }, [allComplete]);
 
   // Shuffle on first load if enabled
   useEffect(() => {
@@ -417,13 +463,82 @@ export function CategoryScreen() {
     setTimeout(() => setIsAnimating(false), 300);
   }, [clicks, index, categoryPhrases, categoryId, dispatch, hapticsEnabled]);
 
-  // Home button: clear saved index and return to Categories
-  const handleBack = useCallback(async () => {
+  // Header-back leave: clear saved index and return to Categories.
+  const doLeaveHeader = useCallback(async () => {
+    allowLeaveRef.current = true;
     await removeStoredValue(`azkar-index-${categoryId}`);
     dispatch(resetIndexCount());
     dispatch(resetPhases());
     navigation.navigate('Categories');
   }, [categoryId, dispatch, navigation]);
+
+  // #38: header back confirms when progress exists but the category is
+  // incomplete (zero taps = nothing to confirm, leave silently).
+  const requestHeaderBack = useCallback(() => {
+    if (allCompleteRef.current || totalTapsRef.current === 0) {
+      void doLeaveHeader();
+      return;
+    }
+    pendingSourceRef.current = 'header';
+    setExitVisible(true);
+  }, [doLeaveHeader]);
+
+  // PhraseCard calls onBack raw, so guard here against double taps.
+  const handleBack = useTimeGuardedCallback(requestHeaderBack, config.interaction.navButtonGuardMs);
+
+  // #38: system back (Android hardware key, iOS gesture, web) confirms the
+  // same way; Leave keeps the existing native-back behavior (goBack preserves
+  // the saved index, unlike the header path which clears it).
+  const handleExitContinue = useCallback(() => {
+    pendingSourceRef.current = null;
+    setExitVisible(false);
+  }, []);
+
+  const handleExitLeave = useCallback(() => {
+    const source = pendingSourceRef.current;
+    pendingSourceRef.current = null;
+    allowLeaveRef.current = true;
+    setExitVisible(false);
+    if (source === 'header') {
+      void doLeaveHeader();
+    } else if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Categories');
+    }
+  }, [doLeaveHeader, navigation]);
+
+  const handleCompletionDismiss = useCallback(() => {
+    // Dismiss only — clicks/index progress is left intact.
+    setCompletionVisible(false);
+  }, []);
+
+  // Android hardware back key. Consumed while incomplete so the dialog shows
+  // instead; complete (or zero taps) falls through to the default behavior.
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (allowLeaveRef.current || allCompleteRef.current || totalTapsRef.current === 0) {
+        return false;
+      }
+      pendingSourceRef.current = 'back';
+      setExitVisible(true);
+      return true;
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // iOS swipe-back gesture + web navigation. Non-GO_BACK removals (e.g. the
+  // Settings gear navigating away) are never blocked.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'POP') return;
+      if (allowLeaveRef.current || allCompleteRef.current || totalTapsRef.current === 0) return;
+      e.preventDefault();
+      pendingSourceRef.current = 'back';
+      setExitVisible(true);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   if (!categoryData || !currentPhrase) {
     return (
@@ -434,18 +549,41 @@ export function CategoryScreen() {
   }
 
   return (
-    <PhraseCard
-      phrase={currentPhrase}
-      counter={clicks[index] ?? 0}
-      onPhraseClick={handlePhraseClick}
-      isAnimating={isAnimating}
-      onBack={handleBack}
-      categoryName={categoryData.title}
-      audioEnabled={audioEnabled}
-      audioAvailable={audioAvailable}
-      audioStatus={audioStatus}
-      onToggleAudio={handleToggleAudio}
-    />
+    <>
+      <PhraseCard
+        phrase={currentPhrase}
+        counter={clicks[index] ?? 0}
+        onPhraseClick={handlePhraseClick}
+        isAnimating={isAnimating}
+        onBack={handleBack}
+        categoryName={categoryData.title}
+        audioEnabled={audioEnabled}
+        audioAvailable={audioAvailable}
+        audioStatus={audioStatus}
+        onToggleAudio={handleToggleAudio}
+      />
+      <CategoryDialog
+        visible={completionVisible}
+        icon="checkmark-circle-outline"
+        title={t('categoryCompleteTitle')}
+        body={t('categoryCompleteBody').replace('{count}', formatNumber(categoryPhrases.length))}
+        actions={[{ label: t('close'), onPress: handleCompletionDismiss, primary: true }]}
+        onRequestClose={handleCompletionDismiss}
+        accessibilityLabel={t('categoryCompleteTitle')}
+      />
+      <CategoryDialog
+        visible={exitVisible}
+        icon="exit-outline"
+        title={t('exitIncompleteTitle')}
+        body={t('exitIncompleteBody').replace('{count}', formatNumber(completedItems))}
+        actions={[
+          { label: t('continueReading'), onPress: handleExitContinue, primary: true },
+          { label: t('leaveCategory'), onPress: handleExitLeave },
+        ]}
+        onRequestClose={handleExitContinue}
+        accessibilityLabel={t('exitIncompleteTitle')}
+      />
+    </>
   );
 }
 
