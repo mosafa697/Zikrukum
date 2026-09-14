@@ -1,6 +1,6 @@
 import { Asset } from 'expo-asset';
 import { File } from 'expo-file-system';
-import type { AzkarPhrase, AzkarCategory } from '../mappers/azkarMapper';
+import type { AzkarPhrase } from '../mappers/azkarMapper';
 
 export type AudioSource = { kind: 'local'; filename: string } | { kind: 'missing' };
 
@@ -45,15 +45,20 @@ function stripAudioPath(value: string): string {
   return value.replace(/^\/?audio\//, '').replace(/\.mp3$/i, '');
 }
 
-export function resolveAudioSource(phrase: AzkarPhrase, category: AzkarCategory): AudioSource {
-  const filename = phrase.filename?.trim() || category.audioRef?.filename?.trim();
-  const audio = phrase.audio?.trim() || category.audioRef?.audio?.trim();
+/**
+ * Resolves a phrase to its bundled clip in `assets/audio/` (via `AUDIO_ASSETS`).
+ * Metro requires static `require()` calls, so a dynamic directory path cannot be
+ * used at runtime — the phrase `filename` is looked up in the static map instead.
+ * Empty metadata normalizes to `missing`.
+ */
+export function resolveAudioSource(phrase: AzkarPhrase): AudioSource {
+  const filename = phrase.filename?.trim();
 
-  if (!filename && !audio) {
+  if (!filename) {
     return { kind: 'missing' };
   }
 
-  const resolvedFilename = stripAudioPath(filename ?? audio ?? '');
+  const resolvedFilename = stripAudioPath(filename);
 
   if (!resolvedFilename) {
     return { kind: 'missing' };

@@ -75,7 +75,8 @@ Zikrukum/
     │   ├── features.ts         # Build-time kill-switches (FEATURES map) — edit before each build
     │   └── useFeature.ts       # useFeature(key) hook wrapper around isFeatureEnabled
     ├── dataset/
-    │   └── azkar-sample.json   # Bundled azkar data (categories + phrases, Arabic text)
+    │   ├── azkar.json          # Bundled azkar data (merged 137-cat union, Arabic text)
+    │   └── azkar-sample.json   # Legacy 22-cat dataset, retained as reference only
     ├── i18n/
     │   ├── ar.ts               # Arabic strings (source of truth for keys)
     │   └── index.ts            # t(key) lookup helper; add new languages here
@@ -176,8 +177,8 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 ### Data Flow (Azkar Content)
 
 ```
-src/dataset/azkar-sample.json
-        │  (raw: [{ id, category, array: [{ id, text, count, subtext, audio?, filename? }] }])
+src/dataset/azkar.json (merged 137-cat union; duplicates resolved in favour of `azkar-sample.json`)
+        │  (raw: [{ id, category, array: [{ id, text, count, subtext?, filename? }] }])
         ▼
 src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon per category id)
         │
@@ -185,7 +186,7 @@ src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon 
 CategoryScreen: dispatch(setPhases(...)) → phases slice → PhraseCard renders one FlatList page per phrase
 ```
 
-Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New categories need a mapping entry (fallback: `albums-outline`). Note: the map contains an orphan entry for id `22` (no such category in the dataset — Friday is id `21`, `سنن يوم الجمعة`); all dataset ids (`1`–`21`, `122`) are mapped, so the fallback is never hit today.
+Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set — never use non-FA names like the old `albums-outline` fallback, which warns on web). New categories need a mapping entry (fallback: `bookmark`). The merged `azkar.json` holds 137 categories; all present ids are mapped, so the fallback is never hit today.
 
 #### Phrase pager (PhraseCard)
 
@@ -196,13 +197,13 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 
 ### Audio
 
-- Source of truth: `audio` / `filename` fields in the dataset (per-phrase or per-category `audioRef`).
+- Source of truth: the per-phrase `filename` field in the dataset (no `audio` key, no per-category fallback — both were removed).
 - Audio clips are bundled locally inside the app under `assets/audio/` and resolved through `expo-asset`.
 - `audioSource.ts` resolves a phrase to `{ kind: 'local', filename }` or `{ kind: 'missing' }`, then loads the matching local asset and verifies it exists via `expo-file-system` before returning a playable URI.
-- Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file.
+- Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file (a dynamic `assets/audio/` directory path cannot work — Metro needs static requires, so the map *is* the directory default).
 - There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
-- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); the dataset wires 46 of 132 phrases (categories `3` + `4` fully; all other categories have no audio yet).
+- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); 46 sample-origin phrases stay wired to bundled clips (categories `3` + `4` fully). The other ~196 `audio`/`filename` fields point at external `/audio/ar_7esn_AlMoslem…` paths with no `AUDIO_ASSETS` entry, so they resolve to a playback error (retry affordance), not the clean `missing` state — clearing or bundling them is an open data task.
 
 ### Internationalization
 
