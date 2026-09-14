@@ -234,6 +234,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
   - `redux-persisted-setting` — persisted settings (3-place wiring rule).
   - `zikrukum-theming` — themes, fonts, RTL, Arabic strings.
   - `zikrukum-audio-data` — dataset, category icons, bundled MP3 audio.
+  - `zikrukum-arabic` — Arabic grammar + full tashkil rules for UI strings and zikr corpus.
   - `expo-verify` — lint, typecheck, and manual checks before done.
 - The app must remain fully offline-capable: no new network dependencies for core content (audio is bundled locally under `assets/audio/`, not streamed).
 - When modifying structure, conventions, or workflows described here, update this AGENTS.md.
