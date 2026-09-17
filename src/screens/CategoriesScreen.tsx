@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -10,8 +10,12 @@ import { azkar } from '../mappers/azkarMapper';
 import { RootState } from '../store';
 import { AZKAR_PRIMARY_FONT, AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
+import { config } from '../config/config';
+import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { toggleFavouriteCategory } from '../store/slices/favouriteCategoriesSlice';
 import { ScreenHeader } from '../components/ScreenHeader';
+
+const SCROLL_TOP_THRESHOLD = 350;
 
 export function CategoriesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -21,22 +25,49 @@ export function CategoriesScreen() {
   const theme = getAzkarTheme(themeName);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const searchAnim = useMemo(() => new Animated.Value(0), []);
+  const scrollTopAnim = useMemo(() => new Animated.Value(0), []);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollTopVisibleRef = useRef(false);
+
+  useEffect(() => {
+    Animated.timing(scrollTopAnim, {
+      toValue: showScrollTop ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showScrollTop, scrollTopAnim]);
+
+  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
+    const shouldShow = event.nativeEvent.contentOffset.y > SCROLL_TOP_THRESHOLD;
+    if (shouldShow !== scrollTopVisibleRef.current) {
+      scrollTopVisibleRef.current = shouldShow;
+      setShowScrollTop(shouldShow);
+    }
+  }, []);
+
+  const doScrollToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+  const guardedScrollToTop = useTimeGuardedCallback(doScrollToTop, config.interaction.navButtonGuardMs);
 
   const toggleSearch = useCallback(() => {
-    setIsSearchOpen((prev) => {
-      const next = !prev;
-      Animated.timing(searchAnim, {
-        toValue: next ? 1 : 0,
-        duration: 180,
-        useNativeDriver: false,
-      }).start();
-      if (!next) {
-        setSearchQuery('');
-      }
-      return next;
-    });
-  }, [searchAnim]);
+    const next = !isSearchOpen;
+    setIsSearchOpen(next);
+    Animated.timing(searchAnim, {
+      toValue: next ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+    if (!next) {
+      setSearchQuery('');
+    } else {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+      scrollTopVisibleRef.current = false;
+      setShowScrollTop(false);
+    }
+  }, [searchAnim, isSearchOpen]);
 
   const filteredAzkar = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -106,7 +137,13 @@ export function CategoriesScreen() {
           </Animated.View>
         }
       />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {!isSearchOpen && (
           <>
             <LinearGradient colors={theme.verseGradient} style={styles.quoteCard}>
@@ -182,6 +219,31 @@ export function CategoriesScreen() {
           );
         })}
       </ScrollView>
+      <Animated.View
+        style={[
+          styles.scrollTopWrap,
+          {
+            opacity: scrollTopAnim,
+            transform: [
+              {
+                scale: scrollTopAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }),
+              },
+            ],
+            pointerEvents: showScrollTop ? 'auto' : 'none',
+          } as any,
+        ]}
+      >
+        <Pressable
+          onPress={guardedScrollToTop}
+          hitSlop={8}
+          accessibilityLabel={t('backToTop')}
+          accessibilityRole="button"
+        >
+          <LinearGradient colors={theme.accentGradient} style={styles.scrollTopBtn}>
+            <Ionicons name="arrow-up" size={22} color={theme.accentTextColor} />
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
     </LinearGradient>
   );
 }
@@ -195,6 +257,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: { padding: 16, paddingBottom: 32 },
+  scrollTopWrap: {
+    position: 'absolute',
+    left: 16,
+    bottom: 24,
+    zIndex: 10,
+  },
+  scrollTopBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 14px rgba(0,0,0,0.2)' } as any,
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 6,
+      },
+    }),
+  },
   pageSub: {
     fontSize: 13,
     textAlign: 'center',

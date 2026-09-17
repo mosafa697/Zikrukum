@@ -17,6 +17,7 @@ export const ar = {
   searchPlaceholder: 'ابحث عن فئة...',
   search: 'بحث',
   closeSearch: 'إغلاق البحث',
+  backToTop: 'الْعَوْدَةُ إِلَى الْأَعْلَى',
   homeSubtitle: 'هوية بصرية هادئة ومريحة: أخضر زمردي عميق، ذهبي دافئ، وخط عربي تقليدي',
   dailyVerse: 'آية اليوم',
 
