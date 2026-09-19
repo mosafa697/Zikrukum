@@ -13,7 +13,7 @@ Use when adding or editing any Arabic text: UI strings, category titles, phrases
 
 ## Sources of truth
 - UI copy: `src/i18n/ar.ts` is the source of truth; look up with `t('key')` from `src/i18n/index.ts`. Never hardcode Arabic strings in screens/components.
-- Zikr corpus: `src/dataset/azkar.json` (merged 137-cat union; raw: `[{ id, category, array: [{ id, text, count, subtext?, filename? }] }]`) mapped by `src/mappers/azkarMapper.ts` to typed `AzkarCategory[]` / `AzkarPhrase`.
+- Zikr corpus: `src/dataset/azkar.json` (merged 135-cat union; raw: `[{ id, category, array: [{ id, text, count, subtext?, filename? }] }]`) mapped by `src/mappers/azkarMapper.ts` to typed `AzkarCategory[]` / `AzkarPhrase`.
 - Wording authority: Hisn al-Muslim (Fortress of the Muslim) for zikr wording; the Uthmani mushaf for Quranic verses. When in doubt, leave the text unchanged and flag it in the issue instead of guessing.
 
 ## Full tashkil rules

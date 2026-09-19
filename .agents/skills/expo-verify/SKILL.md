@@ -14,6 +14,7 @@ Use after code changes, before marking a TODO complete, and before pushing.
 npm run lint        # ESLint check (src/**/*.ts,tsx + App.tsx + index.ts)
 npm run lint:fix    # ESLint --fix + Prettier write — run before considering work done
 npx tsc --noEmit    # TypeScript strict check
+npm run validate:azkar  # Dataset duplicate/consistency check (run if src/dataset/azkar.json touched)
 npm start           # Metro bundler
 npm run android     # Run on Android
 npm run ios         # Run on iOS (macOS only)

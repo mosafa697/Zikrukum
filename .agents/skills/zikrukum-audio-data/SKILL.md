@@ -11,11 +11,11 @@ description: Manage Zikrukum azkar dataset, category icons, and bundled local au
 Use when adding/editing categories or phrases, adding audio clips, or debugging `noAudio` / `audioError` states.
 
 ## Dataset + mapper
-- Source: `src/dataset/azkar.json` (merged 137-cat union; `azkar-sample.json` retained as reference only), raw shape `[{ id, category, array: [{ id, text, count, subtext?, filename? }] }]` — no `audio` key anywhere, no category-level keys beyond `id`/`category`/`array`.
+- Source: `src/dataset/azkar.json` (merged 135-cat union; `azkar-sample.json` retained as reference only), raw shape `[{ id, category, array: [{ id, text, count, subtext?, filename? }] }]` — no `audio` key anywhere, no category-level keys beyond `id`/`category`/`array`.
 - Mapper: `src/mappers/azkarMapper.ts` produces typed `AzkarCategory[]` (`id`, `title`, `icon`, `phrases`, `audioRef?`) and `AzkarPhrase` (`id`, `text`, `count`, `subtext`, `audio?`, `filename?`).
-- Icons: `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set). New categories need an entry; fallback is `bookmark` (never hit today — all 137 merged-dataset ids are mapped). Every name must exist in FontAwesome5 — a non-FA name (like the old `albums-outline` fallback) warns on web (`"not a valid icon name"`).
+- Icons: `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set). New categories need an entry; fallback is `bookmark` (never hit today — all 135 merged-dataset ids are mapped). Every name must exist in FontAwesome5 — a non-FA name (like the old `albums-outline` fallback) warns on web (`"not a valid icon name"`).
 - Consumers: `CategoryScreen` does `azkar.find((item) => item.id.toString() === categoryId)` (route param is a string) then `dispatch(setPhases(...))`; `PhraseCard` renders one FlatList page per phrase.
-- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); 46 sample-origin phrases stay wired to bundled clips (categories `3` + `4` fully). The other ~196 `audio`/`filename` fields point at external `/audio/ar_7esn_AlMoslem…` paths with no `AUDIO_ASSETS` entry, so they resolve to a playback error (retry affordance), not the clean `missing` state — clearing or bundling them is an open data task.
+- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); 46 sample-origin phrases stay wired to bundled clips (categories `3` + `4` fully). The other ~152 `filename` fields (numeric source ids) have no `AUDIO_ASSETS` entry, so they resolve to a playback error (retry affordance), not the clean `missing` state — clearing or bundling them is an open data task.
 
 ## Audio (local only)
 - Source of truth: the per-phrase `filename` field only (no `audio` key, no category fallback). Empty `filename` normalizes to `missing`.

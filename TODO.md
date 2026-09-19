@@ -6,6 +6,8 @@
 
 ## Completed
 
+- [x] **Dataset Duplicate Validation (#43)** — Added `scripts/validate-azkar.mjs` + `npm run validate:azkar` (plain Node, offline, no deps): errors on duplicate category ids/titles (normalized: tashkeel/tatweel stripped), empty arrays, duplicate phrase ids/texts within a category, missing phrase text; warns on categories with byte-identical content (today: 99/133/136 share «بِسْمِ اللَّهِ.» per the upstream source; `--strict` escalates). Accepts an optional dataset path for testing. Wired into AGENTS.md commands + Data Flow and the `expo-verify` skill. Verified on the live dataset (0 errors, 1 expected warning) and with injected duplicate id/title/phrase-text cases (all exit 1); `npm run lint:fix` / `npx tsc --noEmit` clean.
+
 - [x] **Offline Support** — All data is bundled locally (JSON + fonts), no network calls exist; the app works fully in airplane mode.
 
 - [x] **Internationalization (i18n)** — All Arabic UI strings extracted into `src/i18n/ar.ts`; a `t()` helper in `src/i18n/index.ts` serves lookups and is ready for additional language files.

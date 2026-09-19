@@ -10,6 +10,7 @@
     "web": "expo start --web",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\" --fix && prettier --write \"src/**/*.{ts,tsx}\" \"App.tsx\" \"index.ts\"",
+    "validate:azkar": "node scripts/validate-azkar.mjs",
     "postinstall": "patch-package",
     "eas-build-post-install": "patch-package"
   },

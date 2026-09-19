@@ -39,6 +39,7 @@ npm run ios        # Run on iOS (macOS only)
 npm run web        # Run in browser
 npm run lint       # ESLint check
 npm run lint:fix   # ESLint --fix + Prettier write
+npm run validate:azkar  # Dataset duplicate/consistency check (category ids/titles/content, phrase ids/texts; --strict escalates warnings)
 ```
 
 TypeScript check: `npx tsc --noEmit`
@@ -75,7 +76,7 @@ Zikrukum/
     │   ├── features.ts         # Build-time kill-switches (FEATURES map) — edit before each build
     │   └── useFeature.ts       # useFeature(key) hook wrapper around isFeatureEnabled
     ├── dataset/
-    │   ├── azkar.json          # Bundled azkar data (merged 137-cat union, Arabic text)
+    │   ├── azkar.json          # Bundled azkar data (merged 135-cat union, Arabic text)
     │   └── azkar-sample.json   # Legacy 22-cat dataset, retained as reference only
     ├── i18n/
     │   ├── ar.ts               # Arabic strings (source of truth for keys)
@@ -177,7 +178,7 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 ### Data Flow (Azkar Content)
 
 ```
-src/dataset/azkar.json (merged 137-cat union; duplicates resolved in favour of `azkar-sample.json`)
+src/dataset/azkar.json (merged 135-cat union; duplicates resolved in favour of `azkar-sample.json`)
         │  (raw: [{ id, category, array: [{ id, text, count, subtext?, filename? }] }])
         ▼
 src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon per category id)
@@ -186,7 +187,9 @@ src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon 
 CategoryScreen: dispatch(setPhases(...)) → phases slice → PhraseCard renders one FlatList page per phrase
 ```
 
-Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set — never use non-FA names like the old `albums-outline` fallback, which warns on web). New categories need a mapping entry (fallback: `bookmark`). The merged `azkar.json` holds 137 categories; all present ids are mapped, so the fallback is never hit today.
+Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set — never use non-FA names like the old `albums-outline` fallback, which warns on web). New categories need a mapping entry (fallback: `bookmark`). The merged `azkar.json` holds 135 categories; all present ids are mapped, so the fallback is never hit today.
+
+`scripts/validate-azkar.mjs` (`npm run validate:azkar`) guards against duplicate categories after any dataset edit: errors on duplicate category ids/titles (normalized: tashkeel/tatweel stripped), empty arrays, and duplicate phrase ids/texts within a category; warnings on categories with byte-identical content (today: 99/133/136 share the single «بِسْمِ اللَّهِ.» phrase per the upstream source — `--strict` escalates). Run it after touching `azkar.json`.
 
 #### Phrase pager (PhraseCard)
 
@@ -203,7 +206,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAw
 - Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file (a dynamic `assets/audio/` directory path cannot work — Metro needs static requires, so the map *is* the directory default).
 - There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
-- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); 46 sample-origin phrases stay wired to bundled clips (categories `3` + `4` fully). The other ~196 `audio`/`filename` fields point at external `/audio/ar_7esn_AlMoslem…` paths with no `AUDIO_ASSETS` entry, so they resolve to a playback error (retry affordance), not the clean `missing` state — clearing or bundling them is an open data task.
+- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); 46 sample-origin phrases stay wired to bundled clips (categories `3` + `4` fully). The other ~152 `filename` fields (numeric source ids) have no `AUDIO_ASSETS` entry, so they resolve to a playback error (retry affordance), not the clean `missing` state — clearing or bundling them is an open data task.
 
 ### Internationalization
 
