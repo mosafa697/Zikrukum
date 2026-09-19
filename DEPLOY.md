@@ -2,112 +2,103 @@
 
 Track everything needed to publish Zikrukum on Google Play as an Android app.
 
-_Last updated: Aug 30, 2026._
+_Last updated: Sep 19, 2026._
 
-## 1. App Assets
+## Current Status (Sep 19, 2026)
 
-- [x] **App Icon** — `assets/icon.png` (1024×1024 PNG) added and referenced in `app.json` under `expo.icon`.
-	- Note: the original file was a JPEG with a `.png` extension; converted to a real PNG (EAS rejects mismatched formats).
-- [x] **Adaptive Icon** — `assets/android/adaptive-foreground.png` wired up with sand background (`#F4EEE0`) under `expo.android.adaptiveIcon`.
-- [x] **Splash Screen** — Generated `assets/splash-icon.png` (1284×2778, icon centered on sand `#F4EEE0`) and configured under `expo.splash`.
-- [x] **Play Store Icon** — `assets/playstore.png` (512×512 PNG) ready to upload in the Play Console listing.
-	- Note: the extra unused copies that used to live under `assets/android/mipmap-*` were deleted; Expo regenerates launcher icons from `app.json` at build time, so they are not needed.
-- [x] **Feature Graphic** — `assets/banner.jpeg` resized to exactly **1024×500** (ready for upload).
+Code is ready. Play Console registration is in progress.
+
+| Step | Status |
+|---|---|
+| Code quality (lint + tsc) | Done |
+| App assets (icon, adaptive, splash, store icon, banner) | Done |
+| EAS CLI + login + `eas.json` | Done |
+| Google Play developer account | In progress — $25 fee paid Sep 18, phone verified Sep 19; ID verification + developer name still pending |
+| Service account key (`pc-api-key.json`) | Not done |
+| Android keystore | Not done — auto-created by EAS on first build |
+| First production AAB build | Not done |
+| Device test | Not done |
+| Store listing (descriptions, screenshots, forms) | Not done |
+| Closed testing (12 testers × 14 days) | Not done |
+| Production release | Not done |
+
+## Next Steps In Order
+
+1. **Finish account activation** — complete ID verification and choose the developer name in Play Console.
+2. **Create the app in Play Console** — name `Zikrukum`, default language Arabic, then fill listing basics (category, contact email, privacy policy URL).
+3. **Create the service account** so `eas submit` can upload automatically:
+   1. Google Cloud Console → new project → enable `Google Play Android Developer API`.
+   2. Create a Service Account → download the JSON key → save it as `pc-api-key.json` in the repo root (path already wired in `eas.json`).
+   3. Play Console → Users and permissions → add the service account email as **Admin**.
+4. **Build the AAB** — `eas build -p android --profile production`. EAS generates and stores the signing keystore automatically on the first build.
+5. **Closed testing (12-testers policy)** — new personal accounts must run a closed test with at least 12 opted-in testers for 14 continuous days, then apply for production access. The `internal` track does not count; use **Closed testing**.
+6. **Complete the store listing** — phone screenshots (≥2), Data Safety form, IARC content-rating questionnaire, descriptions.
+7. **Submit & release** — `eas submit -p android`, create the production release, monitor ANRs/crashes.
+
+---
+
+## 1. App Assets — DONE
+
+- [x] **App icon** — `assets/icon.png` (1024×1024, real PNG; the original was a JPEG renamed to `.png` — EAS rejects mismatched formats).
+- [x] **Adaptive icon** — `assets/android/adaptive-foreground.png` + sand background `#F4EEE0` in `app.json`.
+- [x] **Splash** — `assets/splash-icon.png` (1284×2778) configured under `expo.splash`.
+- [x] **Play Store icon** — `assets/playstore.png` (512×512).
+- [x] **Feature graphic** — `assets/banner.jpeg` (1024×500).
 
 ## 2. app.json Configuration
 
-- [x] **Android versionCode** — `"versionCode": 1` set under `expo.android`.
-- [x] **Bump Version** — `expo.version` raised from `0.1.0` to `1.0.0`.
-- [x] **Verify Package Name** — Currently `"package": "com.azkar.zikrukum"`; confirm this is final (cannot be changed after first publish).
-- [x] **Permissions Audit** — No dangerous permissions expected (offline app); verify after first EAS build via the build log / Play Console.
+- [x] **Android versioning** — `android.versionCode: 1`, `expo.version: 1.0.0`.
+- [x] **Package name** — `com.azkar.zikrukum` (final — cannot change after first publish).
+- [x] **Permissions** — audio, notifications, exact alarm, boot completed. Audit the first EAS build log to confirm no unexpected permissions.
+- [ ] **Version sync** — `package.json` is `0.1.0` while `app.json` is `1.0.0`; align them before the first build.
 
 ## 3. Build Setup (EAS)
 
-- [ ] **Install eas-cli** — `npm i -g eas-cli`, then `eas login`.
-- [x] **Create `eas.json`** — Present: `production` profile (`buildType: "app-bundle"` for Play's AAB requirement) and `preview` profile (internal-distribution APK); submit config targets the `internal` track via `./pc-api-key.json` service account key.
-- [ ] **Service Account Key** — Place a Play Console API key at `./pc-api-key.json` to enable `eas submit` (or upload the AAB manually through the Console UI instead).
-- [ ] **Signing Key** — Generate/upload an Android keystore via `eas credentials` (or let `eas build` auto-create one on first run).
-- [ ] **First Production Build** — Run `eas build -p android --profile production` and confirm it completes.
+- [x] **eas-cli installed** — v24.3.0, logged in as `mosafa697`.
+- [x] **`eas.json`** — `production` profile = AAB (Play requirement), `preview` profile = internal APK; submit config targets the `internal` track via `./pc-api-key.json`.
+- [ ] **Service account key** — create `./pc-api-key.json` (or upload AABs manually through the Console UI instead).
+- [ ] **Signing keystore** — let `eas build` auto-create it on the first run, then back it up securely (losing it = cannot update the app).
+- [ ] **First production build** — `eas build -p android --profile production`.
 
 ## 4. Pre-Release Verification
 
-- [x] **Lint Clean** — `npm run lint` passes (0 errors; 10 warnings remain, non-blocking: 4× `no-explicit-any` + 6× unused contact-form vars in `SettingsScreen`).
-- [x] **TypeScript Clean** — `npx tsc --noEmit` passes.
-	- Fixed invalid `"ignoreDeprecations": "6.0"` in `tsconfig.json`.
-	- Installed missing direct dependency `@expo/vector-icons` (was only resolving transitively).
-- [ ] **Test on Device** — Install the built AAB/APK on a real Android device; verify navigation, themes, counters, persistence, fonts.
-- [x] **Audio Feature Migration** — `expo-audio` is now installed (`~1.1.1`) and the playback UI/state machine is fully wired into the zikr reader (see `src/audio/`). The stale note about `expo-audio` not being installed is resolved.
+- [x] **Lint clean** — `npm run lint` passes with no warnings (verified Sep 19; the old 10 warnings are resolved).
+- [x] **TypeScript clean** — `npx tsc --noEmit` passes (verified Sep 19).
+- [x] **Audio bundled** — 29 MP3s under `assets/audio/`, mapped in `src/audio/audioSource.ts` (`AUDIO_ASSETS`), wired for categories 3 + 4. Note: some dataset `filename` fields still point at unbundled external paths and resolve to a playback error — acceptable for v1.0.0, cleanup later.
+- [ ] **Device test** — install the AAB/APK on a real Android device; check navigation, themes, counters, persistence, fonts, audio, RTL.
 
-- [x] **Audio Clips — RESOLVED** — 29 MP3s bundled under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); `AUDIO_ASSETS` in `src/audio/audioSource.ts` maps the same 29 keys; `azkar-sample.json` references those 29 distinct filenames (46 of 132 phrases, i.e. categories `3` + `4` fully — all present). Notes: there are no `15.mp3`/`16.mp3`/`23.mp3` (removed; only the combined `15-16.mp3` exists), and `22.mp3` is bundled but currently unreferenced (no category `22` in the dataset — Friday is id `21`). Audio feature is fully wired and ready.
+## 5. Play Console Setup (account level)
 
-## 5. Play Policies & Compliance (Google requirement)
+- [x] **Developer account** — $25 one-time fee paid Sep 18, 2026. The planned-app-count question does not affect the price or limits.
+- [x] **Phone verification** — done Sep 19. International format: `+20` then the number WITHOUT the local leading 0 (e.g. `+201002049983`, not `+2001002049983`).
+- [ ] **ID verification + developer name** — Google verifies identity (hours to days), then choose the developer name.
+- [ ] **Service account linked** — Users and permissions → add service account email as Admin.
+- [ ] **Privacy policy URL** — live at https://zikrukum-pp.pages.dev/ (Cloudflare Pages, separate `zikrukum-pp` repo). Paste it into the listing.
+- [ ] **12-testers policy** — closed test with ≥12 opted-in testers for 14 continuous days, then apply for production access (required for personal accounts created after Nov 2023).
 
-Must be satisfied before the app can be approved/reviewed in the Play Console. Source: [Google Play Developer Policy Center](https://support.google.com/googleplay/android-developer/answer/9859455).
+## 6. Store Listing & Compliance (per app)
 
-### Content & Store-listing policies (per app)
-- [ ] **Data Safety form** — Complete in Play Console. Zikrukum is an offline app storing data only on-device (AsyncStorage) with locally bundled audio: expected declaration is **"no data collected nor shared"**.
-- [ ] **IARC content rating** — Complete the content-rating questionnaire (religious/reference content → low/universal rating in most cases).
-- [ ] **Target audience & content** — State whether the app is designed for children. Religious/kids content may trigger **Families/child-safety** policy requirements (see below).
-- [ ] **Ads declaration** — Declare "no ads" (Zikrukum currently has none).
-- [ ] **App access** — App is fully open (no login) → state so. No demo credentials needed.
-- [ ] **Store listing accuracy** — App name, descriptions, and screenshots must accurately represent the app (no misleading/deceptive metadata — "Deceptive Behavior" policy).
-
-### Technical / build policies
-- [ ] **App signing** — Ship AAB signed with an app-signing key; back up the keystore securely (losing it = cannot update the app).
-- [ ] **Permissions justification** — Every requested permission must be justified. Audit the EAS build log to confirm no unnecessary/unexpected Android permissions are pulled in (rejection risk).
-- [ ] **Target API level** — Must meet Google's current requirement (2026 target is roughly **API 35+**). Expo SDK 57 typically meets this; verify in the Play Console before release.
-- [ ] **Play Integrity / API keys** — Ensure no exposed API keys or secrets in the bundle (none expected; app is offline).
-
-### Platform-wide policies (account-level risk)
-- [ ] **Intellectual property / copyright** — Confirm licenses for all bundled content: hadith/azkar **text**, **fonts** (ScheherazadeNew, Tajawal, Amiri), and **audio clips** (if shipped). Bundled *fonts* are open-licensed (SIL OFL) — good. Any third-party MP3 recitations need permission/license.
-- [ ] **Child safety** — If minors may use the app, comply with the Family/child-safety policies (age gates, content suitability). Decide whether to tag the app as "designed for families" or general audience.
-- [ ] **User data / privacy** — If any data is collected (even analytics/crash logs), the **Privacy Policy URL** (§6) and data-safety disclosure are mandatory; Zikrukum expects to collect none.
-
-## 6. Play Console Requirements (outside repo)
-
-- [ ] **Developer Account** — Google Play developer account created ($25 one-time fee).
-- [x] **Privacy Policy URL** — Live at **https://zikrukum-pp.pages.dev/** (Cloudflare Pages). Source is the separate `zikrukum-pp` repo (repo root has `index.html`, Arabic/RTL static page, no build step). Paste this URL into the Play Console listing. Contact email filled in (`mosafa697@gmail.com`) — no placeholder remains.
-- [ ] **Data Safety Form** — Declare what data is collected/shared (expected: none collected off-device).
-- [ ] **Content Rating Questionnaire** — Complete IARC rating form.
-- [ ] **Store Listing** — App title, short + full descriptions, screenshots (phone, minimum 2), 512×512 icon (done), feature graphic (done).
-- [ ] **App Category & Contact** — Choose category, add contact email.
+- [ ] **Create the app** — name `Zikrukum`, default language Arabic, category, contact email.
+- [ ] **Descriptions + screenshots** — short + full descriptions, phone screenshots (≥2).
+- [ ] **Data Safety form** — offline app, data only on-device (AsyncStorage) → declare **"no data collected nor shared"**.
+- [ ] **IARC content rating** — questionnaire (religious/reference content → low/universal in most cases).
+- [ ] **Ads declaration** — "no ads".
+- [ ] **App access** — fully open, no login, no demo credentials needed.
+- [ ] **Target audience** — decide general vs Families (child-safety policy applies if targeting minors).
+- [ ] **Content licenses** — fonts are SIL OFL (open); azkar texts and MP3 recitations need confirmed licenses.
+- [ ] **Target API level** — must meet Google's 2026 requirement (~API 35+); Expo SDK 57 satisfies this, verify in the Console.
 
 ## 7. Submit
 
-- [ ] **Build & Upload**
-
 ```bash
-eas build --profile preview --platform android #for test android
+eas build -p android --profile production   # produces .aab, keystore auto-created
+eas submit -p android                       # uploads to Play Console (needs pc-api-key.json)
 ```
 
-```bash
-eas build -p android --profile production   # produces .aab
-eas submit -p android                        # uploads to Play Console
-```
+- [ ] **Closed testing rollout** — upload to the Closed testing track, keep ≥12 testers opted in for 14 days, then apply for production access.
+- [ ] **Production release** — create the production release, roll out, monitor ANRs/crashes in Play Console.
 
-- [ ] **Internal Testing Track First** — Roll out to internal/closed testing before production release.
-- [ ] **Production Release** — Create production release, roll out, monitor ANRs/crashes in Play Console.
+## Follow-ups (non-blocking)
 
-## 8. Overall Readiness Status (Aug 30, 2026)
-
-**Not production-ready — code ~85%, process ~60%.** Everything below is verified as of the last update.
-
-### Done & verified
-- `npx tsc --noEmit` passes (0 errors).
-- `npm run lint` passes (0 errors; 10 warnings, non-blocking).
-- App icon / adaptive icon / splash / Play Store icon all present and wired in `app.json`.
-- `eas.json` present (production = AAB, preview = APK); no `pc-api-key.json` yet.
-- Codebase fully offline-capable (bundled JSON + fonts + local audio, no network).
-- **Privacy Policy URL live** at https://zikrukum-pp.pages.dev/ (verified HTTP 200; contact filled).
-- **Feature graphic** ready at 1024×500.
-- **Audio clips** bundled: 29 MP3s + `AUDIO_ASSETS` (same 29 keys) + dataset wired for categories `3` + `4` (46/132 phrases) — audio BLOCKER resolved.
-
-### Blocking before first Play release
-1. **Device test** — Build the AAB/APK and run it on a real Android device.
-2. **Play Console setup** — Developer account, signing keystore, service-account key (`pc-api-key.json`).
-3. **Store listing + policies** — Phone screenshots, Data Safety form, IARC content rating, descriptions, contact email. See §5 and §6. (Privacy policy URL, feature graphic, and audio are all DONE.)
-
-### Non-blocking follow-ups
 - Sync `package.json` version (`0.1.0`) with `app.json` (`1.0.0`).
-- Clean the 10 lint warnings (4× `no-explicit-any`, 6× unused contact-form vars in `SettingsScreen`).
-- Decide on `TODO.md` features (Notifications, First-Launch Onboarding) — not blockers for a v1.0.0 release.
+- `TODO.md` features (notifications, onboarding) — not blockers for v1.0.0.

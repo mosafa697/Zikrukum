@@ -225,6 +225,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAw
 ## Workflow Notes
 
 - GitHub issues are the source of truth for tasks — `TODO.md` is a changelog only (completed work log, no new checkboxes).
+- `DEPLOY.md` is the Google Play release checklist (status table + ordered next steps); keep it updated as Play Console steps complete.
 - Task lifecycle via `gh-cli` labels: `todo` (default on create) → `in-progress` (claimed) → `review` (review passed, awaiting user approval) → `done` + closed. `review` is now a required gate — no commit/push before it.
 - Agent skills in `.agents/skills/` encode recurring workflows — load the relevant skill before starting work:
   - `zikrukum-plan` — plan + edge cases + questions, then `gh issue create --label todo`.
