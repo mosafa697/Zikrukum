@@ -17,6 +17,18 @@ function normalize(text) {
     .trim();
 }
 
+function audioKey(text) {
+  return String(text)
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, '')
+    .replace(/[\u060C\u061B\u061F!?.،؛]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function audioFirstLine(text) {
+  return audioKey(String(text).split('\n')[0]);
+}
+
 let dataset;
 try {
   dataset = JSON.parse(readFileSync(datasetPath, 'utf8'));
@@ -28,6 +40,19 @@ try {
 if (!Array.isArray(dataset) || dataset.length === 0) {
   console.error('ERROR: dataset must be a non-empty array');
   process.exit(1);
+}
+
+// Phrases that own their conventional filename (`{categoryId}-{phraseId}`);
+// other phrases may reference these files when the zikr text matches.
+const canonicalByFilename = new Map();
+for (const category of dataset) {
+  if (!Array.isArray(category?.array)) continue;
+  for (const phrase of category.array) {
+    const ownName = `${category.id}-${phrase.id}`;
+    if (phrase?.filename && String(phrase.filename).trim() === ownName) {
+      canonicalByFilename.set(ownName, { full: audioKey(phrase.text), first: audioFirstLine(phrase.text) });
+    }
+  }
 }
 
 const idOwners = new Map();
@@ -82,6 +107,33 @@ for (const category of dataset) {
     const textKey = normalize(phrase.text);
     signature.push(textKey);
     phraseCount += 1;
+
+    const expectedFilename = `${id}-${phrase.id}`;
+    const filename = phrase.filename ? String(phrase.filename).trim() : '';
+    if (!filename) {
+      errors.push(`category ${id} "${trimmedTitle}": phrase #${phrase.id} missing filename`);
+    } else if (filename !== expectedFilename) {
+      const sharedError = (reason) =>
+        errors.push(
+          `category ${id} "${trimmedTitle}": phrase #${phrase.id} filename "${filename}" is invalid: ${reason}`
+        );
+      if (!/^\d+-\d+$/.test(filename)) {
+        sharedError(`must be "${expectedFilename}" or a shared ` + `\`{categoryId}-{phraseId}\` clip name`);
+      } else {
+        const target = canonicalByFilename.get(filename);
+        if (!target) {
+          sharedError(`no phrase owns the clip name "${filename}"`);
+        } else {
+          const refFull = audioKey(phrase.text);
+          const refFirst = audioFirstLine(phrase.text);
+          const matchesFull = refFull === target.full;
+          const matchesFirst = refFirst.length >= 25 && refFirst === target.first;
+          if (!matchesFull && !matchesFirst) {
+            sharedError(`text does not match the phrase owning clip "${filename}"`);
+          }
+        }
+      }
+    }
 
     const idPhrases = phraseIds.get(String(phrase.id)) ?? [];
     idPhrases.push(textKey.slice(0, 60));

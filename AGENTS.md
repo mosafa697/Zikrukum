@@ -189,7 +189,7 @@ CategoryScreen: dispatch(setPhases(...)) → phases slice → PhraseCard renders
 
 Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set — never use non-FA names like the old `albums-outline` fallback, which warns on web). New categories need a mapping entry (fallback: `bookmark`). The merged `azkar.json` holds 135 categories; all present ids are mapped, so the fallback is never hit today.
 
-`scripts/validate-azkar.mjs` (`npm run validate:azkar`) guards against duplicate categories after any dataset edit: errors on duplicate category ids/titles (normalized: tashkeel/tatweel stripped), empty arrays, and duplicate phrase ids/texts within a category; warnings on categories with byte-identical content (today: 99/133/136 share the single «بِسْمِ اللَّهِ.» phrase per the upstream source — `--strict` escalates). Run it after touching `azkar.json`.
+`scripts/validate-azkar.mjs` (`npm run validate:azkar`) guards against duplicate categories after any dataset edit: errors on duplicate category ids/titles (normalized: tashkeel/tatweel stripped), empty arrays, duplicate phrase ids/texts within a category, and phrase filenames deviating from the `{categoryId}-{phraseId}` convention; warnings on categories with byte-identical content (today: 99/133/136 share the single «بِسْمِ اللَّهِ.» phrase per the upstream source — `--strict` escalates). Run it after touching `azkar.json`.
 
 #### Phrase pager (PhraseCard)
 
@@ -201,12 +201,13 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAw
 ### Audio
 
 - Source of truth: the per-phrase `filename` field in the dataset (no `audio` key, no per-category fallback — both were removed).
+- Filename convention: every phrase's `filename` is `{categoryId}-{phraseId}` (e.g. `3-2` = category 3, phrase 2); the file must live at `assets/audio/{categoryId}-{phraseId}.mp3`. Phrases whose zikr text matches an already-bundled clip may reference that clip's name instead of their own (e.g. evening phrase `4-2` → `3-2` — same zikr); the validator enforces the text match. `scripts/validate-azkar.mjs` errors on any deviation.
 - Audio clips are bundled locally inside the app under `assets/audio/` and resolved through `expo-asset`.
 - `audioSource.ts` resolves a phrase to `{ kind: 'local', filename }` or `{ kind: 'missing' }`, then loads the matching local asset and verifies it exists via `expo-file-system` before returning a playable URI.
 - Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file (a dynamic `assets/audio/` directory path cannot work — Metro needs static requires, so the map *is* the directory default).
 - There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
-- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); 46 sample-origin phrases stay wired to bundled clips (categories `3` + `4` fully). The other ~152 `filename` fields (numeric source ids) have no `AUDIO_ASSETS` entry, so they resolve to a playback error (retry affordance), not the clean `missing` state — clearing or bundling them is an open data task.
+- Current coverage: 29 clips under `assets/audio/` named after their canonical phrase (e.g. `3-2.mp3`, `4-4.mp3`); 53 phrases resolve to them (29 canonical owners + 24 shared-text references like evening `4-2` → `3-2`). The clips were formerly shared across 65 phrases (morning/evening duplicates of the same zikr); the other ~250 phrases resolve to a playback error (retry affordance) until their files are added — an open data task.
 
 ### Internationalization
 
