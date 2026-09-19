@@ -35,7 +35,7 @@ export function CategoriesScreen() {
     Animated.timing(scrollTopAnim, {
       toValue: showScrollTop ? 1 : 0,
       duration: 200,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start();
   }, [showScrollTop, scrollTopAnim]);
 
