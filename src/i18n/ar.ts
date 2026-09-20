@@ -157,4 +157,24 @@ export const ar = {
   clearProgressBody:
     'سيتم إعادة تعيين جميع الإنجازات والسلسلة اليومية وعدد الأذكار الكلي. لا يمكن الرجوع عن هذا الإجراء.',
   clearProgressConfirm: 'مسح التقدم',
+
+  // Onboarding
+  onboardingSkip: 'تخطي',
+  onboardingNext: 'التالي',
+  onboardingStart: 'ابدأ الآن',
+  onboardingWelcomeTitle: 'أهلاً بك في ذِكْرُكُم',
+  onboardingWelcomeBody: 'زادك الإيماني ورفيق دربك، ليظل لسانك رطباً بذكر الله في كل لحظة.',
+  onboardingFeaturesTitle: 'طريقك إلى الطمأنينة',
+  onboardingFeatureShuffleTitle: 'تجديد الروح بالذكر',
+  onboardingFeatureShuffleBody: 'ترتيب عشوائي يتجدد مع كل زيارة، لتدبر المعاني بحضور قلب وخشوع.',
+  onboardingFeatureCounterTitle: 'عداد التسبيح والمسبحة',
+  onboardingFeatureCounterBody: 'مسبحة إلكترونية وعداد تلقائي يضبط أعداد ذكرك ويحفظ وردك اليومي.',
+  onboardingFeatureAudioTitle: 'تلاوات خاشعة',
+  onboardingFeatureAudioBody: 'استمع إلى الأذكار بأصوات نادية تسكن لها القلوب، مع تحكم كامل بالتشغيل.',
+  onboardingFeatureThemesTitle: 'راحة لعينك وقلبك',
+  onboardingFeatureThemesBody: 'تصاميم إسلامية وسمات مريحة للعين مع خيارات لتكبير الخط لراحة القرّاء.',
+  onboardingFeatureFavouritesTitle: 'غراس الجنة وإنجازاتك',
+  onboardingFeatureFavouritesBody: 'احفظ أذكارك المحببة في الصدارة، وواظب على سلسلة أيّامك لتجني أجر الاستمرارية.',
+  onboardingReadyTitle: 'أنر قلبك بالذكر',
+  onboardingReadyBody: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ — ابدأ رحلتك الآن ووثّق صلتك بالله.',
 } as const;

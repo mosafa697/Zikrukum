@@ -21,7 +21,7 @@ Context and architecture reference for the Zikrukum project. Keep this file up t
 | Navigation | `@react-navigation/native` + `native-stack` |
 | Persistence | `@react-native-async-storage/async-storage` |
 | Audio | `expo-audio`, `expo-asset` + `expo-file-system` (clips bundled locally under `assets/audio/`, no remote fetch; `expo-file-system` only verifies the resolved asset URI) |
-| Feature flags | `src/config/features.ts` (`FEATURES` + `isFeatureEnabled` + `useFeature`) — build-time kill-switches, no deletion; `foregroundAudio`/`reminders`/`volumeNav`, edited before each build |
+| Feature flags | `src/config/features.ts` (`FEATURES` + `isFeatureEnabled` + `useFeature`) — build-time kill-switches, no deletion; `foregroundAudio`/`reminders`/`volumeNav`/`onboarding`, edited before each build |
 | Notifications | `@notifee/react-native@9.1.8` (single channel `adhkar-reminders`, `src/notifications/` service+hooks; requires dev build/prebuild, guarded import for web/Expo Go; gated by `features.reminders`) |
 | Screen awake | `expo-keep-awake` (phrase screen keeps the display on while reading) |
 | Volume buttons | `react-native-volume-manager` (hardware volume keys navigate zikr on CategoryScreen; requires a custom dev build, not Expo Go) |
@@ -123,6 +123,7 @@ The store is created **once** at startup with preloaded persisted state; do not 
 Single native stack (`RootStackParamList`), headers hidden (`headerShown: false` — screens render custom headers):
 
 - `Categories` (home) → `Category { categoryId: string }`, `Settings`, `FreeTasbih`; `Settings` → `Achievements` (milestone badges)
+- `Onboarding` (first-launch walkthrough, `src/screens/OnboardingScreen.tsx`) is the `initialRouteName` only while `features.onboarding` is on and `onboarding.completed` is false; both Skip and Done persist the flag and `replace()` to `Categories`, and the route is unregistered once completed (cannot be re-entered; Android back = skip)
 
 Reminder taps deep-link via `navigationRef` (`src/navigation/navigationRef.ts`, ready-gated pending queue, unknown ids fall back to `Categories`) + `notificationRouter` (`extractCategoryId`/`handleNotificationPress` + killed-state AsyncStorage backup consumed in `App.tsx`; headless `onBackgroundEvent` PRESS handler in `index.ts`).
 
@@ -143,6 +144,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `favouriteCategories` | `{ ids: number[] }` | yes | Favourited category IDs (sorted first on home) |
 | `audio` | `{ autoPlayNext, audioEnabled }` | yes | Audio preferences |
 | `volumeNav` | `{ enabled }` | yes | Hardware volume buttons navigate zikr on/off (Settings) |
+| `onboarding` | `{ completed }` | yes | First-launch walkthrough done-flag (shown only when false + `features.onboarding` on; Skip/Done both persist) |
 | `haptics` | `{ enabled }` | yes | Vibrate on each successful dhikr count on/off, default off (Settings) |
 | `reminders` | `{ morning: {enabled, time}, evening: {enabled, time}, friday: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00/Friday 09:00 defaults, `@react-native-community/datetimepicker`) |
 | `milestones` | `{ enabled, achieved: string[], streakCount, lastOpenDate }` | yes | Progress milestones (fire-once `achieved` set incl. count-seed migration; streak advances once/day; cleared only by the explicit Achievements clear-progress action #47) |
