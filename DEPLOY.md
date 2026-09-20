@@ -2,19 +2,19 @@
 
 Track everything needed to publish Zikrukum on Google Play as an Android app.
 
-_Last updated: Sep 19, 2026._
+_Last updated: Sep 20, 2026._
 
-## Current Status (Sep 19, 2026)
+## Current Status (Sep 20, 2026)
 
-Code is ready. Play Console registration is in progress.
+Code is ready. Developer account fully active; next: create the app in Play Console + service account key.
 
 | Step | Status |
 |---|---|
 | Code quality (lint + tsc) | Done |
 | App assets (icon, adaptive, splash, store icon, banner) | Done |
 | EAS CLI + login + `eas.json` | Done |
-| Google Play developer account | In progress — $25 fee paid Sep 18, phone verified Sep 19; ID verification + developer name still pending |
-| Service account key (`pc-api-key.json`) | Not done |
+| Google Play developer account | Done — fee paid Sep 18, phone verified Sep 19, ID verification + developer name complete (Sep 20) |
+| Service account key (`pc-api-key.json`) | In progress |
 | Android keystore | Not done — auto-created by EAS on first build |
 | First production AAB build | Not done |
 | Device test | Not done |
@@ -24,7 +24,7 @@ Code is ready. Play Console registration is in progress.
 
 ## Next Steps In Order
 
-1. **Finish account activation** — complete ID verification and choose the developer name in Play Console.
+1. ~~**Finish account activation**~~ — Done (Sep 20): ID verification + developer name complete.
 2. **Create the app in Play Console** — name `Zikrukum`, default language Arabic, then fill listing basics (category, contact email, privacy policy URL).
 3. **Create the service account** so `eas submit` can upload automatically:
    1. Google Cloud Console → new project → enable `Google Play Android Developer API`.
@@ -71,7 +71,7 @@ Code is ready. Play Console registration is in progress.
 
 - [x] **Developer account** — $25 one-time fee paid Sep 18, 2026. The planned-app-count question does not affect the price or limits.
 - [x] **Phone verification** — done Sep 19. International format: `+20` then the number WITHOUT the local leading 0 (e.g. `+201002049983`, not `+2001002049983`).
-- [ ] **ID verification + developer name** — Google verifies identity (hours to days), then choose the developer name.
+- [x] **ID verification + developer name** — done Sep 20; account fully active.
 - [ ] **Service account linked** — Users and permissions → add service account email as Admin.
 - [ ] **Privacy policy URL** — live at https://zikrukum-pp.pages.dev/ (Cloudflare Pages, separate `zikrukum-pp` repo). Paste it into the listing.
 - [ ] **12-testers policy** — closed test with ≥12 opted-in testers for 14 continuous days, then apply for production access (required for personal accounts created after Nov 2023).
