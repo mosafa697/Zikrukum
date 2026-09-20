@@ -63,6 +63,7 @@ Zikrukum/
     │   ├── PermissionRationaleDialog.tsx # One-time pre-permission rationale Modal (themed, RTL, guarded)
     │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page
     │   ├── ScreenHeader.tsx    # Shared chromeless header: back chevron, centered title, optional right action
+    │   ├── SettingsToggleRow.tsx # Shared settings toggle row: optional icon + label + native Switch, ripple/pressed feedback, full a11y, RTL (I18nManager.isRTL), hairline divider option
     │   └── TasbihButton.tsx    # Circular tasbih counter button
     ├── notifications/          # Notifee channel + permission + service (adhkar-reminders)
     │   ├── channels.ts         # Single Android channel definition

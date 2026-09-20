@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { I18nManager, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,6 +42,7 @@ import { formatNumber } from '../utils/numberFormatting';
 import { removeStoredValue } from '../utils/storage';
 import { azkar } from '../mappers/azkarMapper';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { SettingsToggleRow } from '../components/SettingsToggleRow';
 import { PermissionRationaleDialog } from '../components/PermissionRationaleDialog';
 import {
   markRationaleShown,
@@ -375,13 +376,22 @@ export function SettingsScreen() {
           >
             <Text style={[styles.timePillText, { color: colors.textColor }]}>{timeText}</Text>
           </Pressable>
-          <Switch
-            value={effectiveEnabled}
-            onValueChange={(nextValue) => guardedToggle(nextValue)}
-            trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-            thumbColor="#FFFFFF"
-            ios_backgroundColor={colors.sliderBg}
-          />
+          <Pressable
+            onPress={() => guardedToggle(!effectiveEnabled)}
+            accessibilityRole="switch"
+            accessibilityLabel={label}
+            accessibilityState={{ checked: effectiveEnabled, disabled: false }}
+            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }, styles.reminderSwitchWrap]}
+          >
+            <View pointerEvents="none">
+              <Switch
+                value={effectiveEnabled}
+                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={colors.sliderBg}
+              />
+            </View>
+          </Pressable>
         </View>
       </View>
     );
@@ -492,125 +502,54 @@ export function SettingsScreen() {
           ]}
         >
           <Text style={[styles.label, { color: colors.textColor }]}>{t('settings')}</Text>
-          <Pressable onPress={() => dispatch(toggleShuffle())} style={styles.toggleRow}>
-            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('randomOrder')}</Text>
-            <View
-              style={[
-                styles.toggleBtn,
-                {
-                  backgroundColor: shuffle ? colors.sliderBgActive : colors.buttonBgColor,
-                  borderColor: shuffle ? colors.sliderBgActive : colors.buttonBorderColor,
-                },
-              ]}
-            >
-              <Ionicons
-                name={shuffle ? 'shuffle' : 'list-outline'}
-                size={18}
-                color={shuffle ? colors.iconColorActive : colors.textColor}
-              />
-            </View>
-          </Pressable>
-          <Pressable onPress={() => dispatch(toggleAppearance())} style={styles.toggleRow}>
-            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('showDhikrVirtue')}</Text>
-            <View
-              style={[
-                styles.toggleBtn,
-                {
-                  backgroundColor: showSubText ? colors.sliderBgActive : colors.buttonBgColor,
-                  borderColor: showSubText ? colors.sliderBgActive : colors.buttonBorderColor,
-                },
-              ]}
-            >
-              <Ionicons
-                name={showSubText ? 'eye-outline' : 'eye-off-outline'}
-                size={18}
-                color={showSubText ? colors.iconColorActive : colors.textColor}
-              />
-            </View>
-          </Pressable>
-          <Pressable onPress={() => dispatch(toggleAudioEnabled())} style={styles.toggleRow}>
-            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioEnabledLabel')}</Text>
-            <View
-              style={[
-                styles.toggleBtn,
-                {
-                  backgroundColor: audioEnabled ? colors.sliderBgActive : colors.buttonBgColor,
-                  borderColor: audioEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
-                },
-              ]}
-            >
-              <Ionicons
-                name={audioEnabled ? 'volume-high' : 'volume-mute-outline'}
-                size={18}
-                color={audioEnabled ? colors.iconColorActive : colors.textColor}
-              />
-            </View>
-          </Pressable>
-          <Pressable
-            onPress={() => dispatch(toggleAutoPlayNext())}
+          <SettingsToggleRow
+            label={t('randomOrder')}
+            checked={shuffle}
+            onToggle={() => dispatch(toggleShuffle())}
+            accessibilityLabel={t('randomOrder')}
+            icon="shuffle"
+            showDivider
+          />
+          <SettingsToggleRow
+            label={t('showDhikrVirtue')}
+            checked={showSubText}
+            onToggle={() => dispatch(toggleAppearance())}
+            accessibilityLabel={t('showDhikrVirtue')}
+            icon="eye-outline"
+            showDivider
+          />
+          <SettingsToggleRow
+            label={t('audioEnabledLabel')}
+            checked={audioEnabled}
+            onToggle={() => dispatch(toggleAudioEnabled())}
+            accessibilityLabel={t('audioEnabledLabel')}
+            icon="volume-high"
+            showDivider
+          />
+          <SettingsToggleRow
+            label={t('audioLabel')}
+            checked={autoPlayNext}
+            onToggle={() => dispatch(toggleAutoPlayNext())}
+            accessibilityLabel={t('audioLabel')}
+            icon="play-circle"
+            showDivider
             disabled={!audioEnabled}
-            style={[styles.toggleRow, !audioEnabled && styles.disabledToggleRow]}
-          >
-            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('audioLabel')}</Text>
-            <View
-              style={[
-                styles.toggleBtn,
-                !audioEnabled && styles.disabledToggleBtn,
-                {
-                  backgroundColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBgColor,
-                  borderColor: autoPlayNext ? colors.sliderBgActive : colors.buttonBorderColor,
-                },
-              ]}
-            >
-              <Ionicons
-                name={autoPlayNext ? 'play-circle' : 'play-circle-outline'}
-                size={18}
-                color={
-                  !audioEnabled
-                    ? colors.secondaryTextColor
-                    : autoPlayNext
-                      ? colors.iconColorActive
-                      : colors.textColor
-                }
-              />
-            </View>
-          </Pressable>
-          <Pressable onPress={() => dispatch(toggleVolumeNav())} style={styles.toggleRow}>
-            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('volumeNavLabel')}</Text>
-            <View
-              style={[
-                styles.toggleBtn,
-                {
-                  backgroundColor: volumeNavEnabled ? colors.sliderBgActive : colors.buttonBgColor,
-                  borderColor: volumeNavEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
-                },
-              ]}
-            >
-              <Ionicons
-                name={volumeNavEnabled ? 'play-skip-forward' : 'play-skip-forward-outline'}
-                size={18}
-                color={volumeNavEnabled ? colors.iconColorActive : colors.textColor}
-              />
-            </View>
-          </Pressable>
-          <Pressable onPress={() => dispatch(toggleHaptics())} style={styles.toggleRow}>
-            <Text style={[styles.toggleText, { color: colors.textColor }]}>{t('vibrateOnCount')}</Text>
-            <View
-              style={[
-                styles.toggleBtn,
-                {
-                  backgroundColor: hapticsEnabled ? colors.sliderBgActive : colors.buttonBgColor,
-                  borderColor: hapticsEnabled ? colors.sliderBgActive : colors.buttonBorderColor,
-                },
-              ]}
-            >
-              <Ionicons
-                name={hapticsEnabled ? 'phone-portrait' : 'phone-portrait-outline'}
-                size={18}
-                color={hapticsEnabled ? colors.iconColorActive : colors.textColor}
-              />
-            </View>
-          </Pressable>
+          />
+          <SettingsToggleRow
+            label={t('volumeNavLabel')}
+            checked={volumeNavEnabled}
+            onToggle={() => dispatch(toggleVolumeNav())}
+            accessibilityLabel={t('volumeNavLabel')}
+            icon="play-skip-forward"
+            showDivider
+          />
+          <SettingsToggleRow
+            label={t('vibrateOnCount')}
+            checked={hapticsEnabled}
+            onToggle={() => dispatch(toggleHaptics())}
+            accessibilityLabel={t('vibrateOnCount')}
+            icon="phone-portrait"
+          />
         </View>
 
         <View
@@ -713,35 +652,13 @@ export function SettingsScreen() {
           <Text style={[styles.label, { color: colors.textColor, paddingHorizontal: 14, paddingTop: 4 }]}>
             {t('achievements')}
           </Text>
-          <View
-            style={[
-              styles.reminderItemRow,
-              {
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: colors.buttonBorderColor,
-              },
-            ]}
-          >
-            <Pressable
-              onPress={guardedOpenAchievements}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('achievements')}
-              style={[styles.reminderLabelRow, { flex: 1 }]}
-            >
-              <Ionicons name="trophy-outline" size={22} color={colors.iconColor} />
-              <Text style={[styles.reminderTitle, { color: colors.textColor }]}>
-                {t('milestoneNotifications')}
-              </Text>
-            </Pressable>
-            <Switch
-              value={milestonesEnabled && notifGranted}
-              onValueChange={(nextValue) => guardedToggleMilestones(nextValue)}
-              trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-              thumbColor="#FFFFFF"
-              ios_backgroundColor={colors.sliderBg}
-            />
-          </View>
+          <SettingsToggleRow
+            label={t('milestoneNotifications')}
+            checked={milestonesEnabled && notifGranted}
+            onToggle={(nextValue) => guardedToggleMilestones(nextValue)}
+            accessibilityLabel={t('milestoneNotifications')}
+            icon="trophy-outline"
+          />
           <View>
             <Pressable
               onPress={guardedOpenAchievements}
@@ -875,23 +792,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     writingDirection: 'rtl',
   },
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
+  reminderSwitchWrap: {
+    borderRadius: 20,
   },
-  disabledToggleRow: { opacity: 0.5 },
-  toggleText: { fontSize: 15, fontFamily: AZKAR_PRIMARY_FONT },
-  toggleBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  disabledToggleBtn: { opacity: 0.7 },
   countValue: {
     fontSize: 16,
     fontWeight: '700',
@@ -918,12 +821,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   reminderItemRow: {
-    flexDirection: 'row',
+    // Same vertical metrics as SettingsToggleRow so all toggle rows align.
+    minHeight: 48,
+    paddingVertical: 10,
+    // Native builds force RTL app-wide (I18nManager.forceRTL in index.ts), so
+    // 'row' already lays out label-right / controls-left. Web forceRTL is a
+    // no-op, so reverse the direction there to match (same platform split as
+    // PhraseCard's RTL_MIRROR_SCALE).
+    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  reminderLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  reminderControlsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  reminderLabelRow: {
+    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+    alignItems: 'center',
+    gap: 10,
+  },
+  reminderControlsRow: {
+    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+    alignItems: 'center',
+    gap: 12,
+  },
   reminderTitle: {
     fontSize: 15,
     fontWeight: '700',
