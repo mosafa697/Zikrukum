@@ -10,7 +10,7 @@
  * AND it with platform guards (`Platform.OS !== 'web'` etc.).
  */
 
-export type FeatureKey = 'foregroundAudio' | 'reminders' | 'volumeNav';
+export type FeatureKey = 'foregroundAudio' | 'reminders' | 'volumeNav' | 'onboarding';
 
 export const FEATURES: Record<FeatureKey, boolean> = {
   // Foreground per-phrase playback via expo-audio (useZikrAudio)
@@ -19,6 +19,8 @@ export const FEATURES: Record<FeatureKey, boolean> = {
   reminders: true,
   // Hardware volume-button navigation on CategoryScreen
   volumeNav: true,
+  // First-launch onboarding walkthrough (OnboardingScreen)
+  onboarding: true,
 } as const;
 
 export function isFeatureEnabled(key: FeatureKey): boolean {

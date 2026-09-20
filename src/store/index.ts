@@ -12,6 +12,7 @@ import volumeNavReducer from './slices/volumeNavSlice';
 import hapticsReducer from './slices/hapticsSlice';
 import reminderReducer from './slices/reminderSlice';
 import milestonesReducer from './slices/milestonesSlice';
+import onboardingReducer from './slices/onboardingSlice';
 import { listenerMiddleware } from './persistence';
 import './milestoneListeners';
 
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   haptics: hapticsReducer,
   reminders: reminderReducer,
   milestones: milestonesReducer,
+  onboarding: onboardingReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

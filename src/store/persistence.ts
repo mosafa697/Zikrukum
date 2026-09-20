@@ -34,6 +34,7 @@ import {
   toggleMilestonesEnabled,
   MILESTONES_DEFAULTS,
 } from './slices/milestonesSlice';
+import { setOnboardingCompleted } from './slices/onboardingSlice';
 import { getStoredValue, setStoredValue } from '../utils/storage';
 import { config } from '../config/config';
 import type { AzkarThemeName } from '../theme/azkarTheme';
@@ -146,6 +147,13 @@ listenerMiddleware.startListening({
   },
 });
 
+listenerMiddleware.startListening({
+  actionCreator: setOnboardingCompleted,
+  effect: async (action) => {
+    await setStoredValue('onboardingCompleted', action.payload);
+  },
+});
+
 export async function loadPersistedState() {
   const [
     theme,
@@ -160,6 +168,7 @@ export async function loadPersistedState() {
     vibrateOnCount,
     adhkarReminders,
     milestones,
+    onboardingCompleted,
   ] = await Promise.all([
     getStoredValue<AzkarThemeName>('theme', 'solarized'),
     getStoredValue<number>('totalCount', 0),
@@ -173,6 +182,7 @@ export async function loadPersistedState() {
     getStoredValue<boolean>('vibrateOnCount', false),
     getStoredValue<typeof REMINDER_DEFAULTS>('adhkarReminders', REMINDER_DEFAULTS),
     getStoredValue<typeof MILESTONES_DEFAULTS>('milestones', MILESTONES_DEFAULTS),
+    getStoredValue<boolean>('onboardingCompleted', false),
   ]);
 
   // Migrate stored reminders without friday field
@@ -216,5 +226,6 @@ export async function loadPersistedState() {
       streakCount: milestones.streakCount ?? 0,
       lastOpenDate: milestones.lastOpenDate ?? null,
     },
+    onboarding: { completed: onboardingCompleted },
   };
 }
