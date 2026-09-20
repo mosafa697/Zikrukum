@@ -4,8 +4,12 @@ export type FavouriteCategoriesState = {
   ids: number[];
 };
 
+// Fresh-install defaults: morning (3), evening (4) and friday (21) adhkar
+// pinned to the top. Users who toggle favourites persist their own list.
+export const DEFAULT_FAVOURITE_CATEGORIES = [3, 4, 21];
+
 const initialState: FavouriteCategoriesState = {
-  ids: [],
+  ids: DEFAULT_FAVOURITE_CATEGORIES,
 };
 
 const favouriteCategoriesSlice = createSlice({

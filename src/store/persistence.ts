@@ -4,7 +4,11 @@ import { incrementTotalCount, resetTotalCount, setTotalCount } from './slices/to
 import { toggleShuffle } from './slices/phasesSlice';
 import { decrementFontScale, incrementFontScale, setFontScale } from './slices/fontScaleSlice';
 import { toggleAppearance } from './slices/subTextSlice';
-import { setFavouriteCategories, toggleFavouriteCategory } from './slices/favouriteCategoriesSlice';
+import {
+  setFavouriteCategories,
+  toggleFavouriteCategory,
+  DEFAULT_FAVOURITE_CATEGORIES,
+} from './slices/favouriteCategoriesSlice';
 import { toggleAutoPlayNext, toggleAudioEnabled } from './slices/audioSlice';
 import { toggleVolumeNav } from './slices/volumeNavSlice';
 import { setHaptics, toggleHaptics } from './slices/hapticsSlice';
@@ -162,7 +166,7 @@ export async function loadPersistedState() {
     getStoredValue<boolean>('shufflePhases', false),
     getStoredValue<number>('fontScale', config.font.defaultScale),
     getStoredValue<boolean>('subText', true),
-    getStoredValue<number[]>('favouriteCategories', []),
+    getStoredValue<number[]>('favouriteCategories', DEFAULT_FAVOURITE_CATEGORIES),
     getStoredValue<boolean>('autoPlayNext', true),
     getStoredValue<boolean>('audioEnabled', true),
     getStoredValue<boolean>('volumeNavEnabled', false),
@@ -187,13 +191,20 @@ export async function loadPersistedState() {
     }
   }
 
+  // Missing or empty stored favourites fall back to the defaults (3/4/21);
+  // a non-empty stored list is always a deliberate user choice.
+  const favouriteIds =
+    Array.isArray(favouriteCategories) && favouriteCategories.length > 0
+      ? favouriteCategories
+      : DEFAULT_FAVOURITE_CATEGORIES;
+
   return {
     theme: { value: theme, list: ['light', 'solarized', 'dark'] as AzkarThemeName[] },
     totalCount: { value: totalCount },
     phases: { value: [], shuffle, wasShuffled: false },
     fontScale: { value: fontScale },
     subText: { value: subText },
-    favouriteCategories: { ids: favouriteCategories },
+    favouriteCategories: { ids: favouriteIds },
     audio: { autoPlayNext, audioEnabled },
     playback: { currentPhraseId: null, status: 'idle' as const, currentTime: 0, duration: 0, rate: 1 },
     volumeNav: { enabled: volumeNavEnabled },

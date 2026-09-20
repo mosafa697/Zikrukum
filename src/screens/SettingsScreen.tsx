@@ -830,11 +830,16 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 16, gap: 16, paddingBottom: 32 },
   card: { borderRadius: 20, padding: 20 },
   cardThemed: {
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 16px rgba(0,0,0,0.04)' } as any,
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.04,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 4,
+      },
+    }),
     borderWidth: 1,
     borderColor: '#000',
   },

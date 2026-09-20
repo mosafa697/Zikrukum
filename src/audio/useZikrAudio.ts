@@ -64,7 +64,7 @@ export function useZikrAudio({
 
   const source = useMemo<AudioSource>(() => {
     if (!phrase || !category) return { kind: 'missing' };
-    return resolveAudioSource(phrase, category);
+    return resolveAudioSource(phrase);
   }, [phrase, category]);
 
   const playerRef = useRef<AudioPlayer | null>(null);

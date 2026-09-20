@@ -39,6 +39,7 @@ npm run ios        # Run on iOS (macOS only)
 npm run web        # Run in browser
 npm run lint       # ESLint check
 npm run lint:fix   # ESLint --fix + Prettier write
+npm run validate:azkar  # Dataset duplicate/consistency check (category ids/titles/content, phrase ids/texts; --strict escalates warnings)
 ```
 
 TypeScript check: `npx tsc --noEmit`
@@ -75,7 +76,7 @@ Zikrukum/
     │   ├── features.ts         # Build-time kill-switches (FEATURES map) — edit before each build
     │   └── useFeature.ts       # useFeature(key) hook wrapper around isFeatureEnabled
     ├── dataset/
-    │   └── azkar-sample.json   # Bundled azkar data (categories + phrases, Arabic text)
+    │   └── azkar.json          # Bundled azkar data (merged 135-cat union, Arabic text)
     ├── i18n/
     │   ├── ar.ts               # Arabic strings (source of truth for keys)
     │   └── index.ts            # t(key) lookup helper; add new languages here
@@ -176,8 +177,8 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 ### Data Flow (Azkar Content)
 
 ```
-src/dataset/azkar-sample.json
-        │  (raw: [{ id, category, array: [{ id, text, count, subtext, audio?, filename? }] }])
+src/dataset/azkar.json (merged 135-cat union; single bundled dataset)
+        │  (raw: [{ id, category, array: [{ id, text, count, subtext?, filename? }] }])
         ▼
 src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon per category id)
         │
@@ -185,7 +186,9 @@ src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon 
 CategoryScreen: dispatch(setPhases(...)) → phases slice → PhraseCard renders one FlatList page per phrase
 ```
 
-Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New categories need a mapping entry (fallback: `albums-outline`). Note: the map contains an orphan entry for id `22` (no such category in the dataset — Friday is id `21`, `سنن يوم الجمعة`); all dataset ids (`1`–`21`, `122`) are mapped, so the fallback is never hit today.
+Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set — never use non-FA names like the old `albums-outline` fallback, which warns on web). New categories need a mapping entry (fallback: `bookmark`). The merged `azkar.json` holds 135 categories; all present ids are mapped, so the fallback is never hit today.
+
+`scripts/validate-azkar.mjs` (`npm run validate:azkar`) guards against duplicate categories after any dataset edit: errors on duplicate category ids/titles (normalized: tashkeel/tatweel stripped), empty arrays, duplicate phrase ids/texts within a category, and phrase filenames deviating from the `{categoryId}-{phraseId}` convention; warnings on categories with byte-identical content (today: 99/133/136 share the single «بِسْمِ اللَّهِ.» phrase per the upstream source — `--strict` escalates). Run it after touching `azkar.json`.
 
 #### Phrase pager (PhraseCard)
 
@@ -196,13 +199,14 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 
 ### Audio
 
-- Source of truth: `audio` / `filename` fields in the dataset (per-phrase or per-category `audioRef`).
+- Source of truth: the per-phrase `filename` field in the dataset (no `audio` key, no per-category fallback — both were removed).
+- Filename convention: every phrase's `filename` is `{categoryId}-{phraseId}` (e.g. `3-2` = category 3, phrase 2); the file must live at `assets/audio/{categoryId}-{phraseId}.mp3`. Phrases whose zikr text matches an already-bundled clip may reference that clip's name instead of their own (e.g. evening phrase `4-2` → `3-2` — same zikr); the validator enforces the text match. `scripts/validate-azkar.mjs` errors on any deviation.
 - Audio clips are bundled locally inside the app under `assets/audio/` and resolved through `expo-asset`.
 - `audioSource.ts` resolves a phrase to `{ kind: 'local', filename }` or `{ kind: 'missing' }`, then loads the matching local asset and verifies it exists via `expo-file-system` before returning a playable URI.
-- Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file.
+- Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file (a dynamic `assets/audio/` directory path cannot work — Metro needs static requires, so the map *is* the directory default).
 - There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
-- Current coverage: 29 clips under `assets/audio/` (`1`–`14`, `15-16`, `17`–`22`, `24`–`31`); the dataset wires 46 of 132 phrases (categories `3` + `4` fully; all other categories have no audio yet).
+- Current coverage: 29 clips under `assets/audio/` named after their canonical phrase (e.g. `3-2.mp3`, `4-4.mp3`); 53 phrases resolve to them (29 canonical owners + 24 shared-text references like evening `4-2` → `3-2`). The clips were formerly shared across 65 phrases (morning/evening duplicates of the same zikr); phrases whose `filename` is not in `AUDIO_ASSETS` resolve to `missing`, so the play control stays hidden until their files are added — an open data task.
 
 ### Internationalization
 
@@ -224,6 +228,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id. New ca
 ## Workflow Notes
 
 - GitHub issues are the source of truth for tasks — `TODO.md` is a changelog only (completed work log, no new checkboxes).
+- `DEPLOY.md` is the Google Play release checklist (status table + ordered next steps); keep it updated as Play Console steps complete.
 - Task lifecycle via `gh-cli` labels: `todo` (default on create) → `in-progress` (claimed) → `review` (review passed, awaiting user approval) → `done` + closed. `review` is now a required gate — no commit/push before it.
 - Agent skills in `.agents/skills/` encode recurring workflows — load the relevant skill before starting work:
   - `zikrukum-plan` — plan + edge cases + questions, then `gh issue create --label todo`.

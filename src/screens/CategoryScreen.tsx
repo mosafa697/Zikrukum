@@ -526,9 +526,11 @@ export function CategoryScreen() {
   }, [doLeaveHeader, navigation]);
 
   const handleCompletionDismiss = useCallback(() => {
-    // Dismiss only — clicks/index progress is left intact.
+    // Dismiss then return to Categories — the category is finished, so the
+    // saved index is cleared and the store reset (same path as header leave).
     setCompletionVisible(false);
-  }, []);
+    void doLeaveHeader();
+  }, [doLeaveHeader]);
 
   // Android hardware back key. Consumed while incomplete so the dialog shows
   // instead; complete (or zero taps) falls through to the default behavior.
