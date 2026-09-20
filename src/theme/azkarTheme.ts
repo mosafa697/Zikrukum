@@ -20,6 +20,11 @@ export type AzkarTheme = {
   secondaryTextColor: string;
   sliderBg: string;
   sliderBgActive: string;
+  // Switch (Settings toggles) ON-state colors, themed per palette:
+  // solarized keeps the emerald look, light gets shiny light blue,
+  // dark gets a dark blue — both matching each theme's accent family.
+  switchTrackActive: string;
+  switchThumbActive: string;
   // Dhikr progress-pill fill, tuned so the centered title (textColor) stays
   // legible on the fill — measured label-on-fill contrast: light 5.77,
   // solarized ~4.49, dark 5.44 (label-on-track is >= 9 in all themes).
@@ -56,6 +61,8 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     secondaryTextColor: '#6B7280',
     sliderBg: '#E5E3DD',
     sliderBgActive: '#3B82F6',
+    switchTrackActive: '#9BC6FC',
+    switchThumbActive: '#3B82F6',
     progressFill: '#60A5FA',
     textColor: '#1F2937',
     verseGradient: ['#3B82F6', '#1D4ED8'],
@@ -86,6 +93,8 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     secondaryTextColor: '#766A56',
     sliderBg: '#E8E0D0',
     sliderBgActive: '#1E4338',
+    switchTrackActive: '#1E4338',
+    switchThumbActive: '#2F5D50',
     progressFill: '#BB9A4F',
     textColor: '#3E352B',
     verseGradient: ['#1E4338', '#16352D'],
@@ -116,6 +125,8 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     secondaryTextColor: '#94A3B8',
     sliderBg: '#27344D',
     sliderBgActive: '#3B82F6',
+    switchTrackActive: '#1E3A8A',
+    switchThumbActive: '#2563EB',
     progressFill: '#1D4ED8',
     textColor: '#E2E8F0',
     verseGradient: ['#1E3A8A', '#172554'],

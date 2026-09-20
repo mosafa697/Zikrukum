@@ -174,7 +174,8 @@ export const ar = {
   onboardingFeatureThemesTitle: 'راحة لعينك وقلبك',
   onboardingFeatureThemesBody: 'تصاميم إسلامية وسمات مريحة للعين مع خيارات لتكبير الخط لراحة القرّاء.',
   onboardingFeatureFavouritesTitle: 'غراس الجنة وإنجازاتك',
-  onboardingFeatureFavouritesBody: 'احفظ أذكارك المحببة في الصدارة، وواظب على سلسلة أيّامك لتجني أجر الاستمرارية.',
+  onboardingFeatureFavouritesBody:
+    'احفظ أذكارك المحببة في الصدارة، وواظب على سلسلة أيّامك لتجني أجر الاستمرارية.',
   onboardingReadyTitle: 'أنر قلبك بالذكر',
   onboardingReadyBody: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ — ابدأ رحلتك الآن ووثّق صلتك بالله.',
 } as const;

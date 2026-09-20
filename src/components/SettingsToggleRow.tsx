@@ -1,9 +1,10 @@
 import React from 'react';
-import { I18nManager, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
+import { ThemedSwitch } from './ThemedSwitch';
 
 type SettingsToggleRowProps = {
   label: string;
@@ -59,12 +60,7 @@ export function SettingsToggleRow({
         </Text>
       </View>
       <View pointerEvents="none">
-        <Switch
-          value={checked}
-          trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-          thumbColor="#FFFFFF"
-          ios_backgroundColor={colors.sliderBg}
-        />
+        <ThemedSwitch checked={checked} colors={colors} />
       </View>
     </Pressable>
   );

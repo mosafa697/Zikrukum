@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { I18nManager, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,6 +43,7 @@ import { removeStoredValue } from '../utils/storage';
 import { azkar } from '../mappers/azkarMapper';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SettingsToggleRow } from '../components/SettingsToggleRow';
+import { ThemedSwitch } from '../components/ThemedSwitch';
 import { PermissionRationaleDialog } from '../components/PermissionRationaleDialog';
 import {
   markRationaleShown,
@@ -384,12 +385,7 @@ export function SettingsScreen() {
             style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }, styles.reminderSwitchWrap]}
           >
             <View pointerEvents="none">
-              <Switch
-                value={effectiveEnabled}
-                trackColor={{ false: colors.sliderBg, true: colors.sliderBgActive }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={colors.sliderBg}
-              />
+              <ThemedSwitch checked={effectiveEnabled} colors={colors} />
             </View>
           </Pressable>
         </View>
