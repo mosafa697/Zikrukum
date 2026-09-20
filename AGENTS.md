@@ -76,8 +76,7 @@ Zikrukum/
     │   ├── features.ts         # Build-time kill-switches (FEATURES map) — edit before each build
     │   └── useFeature.ts       # useFeature(key) hook wrapper around isFeatureEnabled
     ├── dataset/
-    │   ├── azkar.json          # Bundled azkar data (merged 135-cat union, Arabic text)
-    │   └── azkar-sample.json   # Legacy 22-cat dataset, retained as reference only
+    │   └── azkar.json          # Bundled azkar data (merged 135-cat union, Arabic text)
     ├── i18n/
     │   ├── ar.ts               # Arabic strings (source of truth for keys)
     │   └── index.ts            # t(key) lookup helper; add new languages here
@@ -178,7 +177,7 @@ Per-category phrase indices are stored directly via `setStoredValue('azkar-index
 ### Data Flow (Azkar Content)
 
 ```
-src/dataset/azkar.json (merged 135-cat union; duplicates resolved in favour of `azkar-sample.json`)
+src/dataset/azkar.json (merged 135-cat union; single bundled dataset)
         │  (raw: [{ id, category, array: [{ id, text, count, subtext?, filename? }] }])
         ▼
 src/mappers/azkarMapper.ts   →  typed AzkarCategory[] (adds FontAwesome5 icon per category id)
@@ -207,7 +206,7 @@ Category icons are hardcoded in `CATEGORY_ICON_MAP` keyed by category id (FontAw
 - Local MP3s must be registered in `audioSource.ts`'s static `AUDIO_ASSETS` map so Metro sees the `require()` at build time and bundles the file (a dynamic `assets/audio/` directory path cannot work — Metro needs static requires, so the map *is* the directory default).
 - There is no remote URL or CDN fetch path; all audio comes from bundled local assets.
 - The placeholder `config.audio.baseUrl` and `config.audio.cacheDir` have been removed in favor of the local asset convention.
-- Current coverage: 29 clips under `assets/audio/` named after their canonical phrase (e.g. `3-2.mp3`, `4-4.mp3`); 53 phrases resolve to them (29 canonical owners + 24 shared-text references like evening `4-2` → `3-2`). The clips were formerly shared across 65 phrases (morning/evening duplicates of the same zikr); the other ~250 phrases resolve to a playback error (retry affordance) until their files are added — an open data task.
+- Current coverage: 29 clips under `assets/audio/` named after their canonical phrase (e.g. `3-2.mp3`, `4-4.mp3`); 53 phrases resolve to them (29 canonical owners + 24 shared-text references like evening `4-2` → `3-2`). The clips were formerly shared across 65 phrases (morning/evening duplicates of the same zikr); phrases whose `filename` is not in `AUDIO_ASSETS` resolve to `missing`, so the play control stays hidden until their files are added — an open data task.
 
 ### Internationalization
 

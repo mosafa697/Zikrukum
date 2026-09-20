@@ -60,7 +60,7 @@ export function resolveAudioSource(phrase: AzkarPhrase): AudioSource {
 
   const resolvedFilename = stripAudioPath(filename);
 
-  if (!resolvedFilename) {
+  if (!resolvedFilename || AUDIO_ASSETS[resolvedFilename] === undefined) {
     return { kind: 'missing' };
   }
 

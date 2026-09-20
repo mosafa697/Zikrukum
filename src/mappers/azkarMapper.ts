@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import azkarData from '../dataset/azkar.json';
-// import azkarData from '../dataset/azkar-sample.json';
 
 type FontAwesome5Name = ComponentProps<typeof FontAwesome5>['name'];
 

@@ -11,11 +11,11 @@ description: Manage Zikrukum azkar dataset, category icons, and bundled local au
 Use when adding/editing categories or phrases, adding audio clips, or debugging `noAudio` / `audioError` states.
 
 ## Dataset + mapper
-- Source: `src/dataset/azkar.json` (merged 135-cat union; `azkar-sample.json` retained as reference only), raw shape `[{ id, category, array: [{ id, text, count, subtext?, filename? }] }]` — no `audio` key anywhere, no category-level keys beyond `id`/`category`/`array`.
+- Source: `src/dataset/azkar.json` (merged 135-cat union; single bundled dataset), raw shape `[{ id, category, array: [{ id, text, count, subtext?, filename? }] }]` — no `audio` key anywhere, no category-level keys beyond `id`/`category`/`array`.
 - Mapper: `src/mappers/azkarMapper.ts` produces typed `AzkarCategory[]` (`id`, `title`, `icon`, `phrases`, `audioRef?`) and `AzkarPhrase` (`id`, `text`, `count`, `subtext`, `audio?`, `filename?`).
 - Icons: `CATEGORY_ICON_MAP` keyed by category id (FontAwesome5 names, validated against the free glyph set). New categories need an entry; fallback is `bookmark` (never hit today — all 135 merged-dataset ids are mapped). Every name must exist in FontAwesome5 — a non-FA name (like the old `albums-outline` fallback) warns on web (`"not a valid icon name"`).
 - Consumers: `CategoryScreen` does `azkar.find((item) => item.id.toString() === categoryId)` (route param is a string) then `dispatch(setPhases(...))`; `PhraseCard` renders one FlatList page per phrase.
-- Current coverage: 29 clips under `assets/audio/` named after their canonical phrase (e.g. `3-2.mp3`, `4-4.mp3`); 53 phrases resolve to them (29 canonical owners + 24 shared-text references like evening `4-2` → `3-2`). The clips were formerly shared across 65 phrases (morning/evening duplicates of the same zikr); the other ~250 phrases resolve to a playback error (retry affordance) until their files are added — an open data task.
+- Current coverage: 29 clips under `assets/audio/` named after their canonical phrase (e.g. `3-2.mp3`, `4-4.mp3`); 53 phrases resolve to them (29 canonical owners + 24 shared-text references like evening `4-2` → `3-2`). The clips were formerly shared across 65 phrases (morning/evening duplicates of the same zikr); phrases whose `filename` is not in `AUDIO_ASSETS` resolve to `missing`, so the play control stays hidden until their files are added — an open data task.
 
 ## Audio (local only)
 - Source of truth: the per-phrase `filename` field only (no `audio` key, no category fallback). Empty `filename` normalizes to `missing`.
