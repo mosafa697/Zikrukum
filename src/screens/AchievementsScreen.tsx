@@ -1,11 +1,26 @@
-import React, { useMemo } from 'react';
-import { FlatList, StyleSheet, Text, View, type ListRenderItemInfo } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ListRenderItemInfo,
+} from 'react-native';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { CategoryDialog } from '../components/CategoryDialog';
 import { RootState } from '../store';
 import { azkar, type AzkarCategory } from '../mappers/azkarMapper';
+import { resetTotalCount } from '../store/slices/totalCountSlice';
+import { MILESTONES_DEFAULTS, setMilestones } from '../store/slices/milestonesSlice';
+import { removeStoredValue } from '../utils/storage';
+import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
+import { config } from '../config/config';
 import {
   COUNT_MILESTONES,
   COUNT_MILESTONE_COPY,
@@ -18,6 +33,8 @@ import { AZKAR_PRIMARY_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { t } from '../i18n';
 import { formatNumber } from '../utils/numberFormatting';
 
+const SCROLL_TOP_THRESHOLD = 350;
+
 type Badge = {
   key: string;
   icon: AzkarCategory['icon'];
@@ -29,11 +46,54 @@ type Badge = {
 };
 
 export function AchievementsScreen() {
+  const dispatch = useDispatch();
   const totalCount = useSelector((state: RootState) => state.totalCount.value);
   const achieved = useSelector((state: RootState) => state.milestones.achieved);
   const streakCount = useSelector((state: RootState) => state.milestones.streakCount);
   const themeName = useSelector((state: RootState) => state.theme.value);
   const colors = getAzkarTheme(themeName);
+
+  const [clearConfirmVisible, setClearConfirmVisible] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollTopAnim = useMemo(() => new Animated.Value(0), []);
+  const listRef = useRef<FlatList<Badge>>(null);
+  const scrollTopVisibleRef = useRef(false);
+
+  useEffect(() => {
+    Animated.timing(scrollTopAnim, {
+      toValue: showScrollTop ? 1 : 0,
+      duration: 200,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  }, [showScrollTop, scrollTopAnim]);
+
+  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
+    const shouldShow = event.nativeEvent.contentOffset.y > SCROLL_TOP_THRESHOLD;
+    if (shouldShow !== scrollTopVisibleRef.current) {
+      scrollTopVisibleRef.current = shouldShow;
+      setShowScrollTop(shouldShow);
+    }
+  }, []);
+
+  const doScrollToTop = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+  const guardedScrollToTop = useTimeGuardedCallback(doScrollToTop, config.interaction.navButtonGuardMs);
+
+  const handleClearProgress = useCallback(async () => {
+    await Promise.all(azkar.map((category) => removeStoredValue(`azkar-index-${category.id}`)));
+    dispatch(resetTotalCount());
+    dispatch(setMilestones({ ...MILESTONES_DEFAULTS }));
+    setClearConfirmVisible(false);
+  }, [dispatch]);
+  const guardedClearProgress = useTimeGuardedCallback(
+    () => void handleClearProgress(),
+    config.interaction.navButtonGuardMs
+  );
+  const guardedClearCancel = useTimeGuardedCallback(
+    () => setClearConfirmVisible(false),
+    config.interaction.navButtonGuardMs
+  );
 
   // Read-only derivation from already-tracked data — no new storage or tracking.
   const badges = useMemo<Badge[]>(() => {
@@ -135,14 +195,68 @@ export function AchievementsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgColor }]}>
-      <ScreenHeader title={t('achievements')} showBack />
+      <ScreenHeader
+        title={t('achievements')}
+        showBack
+        rightAction={
+          <Pressable
+            onPress={() => setClearConfirmVisible(true)}
+            hitSlop={8}
+            android_ripple={{ color: colors.buttonHoverBgColor, borderless: true }}
+            accessibilityRole="button"
+            accessibilityLabel={t('clearProgress')}
+            style={({ pressed }) => [styles.clearBtn, { opacity: pressed ? 0.7 : 1 }]}
+          >
+            <Ionicons name="trash-outline" size={20} color={colors.textColor} />
+          </Pressable>
+        }
+      />
+      <CategoryDialog
+        visible={clearConfirmVisible}
+        icon="trash-outline"
+        title={t('clearProgressTitle')}
+        body={t('clearProgressBody')}
+        actions={[
+          { label: t('cancel'), onPress: guardedClearCancel },
+          { label: t('clearProgressConfirm'), onPress: guardedClearProgress, primary: true },
+        ]}
+        onRequestClose={guardedClearCancel}
+        accessibilityLabel={t('clearProgress')}
+      />
       <FlatList
+        ref={listRef}
         data={badges}
         keyExtractor={(item) => item.key}
         renderItem={renderBadge}
         contentContainerStyle={styles.list}
+        onScroll={handleScroll}
         showsVerticalScrollIndicator={false}
       />
+      <Animated.View
+        style={[
+          styles.scrollTopWrap,
+          {
+            opacity: scrollTopAnim,
+            transform: [
+              {
+                scale: scrollTopAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }),
+              },
+            ],
+            pointerEvents: showScrollTop ? 'auto' : 'none',
+          } as any,
+        ]}
+      >
+        <Pressable
+          onPress={guardedScrollToTop}
+          hitSlop={8}
+          accessibilityLabel={t('backToTop')}
+          accessibilityRole="button"
+        >
+          <LinearGradient colors={colors.accentGradient} style={styles.scrollTopBtn}>
+            <Ionicons name="arrow-up" size={22} color={colors.accentTextColor} />
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -150,6 +264,35 @@ export function AchievementsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { padding: 16, gap: 12, paddingBottom: 32 },
+  clearBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+  },
+  scrollTopWrap: {
+    position: 'absolute',
+    left: 16,
+    bottom: 24,
+    zIndex: 10,
+  },
+  scrollTopBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 14px rgba(0,0,0,0.2)' } as any,
+      default: {
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 6,
+      },
+    }),
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -2,7 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export type MilestonesState = {
   enabled: boolean;
-  /** Fire-once keys (e.g. 'count-100', 'category-3', 'streak-7'). Never cleared on reset. */
+  /** Fire-once keys (e.g. 'count-100', 'category-3', 'streak-7'). Only cleared
+   *  explicitly by the Achievements clear-progress action (#47), never by resets. */
   achieved: string[];
   streakCount: number;
   /** Local calendar day 'YYYY-MM-DD' of the last counted open, or null. */

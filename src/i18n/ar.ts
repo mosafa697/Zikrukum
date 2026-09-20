@@ -152,4 +152,9 @@ export const ar = {
   achievementLocked: 'مغلق',
   achievementOfAdhkar: 'من الأذكار',
   achievementDays: 'أيام',
+  clearProgress: 'مسح التقدم',
+  clearProgressTitle: 'مسح كل التقدم؟',
+  clearProgressBody:
+    'سيتم إعادة تعيين جميع الإنجازات والسلسلة اليومية وعدد الأذكار الكلي. لا يمكن الرجوع عن هذا الإجراء.',
+  clearProgressConfirm: 'مسح التقدم',
 } as const;
