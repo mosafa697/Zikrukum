@@ -54,6 +54,8 @@ type PhraseCardProps = {
   audioRate: number;
   onRateChange: (rate: number) => void;
   onSeekAudio: (seconds: number) => void;
+  audioRepeat: boolean;
+  onRepeatChange: (repeat: boolean) => void;
 };
 
 export function PhraseCard({
@@ -70,6 +72,8 @@ export function PhraseCard({
   audioRate,
   onRateChange,
   onSeekAudio,
+  audioRepeat,
+  onRepeatChange,
 }: PhraseCardProps) {
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -377,11 +381,13 @@ export function PhraseCard({
           rate={audioRate}
           onRateChange={onRateChange}
           onSeek={onSeekAudio}
+          repeat={audioRepeat}
+          onRepeatChange={onRepeatChange}
         />
 
         {showSubText && phrase.subtext ? (
           <>
-            <View style={[styles.divider, { borderColor: colors.buttonBorderColor }]} />
+            <View style={[styles.divider, { borderTopColor: colors.playerTrack }]} />
             <View style={styles.subtextContainer}>
               <ScrollView
                 style={styles.subtextScroll}
@@ -484,7 +490,7 @@ const styles = StyleSheet.create({
     fontFamily: AZKAR_PRIMARY_FONT,
     fontWeight: '700',
   },
-  divider: { borderTopWidth: 1, width: '100%', marginVertical: 12 },
+  divider: { borderTopWidth: 0.5, width: '100%', marginTop: 16, marginBottom: 12 },
   subtextContainer: {
     height: 72,
     justifyContent: 'center',

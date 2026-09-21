@@ -40,6 +40,18 @@ export type AzkarTheme = {
   tasbihGlowColor: string;
   tasbihTextColor: string;
   tasbihShadowColor: string;
+  // Flat audio player (sits directly on the white card): progress track/fill,
+  // secondary button chips, and time/brown text tones.
+  // Solarized values match the approved mock verbatim (dark green #1F4A3D,
+  // cream #F3EBDD, sand #EADFC9, brown text #5C4E36 / #8A7B62); light/dark
+  // derive from each palette's own accent family.
+  playerTrack: string;
+  playerFill: string;
+  playerSecondaryBg: string;
+  playerSecondaryBgActive: string;
+  playerSecondaryText: string;
+  playerText: string;
+  playerTimeText: string;
 };
 
 export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
@@ -74,6 +86,13 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     tasbihGlowColor: 'rgba(96, 165, 250, 0.42)',
     tasbihTextColor: '#FFFFFF',
     tasbihShadowColor: '#1D4ED8',
+    playerTrack: '#E5E3DD',
+    playerFill: '#3B82F6',
+    playerSecondaryBg: '#F2F0EA',
+    playerSecondaryBgActive: '#E4E2D9',
+    playerSecondaryText: '#4B5563',
+    playerText: '#4B5563',
+    playerTimeText: '#6B7280',
   },
   solarized: {
     bgColor: '#F7EFE2',
@@ -106,6 +125,13 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     tasbihGlowColor: 'rgba(187, 154, 79, 0.4)',
     tasbihTextColor: '#F3ECD8',
     tasbihShadowColor: '#16352D',
+    playerTrack: '#EADFC9',
+    playerFill: '#1F4A3D',
+    playerSecondaryBg: '#F3EBDD',
+    playerSecondaryBgActive: '#E4D5BC',
+    playerSecondaryText: '#5C4E36',
+    playerText: '#5C4E36',
+    playerTimeText: '#8A7B62',
   },
   dark: {
     bgColor: '#0B1120',
@@ -138,6 +164,13 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     tasbihGlowColor: 'rgba(59, 130, 246, 0.38)',
     tasbihTextColor: '#FFFFFF',
     tasbihShadowColor: '#172554',
+    playerTrack: '#27344D',
+    playerFill: '#3B82F6',
+    playerSecondaryBg: '#1E293B',
+    playerSecondaryBgActive: '#27344D',
+    playerSecondaryText: '#94A3B8',
+    playerText: '#94A3B8',
+    playerTimeText: '#94A3B8',
   },
 };
 

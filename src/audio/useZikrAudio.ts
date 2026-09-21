@@ -7,6 +7,7 @@ import {
   setPlaybackStatus,
   setPlaybackTime,
   setPlaybackRate as setPlaybackRateAction,
+  setPlaybackRepeat,
   setPlaybackError,
   resetPlayback,
 } from '../store/slices/playbackSlice';
@@ -31,6 +32,8 @@ type UseZikrAudioResult = {
   rate: number;
   setRate: (rate: number) => void;
   seekTo: (seconds: number) => void;
+  repeat: boolean;
+  setRepeat: (repeat: boolean) => void;
 };
 
 function loadPlayer(uri: string): AudioPlayer {
@@ -77,6 +80,12 @@ export function useZikrAudio({
   // ensurePlayer; the store copy keeps the UI in sync. Seeded from the store
   // so remounts (leave + re-enter) keep the session rate.
   const rateRef = useRef(playbackState.rate);
+  // Session-only repeat (#52). The listener below is created once per player,
+  // so it reads through this ref instead of a stale closure. The store value
+  // itself is reset by setCurrentPhrase (phrase change) and resetPlayback
+  // (screen exit), so no extra bookkeeping is needed here.
+  const repeatRef = useRef(playbackState.repeat);
+  repeatRef.current = playbackState.repeat;
 
   useEffect(() => {
     onLoopRef.current = onLoop;
@@ -146,6 +155,27 @@ export function useZikrAudio({
             return;
           }
           lastLoopAtRef.current = now;
+          if (repeatRef.current) {
+            // Session repeat (#52): loop the audio only — skip the counter
+            // decrement, onLoop and onEnded so looping never counts taps or
+            // auto-advances. The 250ms guard above still swallows duplicate
+            // finish events, and real clips are far longer than 250ms so the
+            // next legit loop is never swallowed.
+            dispatch(setPlaybackTime({ currentTime: 0, duration: player.duration }));
+            void player
+              .seekTo(0)
+              .then(() => {
+                try {
+                  player.play();
+                } catch {
+                  dispatch(setPlaybackError('playbackError'));
+                }
+              })
+              .catch(() => {
+                dispatch(setPlaybackError('playbackError'));
+              });
+            return;
+          }
           remainingRepeatsRef.current -= 1;
           // Notify per-loop so the counter can decrement in sync.
           try {
@@ -170,7 +200,9 @@ export function useZikrAudio({
             return;
           }
           dispatch(setPlaybackStatus('finished'));
-          dispatch(setPlaybackTime({ currentTime: player.duration, duration: player.duration }));
+          // Finished reads better with the mock: play icon + thumb back at the
+          // start instead of parked at the end.
+          dispatch(setPlaybackTime({ currentTime: 0, duration: player.duration }));
           try {
             onEndedRef.current?.();
           } catch {
@@ -304,6 +336,15 @@ export function useZikrAudio({
     [dispatch, phraseId]
   );
 
+  // Toggles the session-only repeat flag (#52). Pure store write — the player
+  // picks it up on the next didJustFinish via repeatRef.
+  const setRepeat = useCallback(
+    (next: boolean) => {
+      dispatch(setPlaybackRepeat(next));
+    },
+    [dispatch]
+  );
+
   // Poll the player while playing so the progress bar/time stay in sync.
   useEffect(() => {
     if (playbackState.status !== 'playing' || !playerRef.current) {
@@ -339,5 +380,15 @@ export function useZikrAudio({
 
   const audioAvailable = isFeatureEnabled('foregroundAudio') && source.kind === 'local' && status !== 'error';
 
-  return { status, audioAvailable, toggle, stop, rate: playbackState.rate, setRate, seekTo };
+  return {
+    status,
+    audioAvailable,
+    toggle,
+    stop,
+    rate: playbackState.rate,
+    setRate,
+    seekTo,
+    repeat: playbackState.repeat,
+    setRepeat,
+  };
 }

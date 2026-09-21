@@ -9,6 +9,9 @@ type PlaybackState = {
   duration: number;
   // Session-only playback speed multiplier (1 = normal). Not persisted.
   rate: number;
+  // Session-only repeat toggle (#52). Loops the audio without firing the
+  // counter/auto-advance path; resets on phrase change and screen exit.
+  repeat: boolean;
   errorKey?: string;
 };
 
@@ -18,6 +21,7 @@ const initialState: PlaybackState = {
   currentTime: 0,
   duration: 0,
   rate: 1,
+  repeat: false,
   errorKey: undefined,
 };
 
@@ -27,6 +31,7 @@ const playbackSlice = createSlice({
   reducers: {
     setCurrentPhrase(state, action: PayloadAction<number | null>) {
       state.currentPhraseId = action.payload;
+      state.repeat = false;
       if (action.payload === null) {
         state.status = 'idle';
         state.errorKey = undefined;
@@ -45,6 +50,9 @@ const playbackSlice = createSlice({
     setPlaybackRate(state, action: PayloadAction<number>) {
       state.rate = action.payload;
     },
+    setPlaybackRepeat(state, action: PayloadAction<boolean>) {
+      state.repeat = action.payload;
+    },
     setPlaybackError(state, action: PayloadAction<string>) {
       state.status = 'error';
       state.errorKey = action.payload;
@@ -54,6 +62,7 @@ const playbackSlice = createSlice({
       state.status = 'idle';
       state.currentTime = 0;
       state.duration = 0;
+      state.repeat = false;
       state.errorKey = undefined;
     },
   },
@@ -64,6 +73,7 @@ export const {
   setPlaybackStatus,
   setPlaybackTime,
   setPlaybackRate,
+  setPlaybackRepeat,
   setPlaybackError,
   resetPlayback,
 } = playbackSlice.actions;

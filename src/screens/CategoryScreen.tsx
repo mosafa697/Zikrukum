@@ -146,6 +146,8 @@ export function CategoryScreen() {
     rate: audioRate,
     setRate: setAudioRate,
     seekTo: seekAudioTo,
+    repeat: audioRepeat,
+    setRepeat: setAudioRepeat,
   } = useZikrAudio({
     phrase: currentPhrase,
     category: categoryData,
@@ -583,6 +585,8 @@ export function CategoryScreen() {
         audioRate={audioRate}
         onRateChange={handleRateChange}
         onSeekAudio={handleSeekAudio}
+        audioRepeat={audioRepeat}
+        onRepeatChange={setAudioRepeat}
       />
       <CategoryDialog
         visible={completionVisible}

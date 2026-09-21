@@ -77,6 +77,9 @@ export const ar = {
   audioNoRecordingSubtext: 'لا يتوفر تسجيل صوتي',
   playbackSpeed: 'سرعة التشغيل',
   seekAudioHint: 'اسحب على الشريط أو اضغط عليه للتنقل في الصوت',
+  audioSeekBackLabel: 'رجوع 10 ثوانٍ',
+  audioSeekForwardLabel: 'تقديم 10 ثوانٍ',
+  audioRepeatLabel: 'تكرار التلاوة',
 
   // SettingsScreen
   audioEnabledLabel: 'تفعيل تشغيل الصوت',

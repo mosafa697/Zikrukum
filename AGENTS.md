@@ -56,9 +56,9 @@ Zikrukum/
 └── src/
     ├── audio/                  # Audio source resolution + local bundled assets
     │   ├── audioSource.ts      # Resolves phrase/category audio fields -> local asset URI or 'missing'
-    │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next, session rate + seek)
+    │   └── useZikrAudio.ts     # expo-audio player hook (load/replace/cleanup, time polling, auto-play-next, session rate + seek + session repeat loop)
     ├── components/             # Shared UI components
-    │       ├── AudioPlayerBar.tsx  # Themed audio player bar (play/pause/loading/missing/error + speed cycle + seekable progress)
+    │       ├── AudioPlayerBar.tsx  # Themed flat LTR audio player (play/pause/loading/error + speed cycle + draggable progress thumb + ±10s seek + session repeat; `direction: 'ltr'` native-only inside forced-RTL)
     │   ├── CategoryDialog.tsx    # Generic themed RTL dialog for CategoryScreen notices (completion + exit confirm)
     │   ├── PermissionRationaleDialog.tsx # One-time pre-permission rationale Modal (themed, RTL, guarded)
     │   ├── PhraseCard.tsx      # Zikr phrase pager: FlatList (pagingEnabled), one page per phrase, vertical scroll per page
@@ -149,7 +149,7 @@ Store shape (`src/store/index.ts`) — one slice per concern, all in `src/store/
 | `haptics` | `{ enabled }` | yes | Vibrate on each successful dhikr count on/off, default off (Settings) |
 | `reminders` | `{ morning: {enabled, time}, evening: {enabled, time}, friday: {enabled, time} }` | yes | Adhkar reminder times (06:00/17:00/Friday 09:00 defaults, `@react-native-community/datetimepicker`) |
 | `milestones` | `{ enabled, achieved: string[], streakCount, lastOpenDate }` | yes | Progress milestones (fire-once `achieved` set incl. count-seed migration; streak advances once/day; cleared only by the explicit Achievements clear-progress action #47) |
-| `playback` | `{ currentPhraseId, status, currentTime, duration, errorKey? }` | no | Current audio playback state |
+| `playback` | `{ currentPhraseId, status, currentTime, duration, rate, repeat, errorKey? }` | no | Current audio playback state (session rate + session repeat toggle — repeat loops audio without counting/auto-advancing, resets on phrase change/exit) |
 
 ### Persistence Pattern
 
