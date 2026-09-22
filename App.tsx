@@ -20,6 +20,7 @@ import { getLocalDayStrings, isMilestonePress } from './src/notifications/milest
 import { advanceStreak, type MilestonesState } from './src/store/slices/milestonesSlice';
 import { isFeatureEnabled } from './src/config/features';
 import type { RemindersState } from './src/store/slices/reminderSlice';
+import { setAudioModeAsync } from 'expo-audio';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -29,6 +30,15 @@ export default function App() {
     Amiri: require('./assets/fonts/Amiri-Regular.ttf'),
     AmiriBold: require('./assets/fonts/Amiri-Bold.ttf'),
   });
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: 'doNotMix',
+    });
+  }, []);
+
   const [appStore, setAppStore] = useState<AppStore | null>(null);
 
   // Load persisted settings before first render

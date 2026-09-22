@@ -185,6 +185,17 @@ export function useZikrAudio({
       });
 
       playerRef.current = player;
+
+      try {
+        player.setActiveForLockScreen(true, {
+          title: phrase?.text ?? phrase?.text ?? 'Zikr', // whatever field holds the display text
+          artist: category?.title,
+          // albumTitle / artworkUrl optional
+        });
+      } catch {
+        // ignore — lock screen registration is best-effort
+      }
+
       try {
         // Keep the recitation voice natural at slow/fast speeds, and carry
         // over the session rate chosen via setRate.
@@ -247,6 +258,7 @@ export function useZikrAudio({
 
     if (player) {
       try {
+        player.setActiveForLockScreen(false);
         player.pause();
         await player.seekTo(0);
       } catch {

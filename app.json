@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "Zikrukum",
-    "slug": "zikrukum",
+    "slug": "zikrukuum",
+    "owner": "mahmoudtrk",
     "scheme": "zikrukum",
     "platforms": [
       "ios",
@@ -16,7 +17,8 @@
     ],
     "icon": "./assets/icon.png",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.azkar.zikrukum"
     },
     "android": {
       "package": "com.azkar.zikrukum",
@@ -31,12 +33,19 @@
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",
-        "android.permission.RECEIVE_BOOT_COMPLETED"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ]
     },
     "plugins": [
       "expo-font",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ],
       [
         "expo-build-properties",
         {
@@ -63,7 +72,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "d59c07b9-6625-49d8-b7d6-9d2437abd33b"
+        "projectId": "486edc81-69d1-4d12-9936-ea0c69bbf38c"
       }
     }
   }
