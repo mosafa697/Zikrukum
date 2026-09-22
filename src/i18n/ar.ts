@@ -87,6 +87,14 @@ export const ar = {
   volumeNavLabel: 'التنقل بين الأذكار بأزرار الصوت',
   vibrateOnCount: 'الاهتزاز عند كل عدّ',
 
+  // About section (SettingsScreen)
+  aboutSection: 'عَنِ التَّطْبِيقِ',
+  appVersionLabel: 'الإِصْدَارُ',
+  developerCredit: 'تَطْوِيرُ فَرِيقِ {team}',
+  licenseSummary: 'هَذَا التَّطْبِيقُ مَفْتُوحُ المَصْدَرِ تَحْتَ رُخْصَةِ MIT',
+  rateOnPlay: 'قَيِّمْ عَلَى Google Play',
+  contactEmailLabel: 'تَوَاصَلْ مَعَنَا',
+
   // Notifications — permission & channel
   notifPermissionOpenSettings: 'فتح الإعدادات',
   notifPermissionRequest: 'تفعيل التنبيهات',

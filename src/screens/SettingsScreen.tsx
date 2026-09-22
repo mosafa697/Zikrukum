@@ -1,8 +1,19 @@
 import React, { useCallback, useState } from 'react';
-import { I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  I18nManager,
+  Image,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -308,6 +319,29 @@ export function SettingsScreen() {
     () => void openNotifSettings(ADHKAR_CHANNEL_ID),
     config.interaction.navButtonGuardMs
   );
+
+  // About card actions (#53). Static config only — no network fetch; links
+  // hand off to the OS (Play Store / mail client) and fail silently when no
+  // handler app exists.
+  const appVersion = Constants.expoConfig?.version ?? '';
+  const developerCredit = t('developerCredit').replace('{team}', config.about.developerName);
+
+  const openPlayStore = useCallback(() => {
+    void Linking.openURL(`market://details?id=${config.about.playPackageId}`).catch(() => {
+      void Linking.openURL(config.about.playStoreWebUrl).catch(() => {
+        // Fail silently — no store app or handler available.
+      });
+    });
+  }, []);
+
+  const openContactEmail = useCallback(() => {
+    void Linking.openURL(`mailto:${config.about.contactEmail}`).catch(() => {
+      // Fail silently — no mail client available.
+    });
+  }, []);
+
+  const guardedOpenPlayStore = useTimeGuardedCallback(openPlayStore, config.interaction.navButtonGuardMs);
+  const guardedContactEmail = useTimeGuardedCallback(openContactEmail, config.interaction.navButtonGuardMs);
 
   const handleTimeChange = (_event: unknown, selectedDate?: Date) => {
     const target = pickerTarget;
@@ -733,6 +767,71 @@ export function SettingsScreen() {
             </View>
           )}
         </View>
+
+        <View
+          style={[
+            styles.card,
+            {
+              ...styles.cardThemed,
+              backgroundColor: colors.cardBgColor,
+              borderColor: colors.buttonBorderColor,
+            },
+          ]}
+        >
+          <Text style={[styles.label, styles.aboutLabel, { color: colors.textColor }]}>
+            {t('aboutSection')}
+          </Text>
+          <View style={styles.aboutIdentityRow}>
+            <Image source={require('../../assets/icon.png')} style={styles.aboutAppIcon} />
+            <View style={styles.aboutIdentityText}>
+              <Text style={[styles.aboutAppName, { color: colors.textColor }]}>{config.about.appName}</Text>
+              {appVersion ? (
+                <Text style={[styles.aboutVersion, { color: colors.secondaryTextColor }]}>
+                  {t('appVersionLabel')} {formatNumber(appVersion)}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+          <Text style={[styles.aboutCredit, { color: colors.secondaryTextColor }]}>{developerCredit}</Text>
+          <View style={[styles.aboutLicenseBox, { backgroundColor: colors.secondaryBgColor }]}>
+            <Text style={[styles.aboutLicenseText, { color: colors.secondaryTextColor }]}>
+              {t('licenseSummary')}
+            </Text>
+            <Text style={[styles.aboutLicenseCopyright, { color: colors.secondaryTextColor }]}>
+              {config.about.licenseCopyright}
+            </Text>
+          </View>
+          {Platform.OS === 'android' ? (
+            <Pressable
+              onPress={guardedOpenPlayStore}
+              accessibilityRole="button"
+              accessibilityLabel={t('rateOnPlay')}
+            >
+              <View
+                style={[
+                  styles.aboutActionRow,
+                  styles.aboutActionRowDivided,
+                  { borderBottomColor: colors.buttonBorderColor },
+                ]}
+              >
+                <Ionicons name="star-outline" size={22} color={colors.iconColor} />
+                <Text style={[styles.aboutActionText, { color: colors.textColor }]}>{t('rateOnPlay')}</Text>
+              </View>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={guardedContactEmail}
+            accessibilityRole="button"
+            accessibilityLabel={t('contactEmailLabel')}
+          >
+            <View style={styles.aboutActionRow}>
+              <Ionicons name="mail-outline" size={22} color={colors.iconColor} />
+              <Text style={[styles.aboutActionText, { color: colors.textColor }]}>
+                {t('contactEmailLabel')}
+              </Text>
+            </View>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
@@ -936,5 +1035,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 12,
+  },
+  aboutLabel: { textAlign: 'center' },
+  aboutIdentityRow: {
+    // Direction-agnostic: content is centered as a group, so plain 'row'
+    // renders the icon leading on the right in forced-RTL native and on the
+    // left on web/LTR without any platform split.
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  aboutAppIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+  },
+  aboutIdentityText: { alignItems: 'center' },
+  aboutAppName: {
+    fontSize: 17,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
+  },
+  aboutVersion: {
+    fontSize: 12,
+    fontFamily: AZKAR_COUNTER_FONT,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  aboutCredit: {
+    fontSize: 13,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    marginBottom: 12,
+  },
+  aboutLicenseBox: {
+    borderRadius: 14,
+    padding: 12,
+    gap: 4,
+    marginBottom: 12,
+  },
+  aboutLicenseText: {
+    fontSize: 12,
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    lineHeight: 18,
+  },
+  aboutLicenseCopyright: {
+    fontSize: 12,
+    fontFamily: AZKAR_COUNTER_FONT,
+    textAlign: 'center',
+  },
+  aboutActionRow: {
+    // Centered pair (icon + label) — no direction branch needed.
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 44,
+    paddingVertical: 8,
+  },
+  aboutActionRowDivided: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  aboutActionText: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: AZKAR_PRIMARY_FONT,
+    textAlign: 'center',
+    writingDirection: 'rtl',
   },
 });

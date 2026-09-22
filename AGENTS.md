@@ -74,7 +74,7 @@ Zikrukum/
     │   ├── permissions.ts      # useNotificationPermissions hook + exact-alarm helpers
     │   └── scheduler.ts        # getNextTriggerDate / wall-clock helper for daily triggers
     ├── config/
-    │   ├── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms)
+    │   ├── config.ts           # App constants: audio asset dir, font scale limits, interaction guards (ms), about card (app name, developer, MIT, Play package, contact email)
     │   ├── features.ts         # Build-time kill-switches (FEATURES map) — edit before each build
     │   └── useFeature.ts       # useFeature(key) hook wrapper around isFeatureEnabled
     ├── dataset/
