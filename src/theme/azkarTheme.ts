@@ -81,7 +81,7 @@ export const AZKAR_THEME_MAP: Record<AzkarThemeName, AzkarTheme> = {
     verseTextColor: '#FFFFFF',
     verseSubTextColor: '#DBEAFE',
     accentGradient: ['#9BC6FC', '#60A5FA'],
-    accentTextColor: '#d3d6db',
+    accentTextColor: '#002762',
     tasbihGradient: ['#60A5FA', '#3B82F6', '#1D4ED8'],
     tasbihGlowColor: 'rgba(96, 165, 250, 0.42)',
     tasbihTextColor: '#FFFFFF',
