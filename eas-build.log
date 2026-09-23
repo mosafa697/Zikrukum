@@ -1,0 +1,14 @@
+★ eas-cli@24.7.0 is now available.
+To upgrade, run:
+npm install -g eas-cli
+Proceeding with outdated version.
+
+You don't have the required permissions to perform this operation.
+
+This can sometimes happen if you are logged in as incorrect user.
+Run eas whoami to check the username you are logged in as.
+Run eas login to change the account.
+
+Original error message: Entity not authorized: AppEntity[d59c07b9-6625-49d8-b7d6-9d2437abd33b] (viewer = RegularUserViewerContext[470ce25f-a892-40cd-bda5-b635dccbf9f6], action = READ, ruleIndex = -1)
+Request ID: 7b8bb0db-28ad-4df3-a660-bdfb26e7aa53
+    Error: GraphQL request failed.
