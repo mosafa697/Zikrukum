@@ -105,7 +105,9 @@ Zikrukum/
     ├── utils/
         ├── numberFormatting.ts # formatNumber() (Western digits; Hindi conversion disabled) + formatAudioTime()
         ├── storage.ts          # AsyncStorage get/set/remove wrappers (JSON, typed fallback)
-        └── useTimeGuardedCallback.ts # Debounce/guard hook for taps
+        ├── useTimeGuardedCallback.ts # Debounce/guard hook for taps
+        ├── volumeManager.ts    # Expo Go-guarded `react-native-volume-manager` accessor (null on web/unlinked)
+        └── useVolumeNav.ts     # Shared volume-key nav hook: 1 press = 1 action, hold collapses via `longPressMs` cooldown, every swallowed event still snaps back to baseline (used by CategoryScreen + FreeTasbihScreen)
 ```
 
 ## Architecture

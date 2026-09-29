@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BackHandler, StyleSheet, View, Text } from 'react-native';
 import * as KeepAwake from 'expo-keep-awake';
-import { getVolumeManager } from '../utils/volumeManager';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,12 +28,7 @@ import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
 import { useZikrAudio } from '../audio/useZikrAudio';
 import { triggerCountHaptic } from '../utils/haptics';
 import { config } from '../config/config';
-import { isFeatureEnabled } from '../config/features';
-
-// Volume nav pins the system volume mid-range so both keys always produce a
-// detectable delta (at the min/max rails Android fires no event).
-const VOLUME_NAV_BASELINE = 0.5;
-const VOLUME_NAV_RAIL_EPS = 0.02;
+import { useVolumeNav } from '../utils/useVolumeNav';
 
 export function CategoryScreen() {
   const dispatch = useDispatch();
@@ -99,11 +93,7 @@ export function CategoryScreen() {
   // which cannot read fresh Redux state without re-registering.
   const hapticsRef = useRef(hapticsEnabled);
   hapticsRef.current = hapticsEnabled;
-  const lastVolumeRef = useRef<number | null>(null);
-  const volumeNavGuardRef = useRef(0);
-  const volumeRestoringRef = useRef(false);
   // Passes presses through to the OS while audio plays (#10).
-  const isAudioPlayingRef = useRef(false);
   // Playback intent survives Redux-status gaps (status events not delivered
   // on a device): set on play press, cleared on pause/finish/error.
   const playIntentRef = useRef(false);
@@ -164,7 +154,6 @@ export function CategoryScreen() {
   }, [audioEnabled, currentPhrase, toggleAudio]);
 
   const isAudioPlaying = audioStatus === 'playing';
-  isAudioPlayingRef.current = isAudioPlaying;
   const audioStatusRef = useRef(audioStatus);
   audioStatusRef.current = audioStatus;
   // Intent covers the windows Redux status misses (loading before the first
@@ -201,26 +190,6 @@ export function CategoryScreen() {
       playIntentRef.current = false;
     }
   }, [audioStatus]);
-
-  // While audio is active the native volume UI stays visible and presses pass
-  // through; otherwise nav mode re-engages and the baseline re-syncs.
-  useEffect(() => {
-    if (!isFeatureEnabled('volumeNav')) return;
-    if (!volumeNavEnabled) return;
-    const vm = getVolumeManager();
-    if (!vm) return;
-    void vm.showNativeVolumeUI({ enabled: audioActive });
-    if (!audioActive) {
-      void vm
-        .getVolume()
-        .then(({ volume }) => {
-          lastVolumeRef.current = volume;
-        })
-        .catch(() => {
-          // Keep the previous baseline; listener re-baselines on next event.
-        });
-    }
-  }, [volumeNavEnabled, audioActive, audioStatus]);
 
   // Keep the screen awake while the user is reading zikr on this screen.
   useEffect(() => {
@@ -303,150 +272,53 @@ export function CategoryScreen() {
     }
   }, [categoryPhrases.length]);
 
-  // Hardware volume buttons navigate between zikr phrases. The native volume UI
-  // is hidden and the volume is snapped back to its previous value so the
-  // buttons act as next/previous controls without actually changing the volume.
-  // Only active while the user has enabled the feature in Settings and
-  // the global volumeNav feature flag is on.
+  // Hardware volume buttons navigate between zikr phrases (single physical
+  // press = one action; long-press auto-repeat collapses to one via the shared
+  // hook cooldown + always-snap-back, so the baseline never drifts to a rail).
   // Exception (#10): while audio is active, presses control system volume.
-  useEffect(() => {
-    if (!isFeatureEnabled('volumeNav')) return;
-    if (!volumeNavEnabled) return;
-    let listener: { remove: () => void } | null = null;
+  const handleVolumeUp = useCallback(() => {
+    // Volume up -> go back to the previous zikr without touching the counter.
+    if (indexRef.current > 0) {
+      dispatch(setIndexCount(indexRef.current - 1));
+    }
+  }, [dispatch]);
 
-    const init = async () => {
-      const vm = getVolumeManager();
-      if (!vm) {
-        return;
+  const handleVolumeDown = useCallback(() => {
+    // Volume down -> decrement the current zikr's counter first; once it
+    // reaches the phrase's required count, switch to the next zikr.
+    const maxIndex = maxIndexRef.current;
+    const idx = indexRef.current;
+    const phraseCount = phraseCountRef.current;
+    const currentCount = phraseClicksRef.current;
+    if (currentCount < phraseCount) {
+      const newCount = currentCount + 1;
+      setClicks((prev) => {
+        const next = [...prev];
+        next[idx] = newCount;
+        return next;
+      });
+      dispatch(incrementTotalCount());
+      if (hapticsRef.current) triggerCountHaptic();
+      setIsAnimating(true);
+      if (newCount >= phraseCount) {
+        setTimeout(() => dispatch(incrementIndex()), 300);
       }
-      try {
-        const { volume } = await vm.getVolume();
-        let baseline = volume;
-        if (baseline <= VOLUME_NAV_RAIL_EPS || baseline >= 1 - VOLUME_NAV_RAIL_EPS) {
-          // At a rail no event fires — re-center so both keys work.
-          await vm.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false });
-          try {
-            baseline = (await vm.getVolume()).volume;
-          } catch {
-            baseline = VOLUME_NAV_BASELINE;
-          }
-        }
-        lastVolumeRef.current = baseline;
-        await vm.showNativeVolumeUI({ enabled: false });
-        listener = vm.addVolumeListener(({ volume }) => {
-          if (isAudioPlayingRef.current || playIntentRef.current) {
-            // Audio active: keys belong to the OS; track volume for resume.
-            lastVolumeRef.current = volume;
-            return;
-          }
-          if (volumeRestoringRef.current) {
-            // The swallowed press still moved the real volume — re-baseline.
-            lastVolumeRef.current = volume;
-            return;
-          }
-
-          const last = lastVolumeRef.current;
-          if (last === null || last === undefined) {
-            lastVolumeRef.current = volume;
-            return;
-          }
-          if (volume === last) {
-            // No delta means a system rail — re-center.
-            lastVolumeRef.current = volume;
-            volumeRestoringRef.current = true;
-            void getVolumeManager()
-              ?.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false })
-              .then(async () => {
-                try {
-                  const vm2 = getVolumeManager();
-                  const { volume: actual } = (await vm2?.getVolume()) ?? { volume: VOLUME_NAV_BASELINE };
-                  lastVolumeRef.current = actual;
-                } catch {
-                  lastVolumeRef.current = VOLUME_NAV_BASELINE;
-                }
-              })
-              .catch(() => {
-                lastVolumeRef.current = VOLUME_NAV_BASELINE;
-              })
-              .finally(() => {
-                volumeRestoringRef.current = false;
-              });
-            return;
-          }
-          const now = Date.now();
-          if (now - volumeNavGuardRef.current < config.interaction.counterGuardMs) {
-            // Debounced, but the press still moved the volume — re-baseline.
-            lastVolumeRef.current = volume;
-            return;
-          }
-          const maxIndex = maxIndexRef.current;
-          if (volume > last && indexRef.current > 0) {
-            // Volume up -> go back to the previous zikr without touching the counter.
-            volumeNavGuardRef.current = now;
-            dispatch(setIndexCount(indexRef.current - 1));
-          } else if (volume < last) {
-            // Volume down -> decrement the current zikr's counter first; once it
-            // reaches the phrase's required count, switch to the next zikr.
-            volumeNavGuardRef.current = now;
-            const idx = indexRef.current;
-            const phraseCount = phraseCountRef.current;
-            const currentCount = phraseClicksRef.current;
-            if (currentCount < phraseCount) {
-              const newCount = currentCount + 1;
-              setClicks((prev) => {
-                const next = [...prev];
-                next[idx] = newCount;
-                return next;
-              });
-              dispatch(incrementTotalCount());
-              if (hapticsRef.current) triggerCountHaptic();
-              setIsAnimating(true);
-              if (newCount >= phraseCount) {
-                setTimeout(() => dispatch(incrementIndex()), 300);
-              }
-              // Natural count-through of the final phrase completes the category.
-              if (newCount >= phraseCount && idx === maxIndex) {
-                dispatch(completeCategory(categoryId));
-              }
-              setTimeout(() => setIsAnimating(false), 300);
-            } else if (idx < maxIndex) {
-              dispatch(incrementIndex());
-            }
-          }
-          lastVolumeRef.current = last;
-          volumeRestoringRef.current = true;
-          void getVolumeManager()
-            ?.setVolume(last, { playSound: false, showUI: false })
-            .then(async () => {
-              try {
-                const vm2 = getVolumeManager();
-                const { volume: actual } = (await vm2?.getVolume()) ?? { volume: last };
-                lastVolumeRef.current = actual;
-              } catch {
-                lastVolumeRef.current = last;
-              }
-            })
-            .catch(() => {
-              lastVolumeRef.current = last;
-            })
-            .finally(() => {
-              volumeRestoringRef.current = false;
-            });
-        });
-      } catch {
-        // Unavailable in Expo Go — test volume keys on a custom dev build.
+      // Natural count-through of the final phrase completes the category.
+      if (newCount >= phraseCount && idx === maxIndex) {
+        dispatch(completeCategory(categoryId));
       }
-    };
+      setTimeout(() => setIsAnimating(false), 300);
+    } else if (idx < maxIndex) {
+      dispatch(incrementIndex());
+    }
+  }, [dispatch, categoryId, setClicks, setIsAnimating]);
 
-    void init();
-
-    return () => {
-      listener?.remove();
-      void getVolumeManager()?.showNativeVolumeUI({ enabled: true });
-      lastVolumeRef.current = null;
-      volumeRestoringRef.current = false;
-    };
-  }, [dispatch, volumeNavEnabled, categoryId, setClicks, setIsAnimating]);
+  useVolumeNav({
+    enabled: volumeNavEnabled,
+    audioActive,
+    onVolumeUp: handleVolumeUp,
+    onVolumeDown: handleVolumeDown,
+  });
 
   // Reset store on unmount to cover the native back gesture path
   useEffect(() => {

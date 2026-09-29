@@ -1,8 +1,7 @@
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { getVolumeManager } from '../utils/volumeManager';
 import { useDispatch, useSelector } from 'react-redux';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { TasbihButton } from '../components/TasbihButton';
@@ -14,11 +13,7 @@ import { triggerCountHaptic } from '../utils/haptics';
 import { AZKAR_TITLE_FONT, getAzkarTheme } from '../theme/azkarTheme';
 import { formatNumber } from '../utils/numberFormatting';
 import useTimeGuardedCallback from '../utils/useTimeGuardedCallback';
-
-// Volume nav pins the system volume mid-range so both keys always produce a
-// detectable delta (at the min/max rails Android fires no event).
-const VOLUME_NAV_BASELINE = 0.5;
-const VOLUME_NAV_RAIL_EPS = 0.02;
+import { useVolumeNav } from '../utils/useVolumeNav';
 
 export function FreeTasbihScreen() {
   const dispatch = useDispatch();
@@ -29,14 +24,6 @@ export function FreeTasbihScreen() {
   const hapticsEnabled = useSelector((state: RootState) => state.haptics.enabled);
   const [count, setCount] = useState(0);
 
-  const lastVolumeRef = useRef<number | null>(null);
-  const volumeNavGuardRef = useRef(0);
-  const volumeRestoringRef = useRef(false);
-  // Latest haptics flag for the volume listener, which cannot read fresh
-  // Redux state without re-registering.
-  const hapticsRef = useRef(hapticsEnabled);
-  hapticsRef.current = hapticsEnabled;
-
   const tap = useCallback(() => {
     setCount((c) => c + 1);
     dispatch(incrementTotalCount());
@@ -46,116 +33,20 @@ export function FreeTasbihScreen() {
   const handleTap = useTimeGuardedCallback(tap, config.interaction.freeTasbihTapGuardMs);
 
   // Hardware volume buttons control the free tasbih counter: both keys
-  // increment (+1 plus the global total), matching screen taps.
+  // increment (+1 plus the global total), matching screen taps. Single
+  // physical press = one increment; holds collapse to one via the shared hook.
   // Only active while the user has enabled volume nav in Settings.
-  useEffect(() => {
-    if (!volumeNavEnabled) return;
-    let listener: { remove: () => void } | null = null;
+  const handleVolumeCount = useCallback(() => {
+    setCount((c) => c + 1);
+    dispatch(incrementTotalCount());
+    if (hapticsEnabled) triggerCountHaptic();
+  }, [dispatch, hapticsEnabled]);
 
-    const init = async () => {
-      const vm = getVolumeManager();
-      if (!vm) {
-        return;
-      }
-      try {
-        const { volume } = await vm.getVolume();
-        let baseline = volume;
-        if (baseline <= VOLUME_NAV_RAIL_EPS || baseline >= 1 - VOLUME_NAV_RAIL_EPS) {
-          // At a rail no event fires — re-center so both keys work.
-          await vm.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false });
-          try {
-            baseline = (await vm.getVolume()).volume;
-          } catch {
-            baseline = VOLUME_NAV_BASELINE;
-          }
-        }
-        lastVolumeRef.current = baseline;
-        await vm.showNativeVolumeUI({ enabled: false });
-        listener = vm.addVolumeListener(({ volume }) => {
-          if (volumeRestoringRef.current) {
-            // The swallowed press still moved the real volume — re-baseline.
-            lastVolumeRef.current = volume;
-            return;
-          }
-
-          const last = lastVolumeRef.current;
-          if (last === null || last === undefined) {
-            lastVolumeRef.current = volume;
-            return;
-          }
-          if (volume === last) {
-            // No delta means a system rail — re-center.
-            lastVolumeRef.current = volume;
-            volumeRestoringRef.current = true;
-            void getVolumeManager()
-              ?.setVolume(VOLUME_NAV_BASELINE, { playSound: false, showUI: false })
-              .then(async () => {
-                try {
-                  const vm2 = getVolumeManager();
-                  const { volume: actual } = (await vm2?.getVolume()) ?? { volume: VOLUME_NAV_BASELINE };
-                  lastVolumeRef.current = actual;
-                } catch {
-                  lastVolumeRef.current = VOLUME_NAV_BASELINE;
-                }
-              })
-              .catch(() => {
-                lastVolumeRef.current = VOLUME_NAV_BASELINE;
-              })
-              .finally(() => {
-                volumeRestoringRef.current = false;
-              });
-            return;
-          }
-          const now = Date.now();
-          if (now - volumeNavGuardRef.current < config.interaction.counterGuardMs) {
-            // Debounced, but the press still moved the volume — re-baseline.
-            lastVolumeRef.current = volume;
-            return;
-          }
-          volumeNavGuardRef.current = now;
-          if (volume < last) {
-            setCount((c) => c + 1);
-            dispatch(incrementTotalCount());
-            if (hapticsRef.current) triggerCountHaptic();
-          } else if (volume > last) {
-            setCount((c) => c + 1);
-            dispatch(incrementTotalCount());
-            if (hapticsRef.current) triggerCountHaptic();
-          }
-          lastVolumeRef.current = last;
-          volumeRestoringRef.current = true;
-          void getVolumeManager()
-            ?.setVolume(last, { playSound: false, showUI: false })
-            .then(async () => {
-              try {
-                const vm2 = getVolumeManager();
-                const { volume: actual } = (await vm2?.getVolume()) ?? { volume: last };
-                lastVolumeRef.current = actual;
-              } catch {
-                lastVolumeRef.current = last;
-              }
-            })
-            .catch(() => {
-              lastVolumeRef.current = last;
-            })
-            .finally(() => {
-              volumeRestoringRef.current = false;
-            });
-        });
-      } catch {
-        // Unavailable in Expo Go — test volume keys on a custom dev build.
-      }
-    };
-
-    void init();
-
-    return () => {
-      listener?.remove();
-      void getVolumeManager()?.showNativeVolumeUI({ enabled: true });
-      lastVolumeRef.current = null;
-      volumeRestoringRef.current = false;
-    };
-  }, [dispatch, volumeNavEnabled]);
+  useVolumeNav({
+    enabled: volumeNavEnabled,
+    onVolumeUp: handleVolumeCount,
+    onVolumeDown: handleVolumeCount,
+  });
 
   return (
     <Pressable style={styles.gradient} onPress={handleTap}>
