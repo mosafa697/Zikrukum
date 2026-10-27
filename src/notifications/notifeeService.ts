@@ -64,9 +64,9 @@ export async function getNotificationPermissionStatus(): Promise<NotificationPer
     const settings = await nf.getNotificationSettings();
     // AuthorizationStatus enum: 0 = NOT_DETERMINED, 1 = DENIED, 2 = AUTHORIZED, 3 = PROVISIONAL
     const s = settings.authorizationStatus as number;
-    if (s === 2) return 'authorized';
-    if (s === 3) return 'provisional';
-    if (s === 1) return 'denied';
+    if (s === 1) return 'authorized';
+    if (s === 2) return 'provisional';
+    if (s === 0) return 'denied';
     return 'not-determined';
   } catch {
     return 'denied';
@@ -79,9 +79,9 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
   try {
     const settings = await nf.requestPermission();
     const s = settings.authorizationStatus as number;
-    if (s === 2) return 'authorized';
-    if (s === 3) return 'provisional';
-    if (s === 1) return 'denied';
+    if (s === 1) return 'authorized';
+    if (s === 2) return 'provisional';
+    if (s === 0) return 'denied';
     return 'not-determined';
   } catch {
     return 'denied';

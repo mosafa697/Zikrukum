@@ -90,6 +90,7 @@ export function PhraseCard({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [phraseOverflow, setPhraseOverflow] = useState(false);
   const phraseOverflowRef = useRef(false);
+  const contentHeightsRef = useRef<Record<string, number>>({});
 
   const [pageSize, setPageSize] = useState<{ width: number; height: number }>({
     width: 0,
@@ -156,6 +157,16 @@ export function PhraseCard({
     [commitScrollEnd, toFlowX]
   );
 
+  const updateOverflow = useCallback(() => {
+    const h = contentHeightsRef.current[String(phrase.id)];
+    setPhraseOverflow(h !== undefined && h > pageSize.height + 1);
+  }, [phrase.id, pageSize.height]);
+
+  // Re-evaluate when the active phrase or viewport changes (content size may not re-fire).
+  useEffect(() => {
+    updateOverflow();
+  }, [updateOverflow, fontScale]);
+
   const handleScrollBeginDrag = useCallback(() => {
     isDraggingRef.current = true;
     if (settleTimerRef.current) {
@@ -213,10 +224,8 @@ export function PhraseCard({
   );
 
   const startLongPress = useCallback(() => {
-    longPressTimerRef.current = setTimeout(() => {
-      setLongPressTriggered(true);
-      Clipboard.setStringAsync(phrase.text);
-    }, config.interaction.longPressMs);
+    setLongPressTriggered(true);
+    Clipboard.setStringAsync(phrase.text);
   }, [phrase.text]);
 
   const cancelLongPress = useCallback(() => {
@@ -235,37 +244,8 @@ export function PhraseCard({
   }, [longPressTriggered, guardedCounterPress]);
 
   const renderPhrasePage = useCallback(
-    (info: ListRenderItemInfo<AzkarPhrase>) => {
-      const { item, index: itemIndex } = info;
+    ({ item, index: itemIndex }: ListRenderItemInfo<AzkarPhrase>) => {
       const isActive = itemIndex === index;
-      const content = (
-        <ScrollView
-          style={styles.pageScroll}
-          contentContainerStyle={[styles.phraseScrollContent, phraseOverflow && styles.phraseScrollNoCenter]}
-          showsVerticalScrollIndicator
-          persistentScrollbar
-          nestedScrollEnabled
-          onContentSizeChange={(contentW, contentH) => {
-            if (
-              itemIndex === index &&
-              contentH >= 1 &&
-              phraseOverflowRef.current !== contentH > pageSize.height
-            ) {
-              phraseOverflowRef.current = contentH > pageSize.height;
-              setPhraseOverflow(phraseOverflowRef.current);
-            }
-          }}
-        >
-          <Text
-            style={[
-              styles.phraseText,
-              { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
-            ]}
-          >
-            {item.text}
-          </Text>
-        </ScrollView>
-      );
       return (
         <View
           style={{
@@ -274,24 +254,42 @@ export function PhraseCard({
             transform: [{ scaleX: RTL_MIRROR_SCALE }],
           }}
         >
-          {isActive ? (
+          <ScrollView
+            style={styles.pageScroll}
+            contentContainerStyle={styles.phraseScrollContent}
+            showsVerticalScrollIndicator
+            persistentScrollbar
+            nestedScrollEnabled
+            onContentSizeChange={(_w, h) => {
+              contentHeightsRef.current[String(item.id)] = h;
+              if (isActive) updateOverflow();
+            }}
+          >
             <Pressable
+              disabled={!isActive}
               onPress={handleContentPress}
               onLongPress={startLongPress}
               onPressOut={cancelLongPress}
-              style={styles.phraseAreaInner}
+              delayLongPress={config.interaction.longPressMs}
+              style={styles.phraseTap}
             >
-              {content}
-              {phraseOverflow ? (
-                <LinearGradient
-                  colors={['transparent', colors.cardBgColor]}
-                  style={[styles.overflowFade, { pointerEvents: 'none' } as any]}
-                />
-              ) : null}
+              <Text
+                style={[
+                  styles.phraseText,
+                  { color: colors.textColor, fontSize: fontScale * 16, lineHeight: fontScale * 16 * 1.8 },
+                ]}
+              >
+                {item.text}
+              </Text>
             </Pressable>
-          ) : (
-            content
-          )}
+          </ScrollView>
+          {isActive && phraseOverflow ? (
+            <LinearGradient
+              colors={['transparent', colors.cardBgColor]}
+              style={styles.overflowFade}
+              pointerEvents="none"
+            />
+          ) : null}
         </View>
       );
     },
@@ -306,6 +304,7 @@ export function PhraseCard({
       handleContentPress,
       startLongPress,
       cancelLongPress,
+      updateOverflow,
     ]
   );
 
@@ -370,6 +369,7 @@ export function PhraseCard({
           onScrollBeginDrag={handleScrollBeginDrag}
           onScrollEndDrag={handleScrollEndDrag}
           onMomentumScrollEnd={handleMomentumScrollEnd}
+          extraData={index}
         />
 
         <AudioPlayerBar
@@ -474,6 +474,8 @@ const styles = StyleSheet.create({
   },
   phraseArea: { flex: 1, overflow: 'hidden' },
   pageScroll: { flex: 1 },
+  phraseScrollContent: { flexGrow: 1 },
+  phraseTap: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
   phraseAreaInner: { flex: 1 },
   overflowFade: {
     position: 'absolute',
@@ -482,7 +484,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 34,
   },
-  phraseScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12 },
   phraseScrollNoCenter: { justifyContent: 'flex-start' },
   phraseText: {
     textAlign: 'center',
