@@ -92,20 +92,26 @@ export function CategoriesScreen() {
           <Pressable
             onPress={toggleSearch}
             hitSlop={8}
+            accessibilityRole="button"
             accessibilityLabel={isSearchOpen ? t('closeSearch') : t('search')}
-            style={styles.headerActionBtn}
+            style={({ pressed }) => [
+              styles.headerActionBtn,
+              styles.searchActionBtn,
+              { backgroundColor: theme.verseGradient[0], opacity: pressed ? 0.75 : 1 },
+            ]}
           >
-            <Ionicons name={isSearchOpen ? 'close' : 'search'} size={20} color={theme.textColor} />
+            <Ionicons name={isSearchOpen ? 'close' : 'search'} size={20} color={theme.verseTextColor} />
           </Pressable>
         }
         rightAction={
           <Pressable
             onPress={() => navigation.navigate('Settings')}
             hitSlop={8}
+            accessibilityRole="button"
             accessibilityLabel={t('settings')}
             style={styles.headerActionBtn}
           >
-            <Ionicons name="menu" size={22} color={theme.textColor} />
+            <Ionicons name="settings-outline" size={22} color={theme.textColor} />
           </Pressable>
         }
         bottom={
@@ -255,6 +261,9 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  searchActionBtn: {
+    borderRadius: 12,
   },
   scrollContent: { padding: 16, paddingBottom: 32 },
   scrollTopWrap: {
